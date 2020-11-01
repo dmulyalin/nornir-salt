@@ -5,6 +5,9 @@ from nornir.core.task import AggregatedResult, Task
 from nornir.core.inventory import Host
 
 
+LOCK = threading.Lock()
+
+
 class QueueRunner:
     """
     QueueRunner run tasks over each host using queue together
