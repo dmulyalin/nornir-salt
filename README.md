@@ -30,6 +30,8 @@ Additional details about how it works and usage samples
 
 ## QueueRunner, DictInventory and ResultSerializer example
 
+Sample code to use QueueRunner, DictInventory and ResultSerializer
+
 <details><summary>Code</summary>
 
 ```python
@@ -122,7 +124,9 @@ pprint.pprint(formed_result3, width=100)
 ```
 </details>
 
-## RetryRunner example
+## RetryRunner, DictInventory and ResultSerializer example
+
+Sample code to use RetryRunner, DictInventory and ResultSerializer
 
 <details><summary>Code</summary>
 
@@ -220,5 +224,30 @@ pprint.pprint(formed_result2, width=100)
 
 formed_result3 = ResultSerializer(result3, add_details=True)
 pprint.pprint(formed_result3, width=100)
+```
+</details>
+
+## Connect to hosts behind jumphost
+
+Only Netmiko connections (CONNECTION_NAME=netmiko) support connecting via jumphosts.
+
+To connect to devices behind jumphost, need to define jumphost parameters in host's inventory data:
+
+<details><summary>Code</summary>
+
+```python
+inventory_data = """
+hosts:
+  R1:
+    hostname: 192.168.1.151
+    platform: ios
+    groups: [lab]
+    data: 
+      jumphost:
+        hostname: 10.1.1.1
+        port: 22
+        password: jump_host_password
+        username: jump_host_user
+"""
 ```
 </details>

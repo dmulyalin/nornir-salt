@@ -24,6 +24,9 @@ class RetryRunner:
         connect_retry: number of connection attempts
         connect_backoff: exponential backoff timer in milliseconds
         connect_splay: random splay interval for each connection
+        task_retry: number of attemptsto run task
+        task_backoff: exponential backoff timer in milliseconds
+        task_splay: random splay interval before task start
     """
 
     def __init__(
