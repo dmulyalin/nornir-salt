@@ -30,6 +30,9 @@ Additional details about how it works and usage samples
 
 ## QueueRunner, DictInventory and ResultSerializer example
 
+**Architecture**
+<img src="assets/QueueRunner_v0.png">  
+
 Sample code to use QueueRunner, DictInventory and ResultSerializer
 
 <details><summary>Code</summary>
@@ -126,6 +129,11 @@ pprint.pprint(formed_result3, width=100)
 
 ## RetryRunner, DictInventory and ResultSerializer example
 
+> For grouped tasks need to explicitly provide `connection_name` attribute such as `netmik`, `napalm`, `scrapli`. Specifying `connection_name` attribute for standalone tasks not required. Lack of `connection_name` attribute will resultin skipping connection retry logic and connections to all hosts will be initiated simultaneously up to a number of `num_workers`
+
+**Architecture**
+<img src="assets/RetryRunner_v0.png">  
+
 Sample code to use RetryRunner, DictInventory and ResultSerializer
 
 <details><summary>Code</summary>
@@ -204,7 +212,8 @@ result1 = NornirObj.run(
 # run grouped tasks
 result2 = NornirObj.run(
     task=_task_group_netmiko_send_commands, 
-    commands=["show clock", "show run | inc hostname"]
+    commands=["show clock", "show run | inc hostname"],
+    connection_name="netmiko"
 )
 
 # run another single task
@@ -229,7 +238,7 @@ pprint.pprint(formed_result3, width=100)
 
 ## Connect to hosts behind jumphost
 
-Only Netmiko connections (CONNECTION_NAME=netmiko) support connecting via jumphosts.
+Only Netmiko connections, `connection_name="netmiko"`, supports connecting via Jumphosts.
 
 To connect to devices behind jumphost, need to define jumphost parameters in host's inventory data:
 

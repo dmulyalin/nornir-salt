@@ -138,7 +138,7 @@ class RetryRunner:
                 )
             )
         return host.connections[channel_name]
-    
+
     def connector(self):
         while True:
             connection = self.connectors_q.get(timeout=60)
@@ -153,19 +153,25 @@ class RetryRunner:
                 if elapsed < should_wait:
                     self.connectors_q.put(connection)
                     self.connectors_q.task_done()
-                    continue                
+                    continue
             # initiate connection to host
             connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
-            if connection_name and not connection_name in host.connections:
+            connection_name = task.params.pop("connection_name", connection_name)
+            if connection_name and connection_name not in host.connections:
                 try:
                     time.sleep(random.randrange(0, self.connect_splay) / 1000)
-                    if connection_name == "netmiko" and host.get("jumphost"):
-                        host.connection_options["netmiko"].extras = {
-                            "sock": self._connect_to_device_behind_jumphost(host)
-                        }
-                    host.open_connection(
-                        connection_name, configuration=task.nornir.config
-                    )
+                    if host.get("jumphost") and connection_name == "netmiko":
+                        extras = {}
+                        if host.connection_options.get("netmiko"):
+                            extras = host.connection_options["netmiko"].extras
+                        extras["sock"] = self._connect_to_device_behind_jumphost(host)
+                        host.open_connection(
+                            connection_name, configuration=task.nornir.config, extras=extras
+                        )
+                    else:
+                        host.open_connection(
+                            connection_name, configuration=task.nornir.config
+                        )
                 except Exception as e:
                     params.setdefault("connection_retry", 0)
                     log.error(
@@ -191,7 +197,7 @@ class RetryRunner:
             if work is None:
                 self.work_q.task_done()
                 break
-            task, host, params, result = work                
+            task, host, params, result = work
             # check if need backoff task retry for this host
             if params.get("task_retry", 0) > 0:
                 elapsed = time.time() - params["timestamp"]
@@ -199,10 +205,10 @@ class RetryRunner:
                 if elapsed < should_wait:
                     self.work_q.put(work)
                     self.work_q.task_done()
-                    continue   
-            log.info("{} - running task '{}'".format(host.name, task.name))            
+                    continue
+            log.info("{} - running task '{}'".format(host.name, task.name))
             time.sleep(random.randrange(0, self.task_splay) / 1000)
-            work_result = task.copy().start(host)
+            work_result = task.start(host)
             if work_result[0].failed:
                 params.setdefault("task_retry", 0)
                 log.error(
@@ -228,7 +234,7 @@ class RetryRunner:
         result = AggregatedResult(task.name)
         # enqueue hosts in connectors queue
         for host in hosts:
-            self.connectors_q.put((task, host, {}, result))
+            self.connectors_q.put((task.copy(), host, {}, result))
         # start connectors threads
         connector_threads = []
         for i in range(self.num_connectors):
