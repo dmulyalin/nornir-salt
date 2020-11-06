@@ -23,7 +23,7 @@ pip install nornir_salt
 ## Functions
 
 - **ResultSerializer** - helper function to transform AggregatedResult object in Python dictionary
-- **FFun** - helper filter function, to filter Norninr hosts based on F-object, Glob patterns, groups, IP Prefix, list
+- **FFun** - helper filter function, to filter Nornir hosts based on F-object, Glob patterns, groups, IP Prefix, list
 
 # How and What
 
@@ -342,7 +342,7 @@ pprint.pprint(filtered_hosts.dict().get("inventory", {}).get("hosts"))
 
 ### FO - Filter Object
 
-Filter using [Nornir Filter Object](<https://nornir.readthedocs.io/en/latest/tutorials/intro/inventory.html#Filter-Object>)
+Filter using [Nornir Filter Object](https://nornir.readthedocs.io/en/latest/tutorial/inventory.html#Filter-Object)
 
 Platform ios and hostname 192.168.217.7:
 
@@ -364,7 +364,7 @@ filtered_hosts = FFun(NornirObj, FO=[{"location": "B1", "platform": "ios"}, {"lo
 
 ### FB - Filter gloB
 
-Filter hosts by name using Glob Patterns - [fnmatchcase](<https://docs.python.org/3.4/library/fnmatch.html#fnmatch.fnmatchcase>) method:
+Filter hosts by name using Glob Patterns - [fnmatchcase](https://docs.python.org/3.4/library/fnmatch.html#fnmatch.fnmatchcase) method:
 
 Match R1, R2, R# hostnames but not R11 or R4:
 
