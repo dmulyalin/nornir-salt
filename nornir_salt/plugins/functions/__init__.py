@@ -1,4 +1,4 @@
 from .ResultSerializer import ResultSerializer
-from .FiltersFun import FiltersFun
+from .FFun import FFun
 
-__all__ = ("ResultSerializer", "FiltersFun")
+__all__ = ("ResultSerializer", "FFun")

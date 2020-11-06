@@ -59,7 +59,8 @@ class RetryRunner:
 
         jumphost = {"timeout": 3, "look_for_keys": False, "allow_agent": False}
         jumphost.update(host["jumphost"])
-        # Initiate connection to jumphost if not initiated already.
+        # Initiate connection to jumphost if not initiated already or
+        # if it failed before
         #
         # self.jumphosts_connections dictionary shared between threads,
         # first thread to start will detect that no connection to
@@ -70,18 +71,25 @@ class RetryRunner:
         # continue sleeping until either connection succeeded or
         # failed. On connection failure, first thread will set value
         # to '__failed__' to signal other threads to exit.
-        if not jumphost["hostname"] in self.jumphosts_connections:
+        if (
+            jumphost["hostname"] not in self.jumphosts_connections or
+            self.jumphosts_connections.get(jumphost["hostname"]) == "__failed__"
+        ):
             try:
+                LOCK.acquire()
                 self.jumphosts_connections[jumphost["hostname"]] = "__connecting__"
+                LOCK.release()
                 jumphost_ssh_client = paramiko.client.SSHClient()
                 jumphost_ssh_client.set_missing_host_key_policy(
                     paramiko.AutoAddPolicy()
                 )
                 jumphost_ssh_client.connect(**jumphost)
+                LOCK.acquire()
                 self.jumphosts_connections[jumphost["hostname"]] = {
                     "jumphost_ssh_client": jumphost_ssh_client,
                     "jumphost_ssh_transport": jumphost_ssh_client.get_transport(),
                 }
+                LOCK.release()
                 # add jumphost to host connections to close it
                 # on nornir.close_connections() call
                 host.connections[
@@ -93,7 +101,9 @@ class RetryRunner:
                     )
                 )
             except Exception as e:
+                LOCK.acquire()
                 self.jumphosts_connections[jumphost["hostname"]] = "__failed__"
+                LOCK.release()
                 # add exception info to host data to include in results
                 error_msg = "Failed connection to jumphost '{}', error - {}".format(
                     host["jumphost"]["hostname"], e
@@ -157,6 +167,8 @@ class RetryRunner:
             # initiate connection to host
             connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
             connection_name = task.params.pop("connection_name", connection_name)
+            # on connect retry get connection name from params
+            connection_name = params.get("connection_name", connection_name)
             if connection_name and connection_name not in host.connections:
                 try:
                     time.sleep(random.randrange(0, self.connect_splay) / 1000)
@@ -174,6 +186,7 @@ class RetryRunner:
                         )
                 except Exception as e:
                     params.setdefault("connection_retry", 0)
+                    params["connection_name"] = connection_name
                     log.error(
                         "{} - connection retry attempt {}, error: '{}'".format(
                             host.name, params["connection_retry"], e
