@@ -187,6 +187,17 @@ class RetryRunner:
                 except Exception as e:
                     params.setdefault("connection_retry", 0)
                     params["connection_name"] = connection_name
+                    # close host connections to retry them
+                    try:
+                        host.close_connection(connection_name)
+                    except:
+                        _ = host.connections.pop(connection_name, None)
+                    if host.get("jumphost"):
+                        channel_name = "jumphost_{}_channel".format(host["jumphost"]["hostname"])
+                        try:
+                            host.close_connection(channel_name)
+                        except:
+                            _ = host.connections.pop(channel_name, None)
                     log.error(
                         "{} - connection retry attempt {}, error: '{}'".format(
                             host.name, params["connection_retry"], e
@@ -222,11 +233,11 @@ class RetryRunner:
             log.info("{} - running task '{}'".format(host.name, task.name))
             time.sleep(random.randrange(0, self.task_splay) / 1000)
             work_result = task.start(host)
-            if work_result[0].failed:
+            if work_result[0].failed and work_result[0].exception:
                 params.setdefault("task_retry", 0)
                 log.error(
-                    "{} - task execution retry attempt {} failed".format(
-                        host.name, params["task_retry"]
+                    "{} - task execution retry attempt {} failed: '{}'".format(
+                        host.name, params["task_retry"], work_result[0].exception
                     )
                 )
                 if params["task_retry"] < self.task_retry:

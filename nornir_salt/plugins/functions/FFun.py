@@ -31,7 +31,7 @@ def FFun(nr, **kwargs):
     if kwargs.get("FL"):
         ret = _filter_FL(ret, kwargs.pop("FL"))
         has_filter = True
-    ret.has_filter = has_filter
+    ret.state.has_filter = has_filter
     return ret
     
 def _filter_FO(nr, filter_data):
