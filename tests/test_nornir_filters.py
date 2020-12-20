@@ -78,7 +78,7 @@ def test_FB():
     res = FFun(NornirObj, FB="R[12]")
     res_dict = res.dict()
     hosts_dict = res_dict.get("inventory", {}).get("hosts")
-    pprint.pprint(hosts_dict)
+    # pprint.pprint(hosts_dict)
     assert hosts_dict == {'R1': {'connection_options': {},
                                  'data': {'role': 'core', 'site': 'B1'},
                                  'groups': ['lab'],

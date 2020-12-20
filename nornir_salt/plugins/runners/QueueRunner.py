@@ -32,9 +32,8 @@ class QueueRunner:
                 break
             task, host, result = work_to_do
             work_result = task.copy().start(host)
-            LOCK.acquire()
-            result[host.name] = work_result
-            LOCK.release()
+            with LOCK:
+                result[host.name] = work_result
             self.work_q.task_done()
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:

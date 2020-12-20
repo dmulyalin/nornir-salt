@@ -27,6 +27,8 @@ class RetryRunner:
         task_retry: number of attemptsto run task
         task_backoff: exponential backoff timer in milliseconds
         task_splay: random splay interval before task start
+        reconnect_on_fail: boolean, default True, reconnect to host on 
+                           task failure or not
     """
 
     def __init__(
@@ -38,7 +40,8 @@ class RetryRunner:
         connect_splay: int = 100,
         task_retry: int = 1,
         task_backoff: int = 5000,
-        task_splay: int = 100
+        task_splay: int = 100,
+        reconnect_on_fail: bool = True
     ) -> None:
         self.num_workers = num_workers
         self.num_connectors = num_connectors
@@ -51,6 +54,7 @@ class RetryRunner:
         self.task_backoff = task_backoff
         self.task_splay = task_splay
         self.jumphosts_connections = {}
+        self.reconnect_on_fail = reconnect_on_fail
 
     def _connect_to_device_behind_jumphost(self, host):
         """
@@ -76,20 +80,18 @@ class RetryRunner:
             self.jumphosts_connections.get(jumphost["hostname"]) == "__failed__"
         ):
             try:
-                LOCK.acquire()
-                self.jumphosts_connections[jumphost["hostname"]] = "__connecting__"
-                LOCK.release()
+                with LOCK:
+                    self.jumphosts_connections[jumphost["hostname"]] = "__connecting__"
                 jumphost_ssh_client = paramiko.client.SSHClient()
                 jumphost_ssh_client.set_missing_host_key_policy(
                     paramiko.AutoAddPolicy()
                 )
                 jumphost_ssh_client.connect(**jumphost)
-                LOCK.acquire()
-                self.jumphosts_connections[jumphost["hostname"]] = {
-                    "jumphost_ssh_client": jumphost_ssh_client,
-                    "jumphost_ssh_transport": jumphost_ssh_client.get_transport(),
-                }
-                LOCK.release()
+                with LOCK:
+                    self.jumphosts_connections[jumphost["hostname"]] = {
+                        "jumphost_ssh_client": jumphost_ssh_client,
+                        "jumphost_ssh_transport": jumphost_ssh_client.get_transport(),
+                    }
                 # add jumphost to host connections to close it
                 # on nornir.close_connections() call
                 host.connections[
@@ -101,9 +103,8 @@ class RetryRunner:
                     )
                 )
             except Exception as e:
-                LOCK.acquire()
-                self.jumphosts_connections[jumphost["hostname"]] = "__failed__"
-                LOCK.release()
+                with LOCK:
+                    self.jumphosts_connections[jumphost["hostname"]] = "__failed__"
                 # add exception info to host data to include in results
                 error_msg = "Failed connection to jumphost '{}', error - {}".format(
                     host["jumphost"]["hostname"], e
@@ -149,6 +150,18 @@ class RetryRunner:
             )
         return host.connections[channel_name]
 
+    def _close_host_connection(self, host, connection_name):
+        try:
+            host.close_connection(connection_name)
+        except:
+            _ = host.connections.pop(connection_name, None)
+        if host.get("jumphost"):
+            channel_name = "jumphost_{}_channel".format(host["jumphost"]["hostname"])
+            try:
+                host.close_connection(channel_name)
+            except:
+                _ = host.connections.pop(channel_name, None)        
+
     def connector(self):
         while True:
             connection = self.connectors_q.get(timeout=60)
@@ -156,7 +169,7 @@ class RetryRunner:
                 self.connectors_q.task_done()
                 break
             task, host, params, result = connection
-            # check if need backoff connection retry for this host
+            # check if need back off connection retry for this host
             if params.get("connection_retry", 0) > 0:
                 elapsed = time.time() - params["timestamp"]
                 should_wait = (params["connection_retry"] * self.connect_backoff) / 1000
@@ -169,6 +182,7 @@ class RetryRunner:
             connection_name = task.params.pop("connection_name", connection_name)
             # on connect retry get connection name from params
             connection_name = params.get("connection_name", connection_name)
+            params.setdefault("connection_name", connection_name)
             if connection_name and connection_name not in host.connections:
                 try:
                     time.sleep(random.randrange(0, self.connect_splay) / 1000)
@@ -184,20 +198,13 @@ class RetryRunner:
                         host.open_connection(
                             connection_name, configuration=task.nornir.config
                         )
+                    log.info(
+                        "{} - started connection: '{}'".format(host.name, connection_name)
+                    )
                 except Exception as e:
                     params.setdefault("connection_retry", 0)
-                    params["connection_name"] = connection_name
                     # close host connections to retry them
-                    try:
-                        host.close_connection(connection_name)
-                    except:
-                        _ = host.connections.pop(connection_name, None)
-                    if host.get("jumphost"):
-                        channel_name = "jumphost_{}_channel".format(host["jumphost"]["hostname"])
-                        try:
-                            host.close_connection(channel_name)
-                        except:
-                            _ = host.connections.pop(channel_name, None)
+                    self._close_host_connection(host, connection_name)
                     log.error(
                         "{} - connection retry attempt {}, error: '{}'".format(
                             host.name, params["connection_retry"], e
@@ -209,9 +216,6 @@ class RetryRunner:
                         self.connectors_q.put(connection)
                         self.connectors_q.task_done()
                         continue
-                log.info(
-                    "{} - started connection: '{}'".format(host.name, connection_name)
-                )
             self.connectors_q.task_done()
             self.work_q.put((task, host, params, result))
 
@@ -233,7 +237,8 @@ class RetryRunner:
             log.info("{} - running task '{}'".format(host.name, task.name))
             time.sleep(random.randrange(0, self.task_splay) / 1000)
             work_result = task.start(host)
-            if work_result[0].failed and work_result[0].exception:
+            # if work_result[0].failed and work_result[0].exception:
+            if task.results.failed:
                 params.setdefault("task_retry", 0)
                 log.error(
                     "{} - task execution retry attempt {} failed: '{}'".format(
@@ -243,12 +248,19 @@ class RetryRunner:
                 if params["task_retry"] < self.task_retry:
                     params["task_retry"] += 1
                     params["timestamp"] = time.time()
-                    self.work_q.put(work)
+                    # recover task results for not to count task as failed
+                    for r in task.results:
+                        r.failed = False
+                    if self.reconnect_on_fail:
+                        # close host connections to retry them
+                        self._close_host_connection(host, params["connection_name"])
+                        self.connectors_q.put(work)
+                    else:
+                        self.work_q.put(work)
                     self.work_q.task_done()
                     continue
-            LOCK.acquire()
-            result[host.name] = work_result
-            LOCK.release()
+            with LOCK:
+                result[host.name] = work_result
             self.work_q.task_done()
             log.info("{} - task '{}' completed".format(host.name, task.name))
 

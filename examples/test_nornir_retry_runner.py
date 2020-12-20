@@ -8,17 +8,17 @@ from nornir_salt.plugins.functions import ResultSerializer
 inventory_data = """
 hosts:
   R1:
-    hostname: 192.168.1.151
+    hostname: 192.168.217.2
     platform: ios
     groups: [lab]
-  R2:
-    hostname: 192.168.1.153
-    platform: ios
-    groups: [lab]
-  R3:
-    hostname: 192.168.1.154
-    platform: ios
-    groups: [lab]
+#  R2:
+#    hostname: 192.168.1.153
+#    platform: ios
+#    groups: [lab]
+#  R3:
+#    hostname: 192.168.1.154
+#    platform: ios
+#    groups: [lab]
     
 groups: 
   lab:
@@ -54,6 +54,7 @@ NornirObj = InitNornir(
 
 def _task_group_netmiko_send_commands(task, commands):
     # run commands
+    import ipdb; ipdb.set_trace()
     for command in commands:
         task.run(
             task=netmiko_send_command,
