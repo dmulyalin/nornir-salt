@@ -24,7 +24,7 @@ class RetryRunner:
         connect_retry: number of connection attempts
         connect_backoff: exponential backoff timer in milliseconds
         connect_splay: random splay interval for each connection
-        task_retry: number of attemptsto run task
+        task_retry: number of attempts to run task
         task_backoff: exponential backoff timer in milliseconds
         task_splay: random splay interval before task start
         reconnect_on_fail: boolean, default True, reconnect to host on
@@ -168,7 +168,7 @@ class RetryRunner:
 
     def connector(self):
         while True:
-            connection = self.connectors_q.get(timeout=60)
+            connection = self.connectors_q.get()
             if connection is None:
                 self.connectors_q.task_done()
                 break
@@ -228,7 +228,7 @@ class RetryRunner:
 
     def worker(self):
         while True:
-            work = self.work_q.get(timeout=300)
+            work = self.work_q.get()
             if work is None:
                 self.work_q.task_done()
                 break
@@ -286,22 +286,27 @@ class RetryRunner:
         # start connectors threads
         connector_threads = []
         for i in range(self.num_connectors):
-            t = threading.Thread(target=self.connector, args=(), daemon=True)
+            t = threading.Thread(target=self.connector, args=())
             t.start()
             connector_threads.append(t)
         # start worker threads
         worker_threads = []
         for i in range(self.num_workers):
-            t = threading.Thread(target=self.worker, args=(), daemon=True)
+            t = threading.Thread(target=self.worker, args=())
             t.start()
             worker_threads.append(t)
         # wait until all hosts completed task or timeout reached
-        while (
-            not all(h.name in result for h in hosts)
-            or (time.time() - self.start_time) > self.task_timeout
-        ):
+        while True:
+            with LOCK:
+                if all([h.name in result for h in hosts]):
+                    break
+            if time.time() - self.start_time > self.task_timeout:
+                log.error("RetryRunner task '{}', '{}' seconds wait timeout reached".format(
+                        task.name, self.task_timeout
+                    )
+                )
+                break
             time.sleep(0.1)
-            continue
         # block until all queues empty
         self.connectors_q.join()
         self.work_q.join()
