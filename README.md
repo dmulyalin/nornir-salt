@@ -1,7 +1,7 @@
 # nornir-salt
-Collection of Nornir plugins used with SALTSTACK Nornir modules - proxy, execution. 
+Collection of Nornir plugins used with [SALTSTACK Nornir modules](https://github.com/dmulyalin/salt-nornir). 
 
-All plugins and functions can be used with Nornir directly as well.
+All plugins and functions can be used with Nornir directly.
 
 # Installation
 
@@ -24,6 +24,10 @@ pip install nornir_salt
 
 - **ResultSerializer** - helper function to transform AggregatedResult object in Python dictionary
 - **FFun** - helper filter function, to filter Nornir hosts based on F-object, Glob patterns, groups, IP Prefix, list
+
+## Tasks
+
+- **tcp_ping** - task to TCP ping Nornir hosts, returns dictionary of pinged ports per host
 
 # How and What
 
