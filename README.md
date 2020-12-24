@@ -1,5 +1,5 @@
 # nornir-salt
-Collection of Nornir plugins used with [SALTSTACK Nornir modules](https://github.com/dmulyalin/salt-nornir). 
+Collection of Nornir plugins used with [SALTSTACK Nornir modules](https://github.com/dmulyalin/salt-nornir).
 
 All plugins and functions can be used with Nornir directly.
 
@@ -36,7 +36,7 @@ Additional details about how it works and usage samples
 ## QueueRunner
 
 **Architecture**
-<img src="assets/QueueRunner_v0.png">  
+<img src="assets/QueueRunner_v0.png">
 
 Sample code to use QueueRunner, DictInventory and ResultSerializer
 
@@ -64,8 +64,8 @@ hosts:
     hostname: 192.168.1.154
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
@@ -99,22 +99,22 @@ def _task_group_netmiko_send_commands(task, commands):
             name=command
         )
     return Result(host=task.host)
-    
+
 # run single task
 result1 = NornirObj.run(
-    task=netmiko_send_command, 
+    task=netmiko_send_command,
     command_string="show clock"
 )
 
 # run grouped tasks
 result2 = NornirObj.run(
-    task=_task_group_netmiko_send_commands, 
+    task=_task_group_netmiko_send_commands,
     commands=["show clock", "show run | inc hostname"]
 )
 
 # run another single task
 result3 = NornirObj.run(
-    task=netmiko_send_command, 
+    task=netmiko_send_command,
     command_string="show run | inc hostname"
 )
 
@@ -137,7 +137,7 @@ pprint.pprint(formed_result3, width=100)
 > For grouped tasks need to explicitly provide `connection_name` attribute such as `netmiko`, `napalm`, `scrapli`. Specifying `connection_name` attribute for standalone tasks not required. Lack of `connection_name` attribute will result in skipping connection retry logic and connections to all hosts initiated simultaneously up to the number of `num_workers`
 
 **Architecture**
-<img src="assets/RetryRunner_v0.png">  
+<img src="assets/RetryRunner_v0.png">
 
 Sample code to use RetryRunner, DictInventory and ResultSerializer
 
@@ -165,8 +165,8 @@ hosts:
     hostname: 192.168.1.154
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
@@ -207,23 +207,23 @@ def _task_group_netmiko_send_commands(task, commands):
             name=command
         )
     return Result(host=task.host)
-    
+
 # run single task
 result1 = NornirObj.run(
-    task=netmiko_send_command, 
+    task=netmiko_send_command,
     command_string="show clock"
 )
 
 # run grouped tasks
 result2 = NornirObj.run(
-    task=_task_group_netmiko_send_commands, 
+    task=_task_group_netmiko_send_commands,
     commands=["show clock", "show run | inc hostname"],
     connection_name="netmiko"
 )
 
 # run another single task
 result3 = NornirObj.run(
-    task=netmiko_send_command, 
+    task=netmiko_send_command,
     command_string="show run | inc hostname"
 )
 
@@ -256,7 +256,7 @@ hosts:
     hostname: 192.168.1.151
     platform: ios
     groups: [lab]
-    data: 
+    data:
       jumphost:
         hostname: 10.1.1.1
         port: 22
@@ -304,14 +304,14 @@ hosts:
     data:
       role: access
       site: B3
-      
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
   pod1:
     username: cisco@
-    password: cisco      
+    password: cisco
 """
 
 inventory_dict = yaml.safe_load(inventory_data)
@@ -354,6 +354,12 @@ Platform ios and hostname 192.168.217.7:
 filtered_hosts = FFun(NornirObj, FO={"platform": "ios", "hostname": "192.168.217.7"})
 ```
 
+Host with name R1 or R2:_
+
+```
+filtered_hosts = FFun(NornirObj, FO={"name__any": ["R1", "R2"])
+```
+
 Location B1 or location B2:
 
 ```
@@ -390,7 +396,7 @@ Filter hosts by checking if hosts hostname is part of at least one of given IP P
 
 ```
 filtered_hosts = FFun(NornirObj, FP="192.168.217.0/29, 192.168.2.0/24")
-``` 
+```
 
 If host's inventory hostname is IP, will use it as is, if it is FQDN, will
 attempt to resolve it to obtain IP address, if DNS resolution fails, host
@@ -402,4 +408,4 @@ Match only hosts with names in provided list::
 
 ```
 filtered_hosts = FFun(NornirObj, FL="R1, R2")
-``` 
+```

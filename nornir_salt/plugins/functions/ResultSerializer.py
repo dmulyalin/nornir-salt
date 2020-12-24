@@ -20,7 +20,7 @@ def ResultSerializer(nr_results, add_details=False):
                     "diff": i.diff,
                     "changed": i.changed,
                     "result": i.result,
-                    "failed": True if i.exception else i.failed,,
+                    "failed": True if i.exception else i.failed,
                     "exception": str(i.exception),
                 }
             # form results for the rest of tasks

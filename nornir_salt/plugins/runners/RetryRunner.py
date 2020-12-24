@@ -27,8 +27,7 @@ class RetryRunner:
         task_retry: number of attempts to run task
         task_backoff: exponential backoff timer in milliseconds
         task_splay: random splay interval before task start
-        reconnect_on_fail: boolean, default True, reconnect to host on
-                           task failure or not
+        reconnect_on_fail: boolean, default True, reconnect to host on task failure
         task_timeout: int, seconds to wait for task to complete, default 600
     """
 
@@ -58,7 +57,6 @@ class RetryRunner:
         self.jumphosts_connections = {}
         self.reconnect_on_fail = reconnect_on_fail
         self.task_timeout = task_timeout
-        self.start_time = time.time()
 
     def _connect_to_device_behind_jumphost(self, host):
         """
@@ -244,7 +242,6 @@ class RetryRunner:
             log.info("{} - running task '{}'".format(host.name, task.name))
             time.sleep(random.randrange(0, self.task_splay) / 1000)
             work_result = task.start(host)
-            # if work_result[0].failed and work_result[0].exception:
             if task.results.failed:
                 log.error(
                     "{} - task execution retry attempt {} failed: '{}'".format(
@@ -296,13 +293,15 @@ class RetryRunner:
             t.start()
             worker_threads.append(t)
         # wait until all hosts completed task or timeout reached
+        start_time = time.time()
         while True:
             with LOCK:
-                if all([h.name in result for h in hosts]):
-                    break
-            if time.time() - self.start_time > self.task_timeout:
-                log.error("RetryRunner task '{}', '{}' seconds wait timeout reached".format(
-                        task.name, self.task_timeout
+                hosts_no_result = [h.name for h in hosts if h.name not in result]
+            if hosts_no_result == []:
+                break
+            if time.time() - start_time > self.task_timeout:
+                log.error("RetryRunner task '{}', '{}' seconds wait timeout reached, hosts that did not return results '{}'".format(
+                        task.name, self.task_timeout, hosts_no_result
                     )
                 )
                 break
@@ -310,12 +309,12 @@ class RetryRunner:
         # block until all queues empty
         self.connectors_q.join()
         self.work_q.join()
-        # stop connectors
+        # stop connector threads
         for i in range(self.num_connectors):
             self.connectors_q.put(None)
         for t in connector_threads:
             t.join()
-        # stop workers
+        # stop worker threads
         for i in range(self.num_workers):
             self.work_q.put(None)
         for t in worker_threads:
