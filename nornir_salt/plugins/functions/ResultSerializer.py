@@ -2,7 +2,7 @@ def ResultSerializer(nr_results, add_details=False):
     """
     Helper function to transform Nornir results in dictionary
 
-    :parap add_details: boolean to indicate if results should contain more info
+    :param add_details: boolean to indicate if results should contain more info
     """
     ret = {}
     for hostname, results in nr_results.items():

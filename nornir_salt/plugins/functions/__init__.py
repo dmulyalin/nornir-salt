@@ -1,4 +1,9 @@
 from .ResultSerializer import ResultSerializer
 from .FFun import FFun
+from .FindString import FindString
 
-__all__ = ("ResultSerializer", "FFun")
+__all__ = (
+    "ResultSerializer", 
+    "FFun", 
+    "FindString"
+)
