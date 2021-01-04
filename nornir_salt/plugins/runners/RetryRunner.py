@@ -46,8 +46,8 @@ class RetryRunner:
     ) -> None:
         self.num_workers = num_workers
         self.num_connectors = num_connectors
-        self.connectors_q = None
-        self.work_q = None
+								
+						  
         self.connect_retry = connect_retry
         self.connect_backoff = connect_backoff
         self.connect_splay = connect_splay
@@ -164,11 +164,11 @@ class RetryRunner:
             except:
                 _ = host.connections.pop(channel_name, None)
 
-    def connector(self):
+    def connector(self, connectors_q, work_q):
         while True:
-            connection = self.connectors_q.get()
+            connection = connectors_q.get()
             if connection is None:
-                self.connectors_q.task_done()
+                connectors_q.task_done()
                 break
             task, host, params, result = connection
             # check if need back off connection retry for this host
@@ -176,8 +176,8 @@ class RetryRunner:
                 elapsed = time.time() - params["timestamp"]
                 should_wait = (params["connection_retry"] * self.connect_backoff) / 1000
                 if elapsed < should_wait:
-                    self.connectors_q.put(connection)
-                    self.connectors_q.task_done()
+                    connectors_q.put(connection)
+                    connectors_q.task_done()
                     continue
             # initiate connection to host
             connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
@@ -218,17 +218,17 @@ class RetryRunner:
                     if params["connection_retry"] < self.connect_retry:
                         params["connection_retry"] += 1
                         params["timestamp"] = time.time()
-                        self.connectors_q.put(connection)
-                        self.connectors_q.task_done()
+                        connectors_q.put(connection)
+                        connectors_q.task_done()
                         continue
-            self.connectors_q.task_done()
-            self.work_q.put((task, host, params, result))
+            connectors_q.task_done()
+            work_q.put((task, host, params, result))
 
-    def worker(self):
+    def worker(self, connectors_q, work_q):
         while True:
-            work = self.work_q.get()
+            work = work_q.get()
             if work is None:
-                self.work_q.task_done()
+                work_q.task_done()
                 break
             task, host, params, result = work
             # check if need backoff task retry for this host
@@ -236,8 +236,8 @@ class RetryRunner:
                 elapsed = time.time() - params["timestamp"]
                 should_wait = (params["task_retry"] * self.task_backoff) / 1000
                 if elapsed < should_wait:
-                    self.work_q.put(work)
-                    self.work_q.task_done()
+                    work_q.put(work)
+                    work_q.task_done()
                     continue
             log.info("{} - running task '{}'".format(host.name, task.name))
             time.sleep(random.randrange(0, self.task_splay) / 1000)
@@ -260,36 +260,36 @@ class RetryRunner:
                     if self.reconnect_on_fail:
                         # close host connections to retry them
                         self._close_host_connection(host, params["connection_name"])
-                        self.connectors_q.put(work)
+                        connectors_q.put(work)
                         params["connection_retry"] += 1
                     else:
-                        self.work_q.put(work)
-                    self.work_q.task_done()
+                        work_q.put(work)
+                    work_q.task_done()
                     continue
             with LOCK:
                 result[host.name] = work_result
-            self.work_q.task_done()
+            work_q.task_done()
             log.info("{} - task '{}' completed".format(host.name, task.name))
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
-        self.connectors_q = queue.Queue()
-        self.work_q = queue.Queue()
+        connectors_q = queue.Queue()
+        work_q = queue.Queue()
         result = AggregatedResult(task.name)
         # enqueue hosts in connectors queue
         for host in hosts:
-            self.connectors_q.put(
+            connectors_q.put(
                 (task.copy(), host, {"connection_retry": 0, "task_retry": 0}, result)
             )
         # start connectors threads
         connector_threads = []
         for i in range(self.num_connectors):
-            t = threading.Thread(target=self.connector, args=())
+            t = threading.Thread(target=self.connector, args=(connectors_q, work_q))
             t.start()
             connector_threads.append(t)
         # start worker threads
         worker_threads = []
         for i in range(self.num_workers):
-            t = threading.Thread(target=self.worker, args=())
+            t = threading.Thread(target=self.worker, args=(connectors_q, work_q))
             t.start()
             worker_threads.append(t)
         # wait until all hosts completed task or timeout reached
@@ -307,16 +307,18 @@ class RetryRunner:
                 break
             time.sleep(0.1)
         # block until all queues empty
-        self.connectors_q.join()
-        self.work_q.join()
+        connectors_q.join()
+        work_q.join()
         # stop connector threads
         for i in range(self.num_connectors):
-            self.connectors_q.put(None)
+            connectors_q.put(None)
         for t in connector_threads:
             t.join()
         # stop worker threads
         for i in range(self.num_workers):
-            self.work_q.put(None)
+            work_q.put(None)
         for t in worker_threads:
             t.join()
+        # delete queues and threads
+        del(connectors_q, work_q, connector_threads, worker_threads)
         return result
