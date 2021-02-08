@@ -25,7 +25,5 @@ def ResultSerializer(nr_results, add_details=False):
                 }
             # form results for the rest of tasks
             else:
-                ret[hostname][i.name] = (
-                    {"exception": i.exception} if i.failed else i.result
-                )
+                ret[hostname][i.name] = i.result
     return ret
