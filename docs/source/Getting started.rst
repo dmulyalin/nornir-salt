@@ -82,7 +82,8 @@ Sample code to use RetryRunner, DictInventory and ResultSerializer plugins::
     # run grouped tasks
     result2 = NornirObj.run(
         task=_task_group_netmiko_send_commands,
-        commands=["show clock", "show run | inc hostname"]
+        commands=["show clock", "show run | inc hostname"],
+        connection_name="netmiko"
     )
     
     # run another single task
