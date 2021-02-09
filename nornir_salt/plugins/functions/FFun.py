@@ -12,6 +12,10 @@ Filtering order::
 
 .. note:: If multiple filters provided, filtered hosts must pass all checks - ``AND`` logic.
 
+
+FFun filters overview
+=====================
+
 FO - Filter Object
 ------------------
 
