@@ -1,17 +1,75 @@
+"""
+FindString
+##########
+
+Function to search for regex pattern in hosts' output, similar to network devices include/match pipe statements.
+
+FindString Sample Usage
+=======================
+
+Example invoking FindString function::
+
+    import pprint
+    from nornir import InitNornir
+    from nornir_netmiko import netmiko_send_command
+    from nornir_salt.plugins.functions import ResultSerializer, FindString
+    
+    nr = InitNornir(config_file="config.yaml")
+    
+    result = NornirObj.run(
+        task=netmiko_send_command,
+        command_string="show run"
+    )
+    
+    result_dictionary = ResultSerializer(result)
+    
+    filtered_result = FindString(result_dictionary, pattern="interface \S+")
+    
+    pprint.pprint(filtered_result)
+    
+    # prints:
+    #
+    # {'IOL1': {'show run': 'interface Loopback0\\n'
+    #                       'interface Loopback100\\n'
+    #                       'interface Ethernet0/0\\n'
+    #                       'interface Ethernet0/0.102\\n'
+    #                       'interface Ethernet0/0.107\\n'
+    #                       'interface Ethernet0/0.2000\\n'
+    #                       'interface Ethernet0/1\\n'
+    #                       'interface Ethernet0/2\\n'
+    #                       'interface Ethernet0/3'},
+    #  'IOL2': {'show run': 'interface Loopback0\\n'
+    #                       'interface Ethernet0/0\\n'
+    #                       'interface Ethernet0/0.27\\n'
+    #                       'interface Ethernet0/0.37\\n'
+    #                       'interface Ethernet0/0.107\\n'
+    #                       'interface Ethernet0/0.117\\n'
+    #                       'interface Ethernet0/0.2000\\n'
+    #                       'interface Ethernet0/1\\n'
+    #                       'interface Ethernet0/2\\n'
+    #                       'interface Ethernet0/3'}}
+
+FindString returns
+==================
+
+Returns updated ResultSerializer dictionary, where result fields contains
+only lines matched by pattern.
+
+FindString reference
+====================
+
+.. autofunction:: nornir_salt.plugins.functions.FindString.FindString
+"""
+
 from typing import Dict
 from collections import deque
 import re
 
 def FindString(nr_results: Dict, pattern: str, before: int = 0):
     """
-    Function to search for regex pattern in hosts' output.
-
     :param nr_results: Dictionary produced by ResultSerializer function.
     :param pattern: regular expression pattern to search for
     :param before: number of lines before match to include in results
-
-    Returns updated results dictionary, where results field contains
-    only lines matched by pattern.
     """
     regex = re.compile(str(pattern))
 

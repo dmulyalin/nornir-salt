@@ -1,36 +1,55 @@
 """
-DictInventory is an inventory plugin that loads data from Python 
-dictionaries.
+DictInventory plugin
+####################
 
-Installation::
-
-    pip install nornir3-dictinventory
-
-Args:
-
-  hosts: dictionary with hosts details
-  groups: dictionary with groups data
-  defaults: dictionary with defaults data
+DictInventory is an inventory plugin that loads data from Python dictionaries.
   
-Usage::
+DictInventory sample usage
+==========================
 
+Need to instruct Nornir to use DictInventory plugin on instantiation::
+
+    import yaml
     from nornir import InitNornir
-    from nornir.core.plugins.inventory import InventoryPluginRegister
-    from DictInventory import DictInventory
-
-    InventoryPluginRegister.register("DictInventory", DictInventory)
-
-    nr = InitNornir(
+    
+    inventory_data = '''
+    hosts:
+      R1:
+        hostname: 192.168.1.151
+        platform: ios
+        groups: [lab]
+      R2:
+        hostname: 192.168.1.153
+        platform: ios
+        groups: [lab]
+      R3:
+        hostname: 192.168.1.154
+        platform: ios
+        groups: [lab]
+    
+    groups:
+      lab:
+        username: cisco
+        password: cisco
+    '''
+    
+    inventory_dict = yaml.safe_load(inventory_data)
+    
+    NornirObj = InitNornir(
         inventory={
             "plugin": "DictInventory",
             "options": {
-                "hosts": hosts_dict,
-                "groups": groups_dict,
-                "defaults": defaults_dict,
+                "hosts": inventory_dict["hosts"],
+                "groups": inventory_dict["groups"],
+                "defaults": inventory_dict.get("defaults", {})
             }
-        },
+        }
     )
 
+DictInventory reference
+=======================
+
+.. autoclass:: nornir_salt.plugins.inventory.DictInventory.DictInventory
 """
 import logging
 from typing import Any, Dict, Type
@@ -98,7 +117,13 @@ def _get_inventory_element(
 
 
 class DictInventory:
-    
+    """
+    DictInventory class to instantiate inventory plugin from.
+
+    :param hosts: dictionary with hosts data
+    :param groups: dictionary with groups data
+    :param defaults: dictionary with defaults data
+    """
     def __init__(self, hosts: Dict, groups: Dict, defaults: Dict) -> None:
         self.hosts = hosts
         self.groups = groups
