@@ -12,10 +12,3 @@ Welcome to nornir-salt's documentation!
    Runner Plugins
    Task Plugins
    Functions
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
