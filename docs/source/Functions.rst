@@ -12,3 +12,5 @@ and used accordingly.
 .. automodule:: nornir_salt.plugins.functions.FindString
 
 .. automodule:: nornir_salt.plugins.functions.HostsKeepalive
+
+.. automodule:: nornir_salt.plugins.functions.ToFile
