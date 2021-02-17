@@ -7,21 +7,21 @@ Function to save provided data to file.
 ``tf`` attribute supports ``time.strftime`` directives, if ``tf_per_host``
 is True supports ``host_name`` directive as well, for example::
     
-    ``/path/to/dir/output_%B_%d_%H_%M_%S.txt``
-    ``/path/to/dir/output_{host_name}-%B_%d_%H_%M_%S.txt``
-    ``/path/to/{host_name}/output_%B_%d_%H_%M_%S.txt``
+    /path/to/dir/output_%B_%d_%H_%M_%S.txt
+    /path/to/dir/output_{host_name}-%B_%d_%H_%M_%S.txt
+    /path/to/{host_name}/output_%B_%d_%H_%M_%S.txt
     
 Supported ``tf_format`` values:
 
 * ``raw`` - converts data to string appending newline, does not do any formatting
 * ``pprint`` - uses ``pprint.pformat`` function to format data to string
 * ``json`` - formats data to JSON format
-* ``yaml`` - formats data to YAML fromat
+* ``yaml`` - formats data to YAML format
 
 ToFile Sample Usage
 ===================
 
-Code to demonstrate how to invoke ToFile::
+Code to demonstrate how to invoke ``ToFile`` function::
 
     from nornir import InitNornir
     from nornir_netmiko import netmiko_send_command
