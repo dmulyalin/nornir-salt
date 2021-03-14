@@ -1,0 +1,11 @@
+def fun_1(result):
+    ret =[]
+
+    if "7.7.7.8" not in result.result:
+        ret.append({
+            "error": "Server 7.7.7.8 not in config",
+            "result": "FAIL",
+            "success": False
+        })
+    
+    return ret

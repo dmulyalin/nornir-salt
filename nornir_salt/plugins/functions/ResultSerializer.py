@@ -102,12 +102,17 @@ For example::
                                           'exception': 'None',
                                           'failed': False,
                                           'result': 'hostname IOL2'}}}
-										  
+                                          
 ResultSerializer reference
 ==========================
 
 .. autofunction:: nornir_salt.plugins.functions.ResultSerializer.ResultSerializer
 """
+
+# list of known group tasks to skip them
+skip_tasks = [
+    "netmiko_send_commands"
+]
 
 def ResultSerializer(nr_results, add_details=False):
     """    
@@ -119,8 +124,11 @@ def ResultSerializer(nr_results, add_details=False):
     for hostname, results in nr_results.items():
         ret[hostname] = {}
         for i in results:
-            # skip task groups such as _task_foo_bar
+            # skip group tasks such as _task_foo_bar
             if i.name.startswith("_"):
+                continue
+            # skip known group tasks as they do not contain results
+            elif i.name in skip_tasks:
                 continue
             # handle errors info passed from within tasks
             elif i.host.get("exception"):

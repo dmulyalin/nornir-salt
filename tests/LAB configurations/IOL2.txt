@@ -1,0 +1,192 @@
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname IOL2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition MGMT
+ rd 1:1
+ !
+ address-family ipv4
+ exit-address-family
+!
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+aaa authorization exec default local
+!
+!
+!
+!
+!
+aaa session-id common
+!
+!
+!
+clock timezone EET 2 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab.local
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+username cisco privilege 15 password 0 cisco
+username nornir privilege 15 secret 5 $1$NtwQ$MHvyDZZg43JifMFYy7eas/
+!
+redundancy
+!
+lldp run
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ description Routing Loopback
+ ip address 10.0.0.7 255.255.255.255
+ ip ospf 1 area 0
+ ipv6 address 2001::7/128
+!
+interface Ethernet0/0
+ description Main Interface for L3 features testing
+ no ip address
+ duplex auto
+!
+interface Ethernet0/0.27
+ description to_vIOS1_Gi0/0.27
+ encapsulation dot1Q 27
+ ip address 10.1.27.7 255.255.255.0
+ ipv6 address 2001:27::7/64
+!
+interface Ethernet0/0.37
+ description to_CSR1_Gig2.37
+ encapsulation dot1Q 37
+ ip address 10.1.37.7 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ ipv6 address 2001:37::7/64
+!
+interface Ethernet0/0.107
+ description to_IOL1_Eth0/0.107
+ encapsulation dot1Q 107
+ ip address 10.1.107.7 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ ipv6 address 2001:107::7/64
+!
+interface Ethernet0/0.117
+ description to_IOL3_Eth0/0.117
+ encapsulation dot1Q 117
+ ip address 10.1.117.7 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ ipv6 address 2001:117::7/64
+!
+interface Ethernet0/0.2000
+ description Inband Management
+ encapsulation dot1Q 2000
+ vrf forwarding MGMT
+ ip address 192.168.217.7 255.255.255.0
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+ duplex auto
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+ duplex auto
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+ duplex auto
+!
+router ospf 1
+ router-id 10.0.0.7
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route vrf MGMT 0.0.0.0 0.0.0.0 192.168.217.1 name inband_management
+!
+logging host 1.1.1.1
+logging host 1.1.1.2
+logging host 2.2.2.1
+ipv6 ioam timestamp
+!
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ transport input telnet ssh
+!
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+!
+end

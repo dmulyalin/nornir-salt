@@ -14,3 +14,5 @@ and used accordingly.
 .. automodule:: nornir_salt.plugins.functions.HostsKeepalive
 
 .. automodule:: nornir_salt.plugins.functions.ToFile
+
+.. automodule:: nornir_salt.plugins.functions.TestFuncs
