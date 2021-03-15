@@ -2,7 +2,21 @@
 TTP Parser
 ##########
 
-TBD
+TTP (Template Text Parser) is a module for parsing semi-structured 
+text. This function can iterate over and parse results text output,
+transforming them in structured data.
+
+Dependencies:
+
+* `TTP module <https://pypi.org/project/ttp/>`_ to perform text parsing
+
+Sample usage::
+
+    from nornir_salt import ParseTTP
+    
+    
+    
+.. autofunction:: nornir_salt.plugins.functions.ParseTTP.ParseTTP
 """
 import logging
 import traceback
@@ -29,6 +43,17 @@ def ParseTTP(
     This function takes task results object and parse individual task
     results.
     
+    :param ttp_template: (str) TTP template text
+    :param result: ``nornir.core.task.AggregatedResult`` object with 
+        task's results
+    :param nornir: reference to Nornir object
+    :param task: (str) name or index of task to parse results for
+    :param ttp_kwargs: (dict) arguments to pass onto TTP object instantiation
+    :param res_kwargs: (dict) arguments to use with TTP parser object
+        ``result`` method
+        
+    .. warning:: ParseTTP takes result object and substitutes task's output
+        with parsing results, original output discarded. 
     """
     if not HAS_TTP:
         log.error("ParseTTP error - seems failed to import TTP library")

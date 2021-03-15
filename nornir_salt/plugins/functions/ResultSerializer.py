@@ -30,7 +30,16 @@ Code to demonstrate how to invoke ResultSerializer::
 ResultSerializer returns
 ========================
 
-If ``add_details`` is False returns dictionary::
+ResultSerializer capable of returning two different structures, each one 
+can contain additional task details. The difference between structures is
+in the way how tasks are represented. 
+
+First structure uses dictionary keyed by task name, where values are 
+task's results.
+
+Second structure type uses list to store task results.
+
+If ``add_details`` is False and ``to_dict`` is True returns dictionary::
 
     {
         "hostname_1": {
@@ -50,7 +59,8 @@ For instance::
      'IOL2': {'show clock': '*00:55:21.234 EET Tue Feb 9 2021',
                'show run | inc hostname': 'hostname IOL2'}}
               
-If ``add_details`` is True returns dictionary with additional details::
+If ``add_details`` is True and ``to_dict`` is True returns dictionary 
+with additional details::
 
     {
         "hostname_1": {
@@ -103,6 +113,52 @@ For example::
                                           'failed': False,
                                           'result': 'hostname IOL2'}}}
                                           
+If ``add_details`` is False and ``to_dict`` is False returns dictionary::
+
+    {
+        "hostname_1": [
+            {"name": "task_name_1", "result": result},
+            {"name": "task_name_2", "result": result}
+        ],
+        "hostname_2": [
+            {"name": "task_name_1", "result": result},
+            {"name": "task_name_2", "result": result}
+        ]
+    }
+    
+If ``add_details`` is True and ``to_dict`` is False returns dictionary::
+
+    {
+        "hostname_1": [
+            {
+                "name": "task_name_1",
+                "changed": False,
+                "diff: "",
+                "exception": None,
+                "failed": False,
+                "result": "result string"                
+            },
+            {
+                "name": "task_name_2",
+                "changed": False,
+                "diff: "",
+                "exception": None,
+                "failed": False,
+                "result": "result string"                      
+            }
+        ],
+        "hostname_2": [
+            {
+                "name": "task_name_1",
+                "changed": False,
+                "diff: "",
+                "exception": None,
+                "failed": False,
+                "result": "result string"                
+            }
+        ]
+    }      
+                    
 ResultSerializer reference
 ==========================
 
@@ -114,35 +170,75 @@ skip_tasks = [
     "netmiko_send_commands"
 ]
 
-def ResultSerializer(nr_results, add_details=False):
+def ResultSerializer(nr_results, add_details=False, to_dict=True):
     """    
     :param nr_results: Nornir AggregatedResult results object
     :param add_details: boolean to indicate if results should contain more info, default
         is False
+    :param to_dict: (bool) default is True, forms nested dictionary structure, if False
+        forms results in a list.
     """
     ret = {}
-    for hostname, results in nr_results.items():
-        ret[hostname] = {}
-        for i in results:
-            # skip group tasks such as _task_foo_bar
-            if i.name.startswith("_"):
-                continue
-            # skip known group tasks as they do not contain results
-            elif i.name in skip_tasks:
-                continue
-            # handle errors info passed from within tasks
-            elif i.host.get("exception"):
-                ret[hostname][i.name] = {"exception": i.host["exception"]}
-            # add results details if requested to do so
-            elif add_details:
-                ret[hostname][i.name] = {
-                    "diff": i.diff,
-                    "changed": i.changed,
-                    "result": i.result,
-                    "failed": True if i.exception else i.failed,
-                    "exception": str(i.exception),
-                }
-            # form results for the rest of tasks
-            else:
-                ret[hostname][i.name] = i.result
+    
+    # form nested dictionary structure
+    if to_dict:
+        for hostname, results in nr_results.items():
+            ret[hostname] = {}
+            for i in results:
+                # skip group tasks such as _task_foo_bar
+                if i.name.startswith("_"):
+                    continue
+                # skip known group tasks as they do not contain results
+                elif i.name in skip_tasks:
+                    continue
+                # handle errors info passed from within tasks
+                elif i.host.get("exception"):
+                    ret[hostname][i.name] = {"exception": i.host["exception"]}
+                # add results details if requested to do so
+                elif add_details:
+                    ret[hostname][i.name] = {
+                        "diff": i.diff,
+                        "changed": i.changed,
+                        "result": i.result,
+                        "failed": True if i.exception else i.failed,
+                        "exception": str(i.exception),
+                    }
+                # form results for the rest of tasks
+                else:
+                    ret[hostname][i.name] = i.result
+                    
+    # form nested list of results
+    else:
+        for hostname, results in nr_results.items():
+            ret[hostname] = []
+            for i in results:
+                # skip group tasks such as _task_foo_bar
+                if i.name.startswith("_"):
+                    continue
+                # skip known group tasks as they do not contain results
+                elif i.name in skip_tasks:
+                    continue
+                # handle errors info passed from within tasks
+                elif i.host.get("exception"):
+                    ret[hostname].append({
+                        "name": i.name,
+                        "exception": i.host["exception"]
+                    })
+                # add results details if requested to do so
+                elif add_details:
+                    ret[hostname].append({
+                        "name": i.name,
+                        "diff": i.diff,
+                        "changed": i.changed,
+                        "result": i.result,
+                        "failed": True if i.exception else i.failed,
+                        "exception": str(i.exception),
+                    })
+                # form results for the rest of tasks
+                else:
+                    ret[hostname].append({
+                        "name": i.name,
+                        "result": i.result
+                    })
+                    
     return ret

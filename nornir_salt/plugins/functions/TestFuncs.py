@@ -353,6 +353,7 @@ Example::
 import logging
 import re
 import traceback
+from .ResultSerializer import ResultSerializer
 
 log = logging.getLogger(__name__)
 
@@ -423,6 +424,7 @@ def _run_test(
         test_type,
         task=None,
         per_task=True,
+        serialize=False,
         **kwargs
     ):
     """
@@ -439,13 +441,19 @@ def _run_test(
     :param test_type: (str) type of test running
     :param per_task: (bool) default is True, runs on all host's 
         results if False
+    :param serialize: (bool) default False, if True will serialize 
+        results to dictionary using ``ResultSerializer`` function 
+        before processing results with test function
     :return: list of dictionaries with test results
     """
     ret = []
     
+    # check if need to serialize results to dictionary
+    if serialize:
+        result = ResultSerializer(result, add_details=True)
+        
     # iterate over hosts results and run check
     for hostname, results in result.items():     
-        print(type(results))
         task_result = "_not_found_"
         
         # check if should use host's results as is
@@ -453,14 +461,24 @@ def _run_test(
             task_result = results
         # get task results by task name
         elif isinstance(task, str):
-            for i in results:
-                if i.name == task:
-                    task_result = i
-                    break
+            if serialize:
+                task_result = results[task]
+            else:
+                for i in results:
+                    if i.name == task:
+                        task_result = i
+                        break
         # get task results by task index
         elif isinstance(task, int):
-            task_result=results[task]            
-            
+            if serialize:
+                # this will only work with python3.6 and higher
+                # as it depends on insertion-order preservation 
+                # nature of dictionary objects
+                key = list(results.keys())[task]
+                task_result = results[key]
+            else:
+                task_result=results[task]
+                
         # form return datum dictionary
         ret_datum = ret_datum_template.copy()
         ret_datum["host"] = hostname
@@ -539,11 +557,11 @@ def ContainsTest(
     def _contains(task_result, pattern, use_re, criteria, **kwargs):
         ret = {"criteria": criteria}
         if use_re:
-            if not re.search(pattern, task_result.result):
+            if not re.search(pattern, task_result["result"]):
                 ret["result"] = "FAIL"
                 ret["success"] = False
                 ret["error"] = "Criteria regex not in output"    
-        elif pattern not in task_result.result:
+        elif pattern not in task_result["result"]:
             ret["result"] = "FAIL"
             ret["success"] = False        
             ret["error"] = "Criteria pattern not in output"
@@ -552,11 +570,11 @@ def ContainsTest(
     def _not_contains(task_result, pattern, use_re, criteria, **kwargs):
         ret = {"criteria": criteria}
         if use_re:
-            if re.search(pattern, task_result.result):
+            if re.search(pattern, task_result["result"]):
                 ret["result"] = "FAIL"
                 ret["success"] = False        
                 ret["error"] = "Criteria regex in output"    
-        elif pattern in task_result.result:
+        elif pattern in task_result["result"]:
             ret["result"] = "FAIL"
             ret["success"] = False        
             ret["error"] = "Criteria pattern in output"
@@ -571,7 +589,8 @@ def ContainsTest(
         test_function=_not_contains if revert else _contains,
         test_type="not contains" if revert else "contains",
         use_re=use_re,
-        criteria=criteria
+        criteria=criteria,
+        serialize=True
     )
 
 
@@ -608,7 +627,7 @@ def ContainsLinesTest(
         for line in lines_list:
             if not line.strip():
                 continue
-            if line not in task_result.result:
+            if line not in task_result["result"]:
                 ret["result"] = "FAIL"
                 ret["success"] = False    
                 ret["error"] = "Line not in output"
@@ -622,7 +641,7 @@ def ContainsLinesTest(
         for line in lines_list:
             if not line.strip():
                 continue
-            if line in task_result.result:
+            if line in task_result["result"]:
                 ret["result"] = "FAIL"
                 ret["success"] = False    
                 ret["error"] = "Line in output"
@@ -637,7 +656,8 @@ def ContainsLinesTest(
         test_name=test_name,
         tabulate=tabulate,
         test_function=_not_contains_lines if revert else _contains_lines,
-        test_type="not contains lines" if revert else "contains lines"
+        test_type="not contains lines" if revert else "contains lines",
+        serialize=True
     )
     
     
@@ -671,7 +691,7 @@ def EqualTest(
     
     def _equal(task_result, pattern, criteria, **kwargs):
         ret = {"criteria": criteria}
-        if pattern != task_result.result:
+        if pattern != task_result["result"]:
             ret["result"] = "FAIL"
             ret["success"] = False    
             ret["error"] = "Criteria pattern and output not equal"
@@ -679,7 +699,7 @@ def EqualTest(
 
     def _not_equal(task_result, pattern, criteria, **kwargs):
         ret = {"criteria": criteria}
-        if pattern == task_result.result:
+        if pattern == task_result["result"]:
             ret["result"] = "FAIL"
             ret["success"] = False    
             ret["error"] = "Criteria pattern and output are equal"
@@ -693,7 +713,8 @@ def EqualTest(
         tabulate=tabulate,
         test_function=_not_equal if revert else _equal,
         test_type="not equal" if revert else "equal",
-        criteria=criteria
+        criteria=criteria,
+        serialize=True
     )
     
 
@@ -746,16 +767,16 @@ def CerberusTest(
     def _cerberus_test(task_result, schema, validator_engine, **kwargs):
         ret = {}
         # validate results as is if they are dictionary
-        if isinstance(task_result.result, dict):
-            res = validator_engine.validate(document=task_result.result, schema=schema)
+        if isinstance(task_result["result"], dict):
+            res = validator_engine.validate(document=task_result["result"], schema=schema)
             if not res:
                 ret["result"] = "FAIL"
                 ret["success"] = False    
                 ret["error"] = validator_engine.errors
         # iterate over result items
-        elif isinstance(task_result.result, list):
+        elif isinstance(task_result["result"], list):
             ret = []
-            for item in task_result.result:
+            for item in task_result["result"]:
                 if not isinstance(item, dict):
                     continue
                 res = validator_engine.validate(document=item, schema=schema)
@@ -775,13 +796,15 @@ def CerberusTest(
         tabulate=tabulate,
         test_function=_cerberus_test,
         test_type="cerberus",
-        validator_engine=validator_engine
+        validator_engine=validator_engine,
+        serialize=True
     )    
  
 
 def _load_custom_fun_from_text(function_text, function_name):
     """
-    Helper function to load custom function code from text
+    Helper function to load custom function code from text using
+    Python ``exec`` built-in function
     """
     assert function_name in function_text
         
@@ -813,6 +836,7 @@ def CustomFunctionTest(
         tabulate={},
         test_type="custom",
         per_task=True,
+        serialize=False,
         **kwargs
     ):
     """
@@ -832,12 +856,9 @@ def CustomFunctionTest(
     :param test_type: (str) description of check type performed
     :param per_task: (bool) default is True, runs on all host's results if False
     :param kwargs: additional ``**kwargs`` to pass on to custom function 
-    
-    Notes on ``per_task`` argument. If ``per_task`` set to True (default),
-    only results (``nornir.core.task.Result`` object) for ``task`` specified 
-    passed to test function, if ``per_task`` is False all host's results 
-    (``nornir.core.task.MultiResult`` object) passed to test function. That 
-    is useful when access to all host's results required.
+    :param serialize: (bool) default False, if True will serialize 
+        results to dictionary using ``ResultSerializer`` function 
+        before passing results to test function
     
     .. warning:: ``function_file`` and ``function_text`` uses ``exec`` function 
         to compile python code, using test functions from untrusted sources can 
@@ -845,10 +866,19 @@ def CustomFunctionTest(
         
     Custom functions should accept one positional argument to contain results
     to work with, any additional arguments can be accepted and passed using 
-    ``CustomFunctionTest`` function call. 
+    ``CustomFunctionTest`` function call. If ``serialize`` argument was False,
+    ``result`` will contain ``nornir.core.task.Result`` object, if ``serialize`` 
+    was True, ``result`` will contain dictionary with task results produced
+    by ``ResultSerializer`` function.
+    
+    Notes on ``per_task`` argument. If ``per_task`` set to True (default),
+    only results (``nornir.core.task.Result`` object) for ``task`` specified 
+    passed to test function, if ``per_task`` is False all host's results 
+    (``nornir.core.task.MultiResult`` object) passed to test function. That 
+    is useful when access to all host's results required.
     
     Custom function should return either a dictionary or a list of dictionaries, 
-    in latter cases each list item will be added to overall results individually.
+    in latter case, each list item added to overall results individually.
     
     Results dictionary should contain ``error``, ``result`` and ``success`` keys, 
     other keys can be included as well.
@@ -900,6 +930,7 @@ def CustomFunctionTest(
         test_function=test_function,
         test_type=test_type,
         per_task=per_task,
+        serialize=serialize,
         **kwargs
     )    
     

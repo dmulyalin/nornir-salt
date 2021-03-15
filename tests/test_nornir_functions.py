@@ -957,3 +957,113 @@ Loopback0                  10.0.0.7        YES NVRAM  up                    up
                                 'show run': '--\n vrf forwarding MGMT\n ip address 192.168.217.7 255.255.255.0'}}
               
 # test_find_string_function_before_1()
+
+@skip_if_no_nornir
+def test_result_serializer_to_dict_with_details():
+    output = nr.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """
+        },
+        name="check ntp config"
+    )
+    serialized_output = ResultSerializer(output, add_details=True)
+    assert serialized_output == {'IOL1': {'check ntp config': {'changed': False,
+                                                    'diff': '',
+                                                    'exception': 'None',
+                                                    'failed': False,
+                                                    'result': '\n'
+                                                              'ntp server 7.7.7.8\n'
+                                                              'ntp server 7.7.7.7\n'
+                                                              '        '}},
+                      'IOL2': {'check ntp config': {'changed': False,
+                                                    'diff': '',
+                                                    'exception': 'None',
+                                                    'failed': False,
+                                                    'result': '\nntp server 7.7.7.7\n        '}}}
+                               
+# test_result_serializer_to_dict_with_details()
+
+@skip_if_no_nornir
+def test_result_serializer_to_dict_no_details():
+    output = nr.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """
+        },
+        name="check ntp config"
+    )
+    serialized_output = ResultSerializer(output, add_details=False)
+    assert serialized_output == {'IOL1': {'check ntp config': '\n'
+                                                   'ntp server 7.7.7.8\n'
+                                                   'ntp server 7.7.7.7\n'
+                                                   '        '},
+                      'IOL2': {'check ntp config': '\nntp server 7.7.7.7\n        '}}
+                               
+# test_result_serializer_to_dict_no_details()
+
+@skip_if_no_nornir
+def test_result_serializer_to_list_with_details():
+    output = nr.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """
+        },
+        name="check ntp config"
+    )
+    serialized_output = ResultSerializer(output, add_details=True, to_dict=False)
+    assert serialized_output == {'IOL1': [{'changed': False,
+                                'diff': '',
+                                'exception': 'None',
+                                'failed': False,
+                                'name': 'check ntp config',
+                                'result': '\nntp server 7.7.7.8\nntp server 7.7.7.7\n        '}],
+                      'IOL2': [{'changed': False,
+                                'diff': '',
+                                'exception': 'None',
+                                'failed': False,
+                                'name': 'check ntp config',
+                                'result': '\nntp server 7.7.7.7\n        '}]}
+                      
+# test_result_serializer_to_list_with_details()
+
+@skip_if_no_nornir
+def test_result_serializer_to_list_no_details():
+    output = nr.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """
+        },
+        name="check ntp config"
+    )
+    serialized_output = ResultSerializer(output, add_details=False, to_dict=False) 
+    assert serialized_output == {'IOL1': [{'name': 'check ntp config',
+                                'result': '\nntp server 7.7.7.8\nntp server 7.7.7.7\n        '}],
+                      'IOL2': [{'name': 'check ntp config',
+                                'result': '\nntp server 7.7.7.7\n        '}]}
+                                
+# test_result_serializer_to_list_no_details()

@@ -16,3 +16,5 @@ and used accordingly.
 .. automodule:: nornir_salt.plugins.functions.ToFile
 
 .. automodule:: nornir_salt.plugins.functions.TestFuncs
+
+.. automodule:: nornir_salt.plugins.functions.ParseTTP
