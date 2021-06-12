@@ -12,15 +12,13 @@ Code to demonstrate how to use ``ToFileProcessor`` plugin::
     from nornir import InitNornir
     from nornir_netmiko import netmiko_send_command
     from nornir_salt import ToFileProcessor
-    
+
     nr = InitNornir(config_file="config.yaml")
-    
+
     nr_with_processor = nr.with_processors([
-        ToFileProcessor(
-            tf="/tmp/31/{host_name}/cfg-%B_%d_%H_%M_%S.txt"
-        )
+        ToFileProcessor(tf="config", base_url="./Output/")
     ])
-    
+
     nr_with_processor.run(
         task=netmiko_send_command,
         command_string="show run"
@@ -36,6 +34,8 @@ import time
 import os
 import json
 import pprint
+import traceback
+
 try:
     import yaml
     HAS_YAML = True
@@ -44,8 +44,6 @@ except ImportError:
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
-from nornir_salt.plugins.functions import ResultSerializer
-
 
 log = logging.getLogger(__name__)
 
@@ -75,13 +73,8 @@ formatters = {
     "raw": _to_raw,
     "json": _to_json,
     "pprint": _to_pprint,
-    "yaml": _to_yaml    
+    "yaml": _to_yaml
 }
-
-
-# --------------------------------------------------------------------------------
-# main ToFile function
-# --------------------------------------------------------------------------------
 
 
 def _write(f, data, tf_format):
@@ -94,76 +87,77 @@ def _write(f, data, tf_format):
         log.error("ToFile, unsupported format '{}'; supported '{}'".format(
                 tf_format, list(formatters.keys())
             )
-        )        
-    
-    
+        )
+
+
 class ToFileProcessor:
     """
-    ToFileProcessor can save task execution results to file.
-    
-    :param tf: (str) OS path to file where to save results
+    ToFileProcessor can save task execution results to file on a per host basis.
+    If multiple tasks present, results of all of them saved in same file.
+
+    :param tf: (str) alias name of the file content
     :param tf_format: (str) formatter name to use on results before saving them
-    :param add_details: (bool) maps to `ResultSerializer`` ``add_details`` attribute
-    :param to_dict: (bool) maps to `ResultSerializer`` ``to_dict`` attribute
-    :param base_url: (str) OS path to folder where to save files, concatenates with 
-        ``tf`` attribute to form full path, default is "/var/nornir-salt/"
-    :param tf_alias: (str) descriptive name of the file to reference it using diff processor
-    
-    ``tf`` attribute supports ``time.strftime`` directives, supports ``host_name`` 
-    directive as well, for example::
-        
-        /path/to/dir/output_%B_%d_%H_%M_%S.txt
-        /path/to/dir/output_{host_name}-%B_%d_%H_%M_%S.txt
-        /path/to/{host_name}/output_%B_%d_%H_%M_%S.txt
-    
-    If ``{host_name}`` string present in ``tf`` attribute, results saved on 
-    a per-host basis. Otherwise, results saved as is using provided ``tf_format`` 
-    formatter after serializing results with ``ResultSerializer``.
-    
+    :param base_url: (str) OS path to folder where to save files, default "/var/nornir-salt/"
+    :param max_files: (int) default is 5, maximum number of file for given ``tf`` alias
+
     Supported ``tf_format`` values:
-    
+
     * ``raw`` - (default) converts data to string appending newline to the end
     * ``pprint`` - uses ``pprint.pformat`` function to format data to string
     * ``json`` - formats data to JSON format
     * ``yaml`` - formats data to YAML format
+
+    Files saved under ``base_url`` location, where individual filename formed using
+    string::
+
+        {timestamp}__{hostname}__{tf}.{ext}
+
+    Where:
+
+    * timestamp - ``%d_%B_%Y_%H_%M_%S`` time formatted string, e.g. "12_June_2021_21_48_11"
+    * hostname - ``name`` attribute of host
+    * tf - value of ``tf`` attribute
+    * ext - file extension, json, yaml or txt depending on ``tf_format``
+
+    In addition, ``tf_aliases.json`` file created under ``base_url`` to track files created
+    using dictionary structure of ``{tf: {hostname: [filenames]}}``. ``tf_aliases.json``
+    used by ``DiffProcessor`` to retrieve previous results for the task.
     """
-    
+
     def __init__(
-        self, 
-        tf, 
-        tf_format="json", 
-        add_details=True, 
-        to_dict=True, 
+        self,
+        tf,
+        tf_format="raw",
         base_url="/var/nornir-salt/",
-        tf_alias=None
+        max_files=5
     ):
-        self.tf = tf if tf.startswith("/") else os.path.join(base_url, tf)
-        self.aliases_file = os.path.join(base_url, "tf_aliases.json")
-        self.aliases_data = {}
+        self.tf = tf
         self.tf_format = tf_format
-        self.add_details = add_details
-        self.to_dict = to_dict
-        self.tf_alias = tf_alias
-        
-        if self.tf_alias:
-            self._load_aliases()
-        
+        self.base_url = base_url
+        self.max_files = max(1, max_files)
+
+        self.timestamp = time.strftime("%d_%B_%Y_%H_%M_%S")
+        self.aliases_file = os.path.join(base_url, "tf_aliases.json")
+        self.aliases_data = {} # dictionary of {tf: {hostname: [filenames]}}
+
+        self._load_aliases()
+
     def _load_aliases(self):
         # create aliases file if does not exist
         if not os.path.exists(self.aliases_file):
             os.makedirs(os.path.dirname(self.aliases_file), exist_ok=True)
             with open(self.aliases_file, mode="w", encoding="utf-8") as f:
                 f.write(json.dumps({}))
-        
+
         # load aliases data
         with open(self.aliases_file, mode="r", encoding="utf-8") as f:
             self.aliases_data = json.loads(f.read())
-            
+
     def _dump_aliases(self):
         # save aliases data
         with open(self.aliases_file, mode="w", encoding="utf-8") as f:
-            _write(f, self.aliases_data, "json")      
-    
+            _write(f, self.aliases_data, "json")
+
     def task_started(self, task: Task) -> None:
         pass # ignore
 
@@ -173,46 +167,55 @@ class ToFileProcessor:
     def task_instance_completed(self, task: Task, host: Host, result: MultiResult) -> None:
         """ save to file on a per-host basis """
 
-        if "{host_name}" in self.tf:
-            host_filename = time.strftime(self.tf).format(host_name=host.name)
-            os.makedirs(os.path.dirname(host_filename), exist_ok=True)            
-            with open(host_filename, mode="w", encoding="utf-8") as f:
-                for i in result:
-                    exception = str(i.exception) if i.exception != None else i.host.get("exception", None)
-                    # check if need to skip this task results
-                    if hasattr(i, "skip_results") and i.skip_results is True and not exception:
-                        continue
-                    else:
-                        _write(f, i.result, self.tf_format)
-            # save alias
-            if self.tf_alias:
-                self.aliases_data.setdefault(self.tf_alias, {})
-                self.aliases_data[self.tf_alias].setdefault(host.name, [])
-                if not host_filename in self.aliases_data[self.tf_alias][host.name]:
-                    self.aliases_data[self.tf_alias][host.name].insert(0, host_filename)
-                
+        # form file name
+        if self.tf_format == "json":
+            ext="json"
+        elif self.tf_format == "yaml":
+            ext="yaml"
+        else:
+            ext="txt"
+
+        host_filename = "{timestamp}__{hostname}__{tf}.{ext}".format(
+            timestamp=self.timestamp,
+            hostname=host.name,
+            tf=self.tf,
+            ext=ext
+        )
+        host_filename = os.path.join(self.base_url, host_filename)
+
+        # save data to file
+        os.makedirs(os.path.dirname(host_filename), exist_ok=True)
+        with open(host_filename, mode="w", encoding="utf-8") as f:
+            for i in result:
+                # check if need to skip this task results
+                exception = str(i.exception) if i.exception != None else i.host.get("exception", None)
+                if hasattr(i, "skip_results") and i.skip_results is True and not exception:
+                    continue
+                else:
+                    _write(f, i.result, self.tf_format)
+
+        # save aliases data
+        self.aliases_data.setdefault(self.tf, {})
+        self.aliases_data[self.tf].setdefault(host.name, [])
+        if not host_filename in self.aliases_data[self.tf][host.name]:
+            self.aliases_data[self.tf][host.name].insert(0, host_filename)
+
+            # check if need to delete old files
+            if len(self.aliases_data[self.tf][host.name]) > self.max_files:
+                file_to_rm = self.aliases_data[self.tf][host.name].pop()
+                try:
+                    os.remove(file_to_rm)
+                except:
+                    log.error("nornir-salt:ToFileProcessor failed to remove file '{}':\n{}".format(
+                            file_to_rm, traceback.format_exc()
+                        )
+                    )
+
     def subtask_instance_started(self, task: Task, host: Host) -> None:
-        pass  # ignore subtasks
+        pass # ignore subtasks
 
     def subtask_instance_completed(self, task: Task, host: Host, result: MultiResult) -> None:
-        pass  # ignore subtasks
-        
+        pass # ignore subtasks
+
     def task_completed(self, task: Task, result: AggregatedResult) -> None:
-        """ save content of all hosts tasks to file """                
-               
-        if "{host_name}" not in self.tf:
-            data = ResultSerializer(result, add_details=self.add_details, to_dict=self.to_dict)
-            filename = time.strftime(self.tf)
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-            with open(filename, mode="w", encoding="utf-8") as f:
-                _write(f, data, self.tf_format)
-                
-            # save alias
-            if self.tf_alias:
-                self.aliases_data.setdefault(self.tf_alias, {"all": []})
-                if not filename in self.aliases_data[self.tf_alias]["all"]:
-                    self.aliases_data[self.tf_alias]["all"].insert(0, filename)
-                
-        # save alises to the file after task completion
-        if self.tf_alias:
-            self._dump_aliases()
+        self._dump_aliases()

@@ -1,6 +1,6 @@
 import setuptools
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 __author__ = "Denis Mulyalin"
 
 with open("README.md", "r") as f:

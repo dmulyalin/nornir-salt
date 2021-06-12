@@ -47,6 +47,7 @@ from .plugins.connections import NcclientPlugin
 # processors plugins
 from .plugins.processors import ToFileProcessor
 from .plugins.processors import TestsProcessor
+from .plugins.processors import DiffProcessor
 
 __all__ = (
     "ResultSerializer",
@@ -69,5 +70,6 @@ __all__ = (
     "scrapli_netconf_call",
     "ToFileProcessor",
     "TestsProcessor",
-    "TabulateFormatter"
+    "TabulateFormatter",
+    "DiffProcessor"
 )

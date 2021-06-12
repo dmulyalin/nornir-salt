@@ -1,8 +1,10 @@
 import sys
+import os
 import pprint
 import logging
 import yaml
 import pytest
+import time
 sys.path.insert(0,'..')
 
 try:
@@ -17,7 +19,7 @@ except ImportError:
 from nornir_salt import ResultSerializer
 from nornir_salt import DictInventory
 from nornir_salt import nr_test
-from nornir_salt.plugins.processors.TestsProcessor import ToFileProcessor
+from nornir_salt.plugins.processors.ToFileProcessor import ToFileProcessor
 
 
 logging.basicConfig(level=logging.ERROR)
@@ -81,6 +83,12 @@ InventoryPluginRegister.register("DictInventory", DictInventory)
 
 nr = init(lab_inventory_dict)
 
+def clean_up_folder():
+    # remove previous files and folder
+    if os.path.exists("./tofile_outputs/"):
+        for filen in os.listdir("./tofile_outputs/"):
+            os.remove("./tofile_outputs/" + filen)
+        os.rmdir("./tofile_outputs/")    
 
 # ----------------------------------------------------------------------
 # tests that need Nornir
@@ -88,6 +96,9 @@ nr = init(lab_inventory_dict)
 
 @skip_if_no_nornir
 def test_to_file():
+    clean_up_folder()
+        
+    # run test        
     nr_with_tests =nr.with_processors([
         ToFileProcessor(tf="config", base_url="./tofile_outputs/")   
     ])
@@ -104,5 +115,74 @@ ntp server 7.7.7.7
         },
         name="show run | inc ntp"
     )
-	
-test_to_file()
+    files = os.listdir("./tofile_outputs/")
+    assert "tf_aliases.json" in files, "tf_aliases.json not found"
+    for file in files:
+        if "tf_aliases.json" in file:
+            continue
+        assert "IOL1__config.txt" in file or "IOL2__config.txt" in file
+    
+# test_to_file()
+
+
+@skip_if_no_nornir
+def test_to_file_max_files():
+    clean_up_folder()
+        
+    # run test        
+    nr_with_tests = nr.with_processors([
+        ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)   
+    ])
+    output = nr_with_tests.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """
+        },
+        name="show run | inc ntp"
+    )
+    time.sleep(1)
+    nr_with_tests = nr.with_processors([
+        ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)   
+    ])
+    output = nr_with_tests.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """
+        },
+        name="show run | inc ntp"
+    )
+    time.sleep(1)
+    nr_with_tests = nr.with_processors([
+        ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)   
+    ])
+    output = nr_with_tests.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """
+        },
+        name="show run | inc ntp"
+    )
+    files = os.listdir("./tofile_outputs/")
+
+    assert "tf_aliases.json" in files, "tf_aliases.json not found"
+    assert len(files) == 5, "above max_files found in directory"
+        
+# test_to_file_max_files()
