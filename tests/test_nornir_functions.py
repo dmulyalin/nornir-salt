@@ -13,7 +13,7 @@ try:
     HAS_NORNIR = True
 except ImportError:
     HAS_NORNIR = False
-    
+
 from nornir_salt import FindString
 from nornir_salt import ResultSerializer
 from nornir_salt import DictInventory
@@ -30,7 +30,7 @@ logging.basicConfig(level=logging.ERROR)
 
 
 skip_if_no_nornir = pytest.mark.skipif(
-    HAS_NORNIR == False, 
+    HAS_NORNIR == False,
     reason="Failed to import all required Nornir modules and plugins"
 )
 skip_if_no_lab = None
@@ -45,12 +45,12 @@ hosts:
     hostname: 192.168.217.7
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
-    
+
 defaults: {}
 """
 lab_inventory_dict = yaml.safe_load(lab_inventory)
@@ -60,7 +60,7 @@ def init(opts):
     Initiate nornir by calling InitNornir()
     """
     global skip_if_no_lab
-    
+
     nr = InitNornir(
         logging={"enabled": False},
         runner={
@@ -75,20 +75,20 @@ def init(opts):
             }
         },
     )
-    
+
     ping_check = ResultSerializer(nr.run(tcp_ping))
     HAS_LAB = True
     for hostname, result in ping_check.items():
         if result['tcp_ping'][22] == False:
             HAS_LAB = False
-            
+
     skip_if_no_lab = pytest.mark.skipif(
-        HAS_LAB == False, 
+        HAS_LAB == False,
         reason="Failed connect to LAB"
     )
 
     return nr
-    
+
 InventoryPluginRegister.register("DictInventory", DictInventory)
 
 nr = init(lab_inventory_dict)
@@ -114,12 +114,12 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = ContainsTest(
-        output, 
+        output,
         task="check ntp config",
         test_name="Test NTP config",
         pattern="ntp server 7.7.7.8"
     )
-    # pprint.pprint(check_result)  
+    # pprint.pprint(check_result)
     assert check_result == [{'criteria': 'ntp server 7.7.7.8',
                              'error': None,
                              'host': 'IOL1',
@@ -136,8 +136,8 @@ ntp server 7.7.7.7
                              'task': 'check ntp config',
                              'test_name': 'Test NTP config',
                              'test_type': 'contains'}]
-    
-# test_contains_check_nr_test()
+
+# test_contains_check()
 
 @skip_if_no_nornir
 def test_contains_check_tabulate():
@@ -155,7 +155,7 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = ContainsTest(
-        output, 
+        output,
         task="check ntp config",
         test_name="Test NTP config",
         pattern="ntp server 7.7.7.8",
@@ -186,8 +186,8 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = ContainsTest(
-        output, 
-        test_name="check ntp config", 
+        output,
+        test_name="check ntp config",
         task="check ntp config",
         pattern="ntp server 7.7.7.8",
         tabulate={
@@ -199,7 +199,7 @@ ntp server 7.7.7.7
 ------  ----------------  --------
 IOL1    check ntp config  PASS
 IOL2    check ntp config  FAIL"""
-    
+
 # test_contains_check_tabulate_with_headers()
 
 
@@ -219,13 +219,13 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = ContainsTest(
-        output, 
+        output,
         task="check ntp config",
         test_name="Test NTP config",
         pattern="ntp server 7.7.7.8",
         revert=True
     )
-    # pprint.pprint(check_result)  
+    # pprint.pprint(check_result)
     assert check_result == [{'criteria': 'ntp server 7.7.7.8',
                              'error': 'Criteria pattern in output',
                              'host': 'IOL1',
@@ -242,7 +242,7 @@ ntp server 7.7.7.7
                              'task': 'check ntp config',
                              'test_name': 'Test NTP config',
                              'test_type': 'not contains'}]
-        
+
 # test_not_contains_check()
 
 
@@ -263,9 +263,9 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = ContainsLinesTest(
-        output, 
-        test_name="check ntp config", 
-        lines="ntp server 7.7.7.8\nntp server 7.7.7.7\nntp server 8.8.8.8"
+        output,
+        test_name="check ntp config",
+        pattern="ntp server 7.7.7.8\nntp server 7.7.7.7\nntp server 8.8.8.8"
     )
     # pprint.pprint(check_result)
     assert check_result == [{'criteria': '',
@@ -284,7 +284,7 @@ ntp server 7.7.7.7
                              'task': -1,
                              'test_name': 'check ntp config',
                              'test_type': 'contains lines'}]
-    
+
 # test_contains_lines_check()
 
 
@@ -305,9 +305,9 @@ ntp server 3.3.3.3
         name="check ntp config"
     )
     check_result = ContainsLinesTest(
-        output, 
-        test_name="check ntp config", 
-        lines="ntp server 1.1.1.2\nntp server 3.3.3.3",
+        output,
+        test_name="check ntp config",
+        pattern="ntp server 1.1.1.2\nntp server 3.3.3.3",
         revert=True
     )
     # pprint.pprint(check_result)
@@ -327,7 +327,7 @@ ntp server 3.3.3.3
                              'task': -1,
                              'test_name': 'check ntp config',
                              'test_type': 'not contains lines'}]
-    
+
 # test_not_contains_lines_check()
 
 
@@ -345,8 +345,8 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = EqualTest(
-        output, 
-        test_name="check ntp config", 
+        output,
+        test_name="check ntp config",
         pattern="""ntp server 7.7.7.8
 ntp server 7.7.7.7"""
     )
@@ -367,7 +367,7 @@ ntp server 7.7.7.7"""
                              'task': -1,
                              'test_name': 'check ntp config',
                              'test_type': 'equal'}]
-                             
+
 # test_equal_check()
 
 @skip_if_no_nornir
@@ -384,8 +384,8 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = EqualTest(
-        output, 
-        test_name="check ntp config", 
+        output,
+        test_name="check ntp config",
         pattern="""ntp server 7.7.7.8
 ntp server 7.7.7.7""",
         revert=True
@@ -407,7 +407,7 @@ ntp server 7.7.7.7""",
                              'task': -1,
                              'test_name': 'check ntp config',
                              'test_type': 'not equal'}]
-                             
+
 # test_not_equal_check()
 
 def fun_1(result):
@@ -419,7 +419,7 @@ def fun_1(result):
             "result": "FAIL",
             "success": False
         })
-    
+
     return ret
 
 @skip_if_no_nornir
@@ -436,7 +436,7 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = CustomFunctionTest(
-        output, 
+        output,
         function_call=fun_1,
         task="check ntp config",
         test_name="Check NTP cfg using custom fun"
@@ -458,7 +458,7 @@ ntp server 7.7.7.7
                              'task': 'check ntp config',
                              'test_name': 'Check NTP cfg using custom fun',
                              'test_type': 'custom'}]
-  
+
 # test_custom_function_call()
 
 
@@ -472,7 +472,7 @@ def fun_1(result):
             "result": "FAIL",
             "success": False
         })
-    
+
     return ret
 """
 
@@ -490,7 +490,7 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = CustomFunctionTest(
-        output, 
+        output,
         function_text=fun_1_text,
         function_name="fun_1",
         task="check ntp config",
@@ -513,7 +513,7 @@ ntp server 7.7.7.7
                              'task': 'check ntp config',
                              'test_name': 'Check NTP cfg using custom fun',
                              'test_type': 'custom'}]
-  
+
 # test_custom_function_text()
 
 @skip_if_no_nornir
@@ -530,7 +530,7 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     check_result = CustomFunctionTest(
-        output, 
+        output,
         function_file="./assets/custom_check_function_fun_1.txt",
         function_name="fun_1",
         task="check ntp config",
@@ -553,7 +553,7 @@ ntp server 7.7.7.7
                              'task': 'check ntp config',
                              'test_name': 'Check NTP cfg using custom fun',
                              'test_type': 'custom'}]
-  
+
 # test_custom_function_file()
 
 @skip_if_no_nornir
@@ -582,7 +582,7 @@ logging host 3.3.3.3
         },
         name="check syslog config"
     )
-    
+
     test_suite = [
     {
         "test": "contains",
@@ -598,10 +598,10 @@ logging host 3.3.3.3
     {
         "test": "contains_lines",
         "test_name": "check configuration of logging",
-        "lines": ["1.1.1.1", "2.2.2.2"],
+        "pattern": ["1.1.1.1", "2.2.2.2"],
         "task": "check syslog config",
         "result": output_2
-    },    
+    },
     {
         "test": "custom",
         "test_name": "check NTP cfg custom fun",
@@ -638,12 +638,12 @@ def test_cerberus_dict():
             }
         },
         name="interfaces MTU"
-    )    
+    )
     test_schema = {
-        "mtu": {"type": "integer", "allowed": [1500]} 
+        "mtu": {"type": "integer", "allowed": [1500]}
     }
     check_result = CerberusTest(
-        output, 
+        output,
         schema=test_schema,
         task="interfaces MTU",
         test_name="check MTU using cerberus"
@@ -665,7 +665,7 @@ def test_cerberus_dict():
                              'task': 'interfaces MTU',
                              'test_name': 'check MTU using cerberus',
                              'test_type': 'cerberus'}]
-                             
+
 # test_cerberus_dict()
 
 def test_cerberus_list_of_dict():
@@ -682,12 +682,12 @@ def test_cerberus_list_of_dict():
             ]
         },
         name="interfaces MTU"
-    )    
+    )
     test_schema = {
-        "mtu": {"type": "integer", "allowed": [1500]} 
+        "mtu": {"type": "integer", "allowed": [1500]}
     }
     check_result = CerberusTest(
-        output, 
+        output,
         schema=test_schema,
         task="interfaces MTU",
         test_name="check MTU using cerberus"
@@ -717,16 +717,16 @@ def test_cerberus_list_of_dict():
                              'task': 'interfaces MTU',
                              'test_name': 'check MTU using cerberus',
                              'test_type': 'cerberus'}]
-                             
+
 # test_cerberus_list_of_dict()
-    
+
 # ----------------------------------------------------------------------
 # tests that do not need LAB or Nornir
 # ----------------------------------------------------------------------
 
 def test_find_string_function():
     from nornir_salt import FindString
-    
+
     data = {
     "router-1": {
             "show run": """
@@ -768,7 +768,7 @@ Ethernet0/1                unassigned      YES NVRAM  up                    up
 Ethernet0/2                unassigned      YES NVRAM  up                    up
 Ethernet0/3                unassigned      YES NVRAM  administratively down down
 Loopback0                  10.0.0.10       YES NVRAM  up                    up
-Loopback100                1.1.1.100       YES NVRAM  up                    up            
+Loopback100                1.1.1.100       YES NVRAM  up                    up
             """
         },
     "router-2": {
@@ -825,23 +825,23 @@ Ethernet0/0.2000           192.168.217.7   YES NVRAM  up                    up
 Ethernet0/1                unassigned      YES NVRAM  administratively down down
 Ethernet0/2                unassigned      YES NVRAM  administratively down down
 Ethernet0/3                unassigned      YES NVRAM  administratively down down
-Loopback0                  10.0.0.7        YES NVRAM  up                    up            
+Loopback0                  10.0.0.7        YES NVRAM  up                    up
             """
         },
     }
-    
+
     res = FindString(data, pattern="192.168.*")
     # pprint.pprint(res, width=150)
     assert res == {'router-1': {'show ip int brief': 'Ethernet0/0.2000           192.168.217.10  YES NVRAM  up                    up',
                                              'show run': ' ip address 192.168.217.10 255.255.255.0'},
                                 'router-2': {'show ip int brief': 'Ethernet0/0.2000           192.168.217.7   YES NVRAM  up                    up',
                                              'show run': ' ip address 192.168.217.7 255.255.255.0'}}
-    
+
 # test_find_string_function()
 
 def test_find_string_function_before_1():
     from nornir_salt import FindString
-    
+
     data = {
     "router-1": {
             "show run": """
@@ -883,7 +883,7 @@ Ethernet0/1                unassigned      YES NVRAM  up                    up
 Ethernet0/2                unassigned      YES NVRAM  up                    up
 Ethernet0/3                unassigned      YES NVRAM  administratively down down
 Loopback0                  10.0.0.10       YES NVRAM  up                    up
-Loopback100                1.1.1.100       YES NVRAM  up                    up            
+Loopback100                1.1.1.100       YES NVRAM  up                    up
             """
         },
     "router-2": {
@@ -940,11 +940,11 @@ Ethernet0/0.2000           192.168.217.7   YES NVRAM  up                    up
 Ethernet0/1                unassigned      YES NVRAM  administratively down down
 Ethernet0/2                unassigned      YES NVRAM  administratively down down
 Ethernet0/3                unassigned      YES NVRAM  administratively down down
-Loopback0                  10.0.0.7        YES NVRAM  up                    up            
+Loopback0                  10.0.0.7        YES NVRAM  up                    up
             """
         },
     }
-    
+
     res = FindString(data, pattern="192.168.*", before=1)
     # pprint.pprint(res, width=150)
     assert res == {'router-1': {'show ip int brief': '--\n'
@@ -955,7 +955,7 @@ Loopback0                  10.0.0.7        YES NVRAM  up                    up
                                                      'Ethernet0/0.117            10.1.117.7      YES NVRAM  up                    up\n'
                                                      'Ethernet0/0.2000           192.168.217.7   YES NVRAM  up                    up',
                                 'show run': '--\n vrf forwarding MGMT\n ip address 192.168.217.7 255.255.255.0'}}
-              
+
 # test_find_string_function_before_1()
 
 @skip_if_no_nornir
@@ -976,7 +976,7 @@ ntp server 7.7.7.7
     serialized_output = ResultSerializer(output, add_details=True)
     assert serialized_output == {'IOL1': {'check ntp config': {'changed': False,
                                                     'diff': '',
-                                                    'exception': 'None',
+                                                    'exception': None,
                                                     'failed': False,
                                                     'result': '\n'
                                                               'ntp server 7.7.7.8\n'
@@ -984,10 +984,10 @@ ntp server 7.7.7.7
                                                               '        '}},
                       'IOL2': {'check ntp config': {'changed': False,
                                                     'diff': '',
-                                                    'exception': 'None',
+                                                    'exception': None,
                                                     'failed': False,
                                                     'result': '\nntp server 7.7.7.7\n        '}}}
-                               
+
 # test_result_serializer_to_dict_with_details()
 
 @skip_if_no_nornir
@@ -1011,7 +1011,7 @@ ntp server 7.7.7.7
                                                    'ntp server 7.7.7.7\n'
                                                    '        '},
                       'IOL2': {'check ntp config': '\nntp server 7.7.7.7\n        '}}
-                               
+
 # test_result_serializer_to_dict_no_details()
 
 @skip_if_no_nornir
@@ -1030,19 +1030,22 @@ ntp server 7.7.7.7
         name="check ntp config"
     )
     serialized_output = ResultSerializer(output, add_details=True, to_dict=False)
-    assert serialized_output == {'IOL1': [{'changed': False,
-                                'diff': '',
-                                'exception': 'None',
-                                'failed': False,
-                                'name': 'check ntp config',
-                                'result': '\nntp server 7.7.7.8\nntp server 7.7.7.7\n        '}],
-                      'IOL2': [{'changed': False,
-                                'diff': '',
-                                'exception': 'None',
-                                'failed': False,
-                                'name': 'check ntp config',
-                                'result': '\nntp server 7.7.7.7\n        '}]}
-                      
+    # pprint.pprint(serialized_output)
+    assert serialized_output == [{'changed': False,
+                                 'diff': '',
+                                 'exception': None,
+                                 'failed': False,
+                                 'host': 'IOL1',
+                                 'name': 'check ntp config',
+                                 'result': '\nntp server 7.7.7.8\nntp server 7.7.7.7\n        '},
+                                {'changed': False,
+                                 'diff': '',
+                                 'exception': None,
+                                 'failed': False,
+                                 'host': 'IOL2',
+                                 'name': 'check ntp config',
+                                 'result': '\nntp server 7.7.7.7\n        '}]
+
 # test_result_serializer_to_list_with_details()
 
 @skip_if_no_nornir
@@ -1060,10 +1063,13 @@ ntp server 7.7.7.7
         },
         name="check ntp config"
     )
-    serialized_output = ResultSerializer(output, add_details=False, to_dict=False) 
-    assert serialized_output == {'IOL1': [{'name': 'check ntp config',
-                                'result': '\nntp server 7.7.7.8\nntp server 7.7.7.7\n        '}],
-                      'IOL2': [{'name': 'check ntp config',
-                                'result': '\nntp server 7.7.7.7\n        '}]}
-                                
+    serialized_output = ResultSerializer(output, add_details=False, to_dict=False)
+    # pprint.pprint(serialized_output)
+    assert serialized_output == [{'host': 'IOL1',
+                                  'name': 'check ntp config',
+                                  'result': '\nntp server 7.7.7.8\nntp server 7.7.7.7\n        '},
+                                 {'host': 'IOL2',
+                                  'name': 'check ntp config',
+                                  'result': '\nntp server 7.7.7.7\n        '}]
+
 # test_result_serializer_to_list_no_details()

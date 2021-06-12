@@ -1,3 +1,10 @@
+"""
+Notes:
+
+1. Below tests will not pass for nornir 3.0.0; should pass for nornir 3.1.0 and above
+de to this PR - https://github.com/nornir-automation/nornir/pull/623
+"""
+
 import sys
 import yaml
 import pprint
@@ -38,14 +45,14 @@ hosts:
     data:
       role: access
       site: B3
-      
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
   pod1:
     username: cisco@
-    password: cisco      
+    password: cisco
 """
 
 inventory_dict = yaml.safe_load(inventory_data)
@@ -78,26 +85,26 @@ def test_FB():
     res = FFun(NornirObj, FB="R[12]")
     res_dict = res.dict()
     hosts_dict = res_dict.get("inventory", {}).get("hosts")
-    # pprint.pprint(hosts_dict)
+    pprint.pprint(hosts_dict)
     assert hosts_dict == {'R1': {'connection_options': {},
                                  'data': {'role': 'core', 'site': 'B1'},
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.151',
                                  'name': 'R1',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'},
+                                 'username': None},
                           'R2': {'connection_options': {},
                                  'data': {'role': 'agg', 'site': 'B2'},
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.153',
                                  'name': 'R2',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'}}
-                      
+                                 'username': None}}
+
 # import ipdb; ipdb.set_trace()
 # test_FB()
 
@@ -111,29 +118,29 @@ def test_FO_list_of_dict():
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.153',
                                  'name': 'R2',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'},
+                                 'username': None},
                           'R3': {'connection_options': {},
                                  'data': {'role': 'agg', 'site': 'B3'},
                                  'groups': ['lab'],
                                  'hostname': '192.168.2.154',
                                  'name': 'R3',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'},
+                                 'username': None},
                           'SW1': {'connection_options': {},
                                   'data': {'role': 'access', 'site': 'B3'},
                                   'groups': ['lab', 'pod1'],
                                   'hostname': '192.168.2.144',
                                   'name': 'SW1',
-                                  'password': 'cisco',
+                                  'password': None,
                                   'platform': 'nxos_ssh',
                                   'port': None,
-                                  'username': 'cisco'}}
-        
+                                  'username': None}}
+
 # test_FO_list_of_dict()
 
 def test_FO_dict():
@@ -146,19 +153,19 @@ def test_FO_dict():
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.153',
                                  'name': 'R2',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'},
+                                 'username': None},
                           'R3': {'connection_options': {},
                                  'data': {'role': 'agg', 'site': 'B3'},
                                  'groups': ['lab'],
                                  'hostname': '192.168.2.154',
                                  'name': 'R3',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'}}
+                                 'username': None}}
 
 # test_FO_dict()
 
@@ -172,11 +179,11 @@ def test_FG():
                           'groups': ['lab', 'pod1'],
                           'hostname': '192.168.2.144',
                           'name': 'SW1',
-                          'password': 'cisco',
+                          'password': None,
                           'platform': 'nxos_ssh',
                           'port': None,
-                          'username': 'cisco'}}
-    
+                          'username': None}}
+
 # test_FG()
 
 def test_FP():
@@ -189,29 +196,29 @@ def test_FP():
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.151',
                                  'name': 'R1',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'},
+                                 'username': None},
                           'R2': {'connection_options': {},
                                  'data': {'role': 'agg', 'site': 'B2'},
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.153',
                                  'name': 'R2',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'},
+                                 'username': None},
                           'SW1': {'connection_options': {},
                                   'data': {'role': 'access', 'site': 'B3'},
                                   'groups': ['lab', 'pod1'],
                                   'hostname': '192.168.2.144',
                                   'name': 'SW1',
-                                  'password': 'cisco',
+                                  'password': None,
                                   'platform': 'nxos_ssh',
                                   'port': None,
-                                  'username': 'cisco'}}
-    
+                                  'username': None}}
+
 # test_FP()
 
 def test_FL():
@@ -224,20 +231,20 @@ def test_FL():
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.151',
                                  'name': 'R1',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'},
+                                 'username': None},
                           'SW1': {'connection_options': {},
                                   'data': {'role': 'access', 'site': 'B3'},
                                   'groups': ['lab', 'pod1'],
                                   'hostname': '192.168.2.144',
                                   'name': 'SW1',
-                                  'password': 'cisco',
+                                  'password': None,
                                   'platform': 'nxos_ssh',
                                   'port': None,
-                                  'username': 'cisco'}}
-         
+                                  'username': None}}
+
 # test_FL()
 
 def test_FB_FG_FP_FO():
@@ -250,9 +257,9 @@ def test_FB_FG_FP_FO():
                                  'groups': ['lab'],
                                  'hostname': '192.168.1.151',
                                  'name': 'R1',
-                                 'password': 'cisco',
+                                 'password': None,
                                  'platform': 'ios',
                                  'port': None,
-                                 'username': 'cisco'}}
-    
+                                 'username': None}}
+
 # test_FB_FG_FP_FO()

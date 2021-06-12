@@ -2,23 +2,24 @@
 HostsKeepalive
 ##############
 
-Function to iterate over Nornir hosts' connections and check if connection 
-still alive. If connection not responding, ``HostsKeepalive`` function deletes 
-it. 
+Function to iterate over Nornir hosts' connections and check if connection
+still alive. If connection not responding, ``HostsKeepalive`` function deletes
+it.
 
-In general case, running ``HostsKeepalive`` function will keep connection with host 
+In general case, running ``HostsKeepalive`` function will keep connection with host
 open, preventing it from timeout due to inactivity.
 
 ``HostsKeepalive`` function supports these connection types:
 
-- netmiko - writes ``chr(0)`` to Pramiko channel to check connection
+- netmiko - writes ``chr(0)`` to Paramiko channel to check connection
 - paramiko channel - uses connection ``active`` attribute to check connection
 - napalm - uses ``is_alive()`` method to check connection
 - scrapli - uses ``isalive()`` method to check connection
+- ncclient - uses ``connected`` attribute of connection manager to check connection status
 
 .. note:: HostsKeepalive only checks previously established connections, it
   does not creates new connections to hosts or tries to reopen dead connections.
-    
+
 HostsKeepalive Sample Usage
 ===========================
 
@@ -26,12 +27,12 @@ Sample code to invoke ``HostsKeepalive`` function::
 
     from nornir import InitNornir
     from nornir_salt.plugins.functions import HostsKeepalive
-    
+
     nr = InitNornir(config_file="config.yaml")
-    
+
     stats = HostsKeepalive(nr)
 
-HostsKeepalive returns 
+HostsKeepalive returns
 ======================
 
 Returns ``stats`` dictionary with statistics about ``HostsKeepalive`` execution
@@ -40,7 +41,7 @@ Returns ``stats`` dictionary with statistics about ``HostsKeepalive`` execution
 
 - ``dead_connections_cleaned`` - contains overall number of connections cleaned
 
-HostsKeepalive reference 
+HostsKeepalive reference
 ========================
 
 .. autofunction:: nornir_salt.plugins.functions.HostsKeepalive.HostsKeepalive
@@ -60,7 +61,7 @@ def HostsKeepalive(nr):
     stats = {
         "dead_connections_cleaned": 0
     }
-    
+
     for host_name, host_obj in nr.inventory.hosts.items():
         # to avoid "RuntimeError: dictionary changed size during iteration" error
         # going to iterate over a copy of dictionary keys
@@ -76,9 +77,14 @@ def HostsKeepalive(nr):
                     is_alive = conn_obj.connection.is_alive()
                 elif "scrapli" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.connection.isalive()
+                elif "ncclient" in str(type(conn_obj)).lower():
+                    is_alive = conn_obj.connection.connected
                 else:
                     log.debug(
-                        "nornir_salt:HostsKeepalive - uncknown connection type '{}'".format(conn_name)
+                        "nornir_salt:HostsKeepalive - uncknown connection '{}', type: '{}'".format(
+                            conn_name,
+                            str(type(conn_obj)).lower()
+                        )
                     )
             except:
                 is_alive = False
@@ -98,5 +104,5 @@ def HostsKeepalive(nr):
                         conn_name, host_name
                     )
                 )
-                
+
     return stats

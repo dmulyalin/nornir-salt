@@ -10,10 +10,11 @@ from .TestFuncs import CerberusTest
 from .TestFuncs import RunTestSuite
 from .TestFuncs import CustomFunctionTest
 from .ParseTTP import ParseTTP
+from .TabulateFormatter import TabulateFormatter
 
 __all__ = (
-    "ResultSerializer", 
-    "FFun", 
+    "ResultSerializer",
+    "FFun",
     "FindString",
     "HostsKeepalive",
     "ToFile",
@@ -23,5 +24,6 @@ __all__ = (
     "CerberusTest",
     "RunTestSuite",
     "ParseTTP",
-    "CustomFunctionTest"
+    "CustomFunctionTest",
+    "TabulateFormatter"
 )

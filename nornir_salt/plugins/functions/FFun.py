@@ -151,12 +151,14 @@ from nornir.core.filter import F
 log = logging.getLogger(__name__)
 
 
-def FFun(nr, **kwargs):
+def FFun(nr, check_if_has_filter=False, **kwargs):
     """
     Inventory filters dispatcher function.
     
     :param nr: Nornir object
     :param kwargs: Dictionary with filtering parameters e.g. {"FB": "host1*", "FL": ["host1", "host2"]}
+    :param check_if_has_filter: (bool) default is False, if True, returns tuple ``(filtered_hosts, has_filter)``,
+        where ``has_filter`` is boolean set to True if any of ``Fx`` filters provided
     :param FO: Nornir Filter object dictionary
     :param FB: Gloab string to filter based on hosts' names
     :param FG: Name of inventory group to return only hosts that part of it
@@ -166,7 +168,8 @@ def FFun(nr, **kwargs):
     ret = nr
     has_filter = False
     # check if kwargs argument given, usually
-    # supplied by SALT nornir-proxy
+    # supplied by SALT nornir-proxy, that required for pop to modify
+    # Nornir proxy original kwargs by removing all Fx arguments
     if kwargs.get("kwargs"):
         kwargs = kwargs["kwargs"]
     if kwargs.get("FO"):
@@ -181,11 +184,11 @@ def FFun(nr, **kwargs):
     if kwargs.get("FP"):
         ret = _filter_FP(ret, kwargs.pop("FP"))
         has_filter = True
-    if kwargs.get("FL"):
+    if "FL" in kwargs:
         ret = _filter_FL(ret, kwargs.pop("FL"))
         has_filter = True
-    ret.state.has_filter = has_filter
-    return ret
+    return (ret, has_filter) if check_if_has_filter else ret
+
     
 def _filter_FO(nr, filter_data):
     """
@@ -274,4 +277,7 @@ def _filter_FL(ret, names_list):
         if isinstance(names_list, str)
         else names_list
     )
-    return ret.filter(filter_func=lambda h: h.name in names_list)
+    if "_all_" in names_list:
+        return ret
+    else:
+        return ret.filter(filter_func=lambda h: h.name in names_list)

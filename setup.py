@@ -35,5 +35,8 @@ setuptools.setup(
     [nornir.plugins.runners]
     QueueRunner=nornir_salt:QueueRunner
     RetryRunner=nornir_salt:RetryRunner
+
+    [nornir.plugins.connections]
+    ncclient=nornir_salt:NcclientPlugin
     """,
 )

@@ -11,4 +11,6 @@ Welcome to nornir-salt's documentation!
    Inventory Plugins
    Runner Plugins
    Task Plugins
+   Processors Plugins
    Functions
+

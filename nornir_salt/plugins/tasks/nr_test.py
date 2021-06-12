@@ -11,9 +11,9 @@ nr_test sample usage
 Code to invoke ``nr_test`` task::
 
     from nornir_salt import nr_test
-    
+
     output = nr.run(task=nr_test, abc=123)
-    
+
 nr_test returns
 =============================
 
@@ -27,7 +27,14 @@ nr_test reference
 """
 from nornir.core.task import Result
 
-def nr_test(task, ret_data_per_host={}, ret_data="__undefined_value__", **kwargs):
+def nr_test(
+        task,
+        ret_data_per_host={},
+        ret_data="__undefined_value__",
+        excpt=None,
+        excpt_msg="",
+        **kwargs
+    ):
     """
     Dummy task that echoes data passed to it. Useful to debug and
     verification of Nornir object operation.
@@ -37,15 +44,22 @@ def nr_test(task, ret_data_per_host={}, ret_data="__undefined_value__", **kwargs
     :param ret_data: Any data to include in results, same for each host
     :param kwargs: Any key-value pair to include in results, same for each host
     :return result: ``ret_data`` or ``**kwargs`` passed to the task
-    
+    :param excpt: (obj or True) exception object to raise; if True, raises ``RuntimeError``
+    :param excpt_msg: (str) message to use with exception
+
     Order of preference of return data:
-    
-    1. If ``ret_data_per_host`` present, it is used to form results 
-    2. If ``ret_data`` present, it is included in results 
-    3. If ``**kwargs`` supplied, they are included in results
+
+    1. If ``ret_data_per_host`` present, it is used to form results
+    2. If ``excpt`` object supplied, it is raised
+    3. If ``ret_data`` present, it is included in results
+    4. If ``**kwargs`` supplied, they are included in results
     """
     if ret_data_per_host:
         return Result(host=task.host, result=ret_data_per_host.get(task.host.name, None))
+    elif excpt == True:
+        raise RuntimeError(excpt_msg)
+    elif excpt != None:
+        raise excpt(excpt_msg)
     elif ret_data != "__undefined_value__":
         return Result(host=task.host, result=ret_data)
     else:
