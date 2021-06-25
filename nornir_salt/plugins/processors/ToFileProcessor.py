@@ -110,7 +110,7 @@ class ToFileProcessor:
     Files saved under ``base_url`` location, where individual filename formed using
     string::
 
-        {timestamp}__{hostname}__{tf}.{ext}
+        {tf}__{timestamp}__{hostname}.{ext}
 
     Where:
 
@@ -120,8 +120,9 @@ class ToFileProcessor:
     * ext - file extension, json, yaml or txt depending on ``tf_format``
 
     In addition, ``tf_aliases.json`` file created under ``base_url`` to track files created
-    using dictionary structure of ``{tf: {hostname: [filenames]}}``. ``tf_aliases.json``
-    used by ``DiffProcessor`` to retrieve previous results for the task.
+    using dictionary structure of ``{tf: {hostname: [{filename: str, tasks: {task_name: 
+    file_span}}]}}``. ``tf_aliases.json`` used by ``DiffProcessor`` to retrieve previous results 
+    for the task.
     """
 
     def __init__(
@@ -138,7 +139,7 @@ class ToFileProcessor:
 
         self.timestamp = time.strftime("%d_%B_%Y_%H_%M_%S")
         self.aliases_file = os.path.join(base_url, "tf_aliases.json")
-        self.aliases_data = {} # dictionary of {tf: {hostname: [filenames]}}
+        self.aliases_data = {} # dictionary of {tf name: {hostname: [{filename: str, tasks: {task_name: file_span}}]}}
 
         self._load_aliases()
 
@@ -172,10 +173,12 @@ class ToFileProcessor:
             ext="json"
         elif self.tf_format == "yaml":
             ext="yaml"
+        elif self.tf_format == "pprint":
+            ext="py"
         else:
             ext="txt"
 
-        host_filename = "{timestamp}__{hostname}__{tf}.{ext}".format(
+        host_filename = "{tf}__{timestamp}__{hostname}.{ext}".format(
             timestamp=self.timestamp,
             hostname=host.name,
             tf=self.tf,
@@ -183,33 +186,38 @@ class ToFileProcessor:
         )
         host_filename = os.path.join(self.base_url, host_filename)
 
-        # save data to file
+        # add aliases data
+        self.aliases_data.setdefault(self.tf, {})
+        self.aliases_data[self.tf].setdefault(host.name, [])
+        
+        # save data to file and populate alias details for tasks
         os.makedirs(os.path.dirname(host_filename), exist_ok=True)
         with open(host_filename, mode="w", encoding="utf-8") as f:
+            self.aliases_data[self.tf][host.name].insert(0, {"filename": host_filename, "tasks": {}})
+            span_start = 0
+                                                             
             for i in result:
                 # check if need to skip this task results
                 exception = str(i.exception) if i.exception != None else i.host.get("exception", None)
                 if hasattr(i, "skip_results") and i.skip_results is True and not exception:
                     continue
-                else:
-                    _write(f, i.result, self.tf_format)
+                # save results to file
+                _write(f, i.result, self.tf_format)
+                # add aliases data
+                span = (span_start, span_start + len(str(i.result)) + 1)
+                self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = span
+                span_start +=  len(str(i.result)) + 1 # _write appends \n hence +1
 
-        # save aliases data
-        self.aliases_data.setdefault(self.tf, {})
-        self.aliases_data[self.tf].setdefault(host.name, [])
-        if not host_filename in self.aliases_data[self.tf][host.name]:
-            self.aliases_data[self.tf][host.name].insert(0, host_filename)
-
-            # check if need to delete old files
-            if len(self.aliases_data[self.tf][host.name]) > self.max_files:
-                file_to_rm = self.aliases_data[self.tf][host.name].pop()
-                try:
-                    os.remove(file_to_rm)
-                except:
-                    log.error("nornir-salt:ToFileProcessor failed to remove file '{}':\n{}".format(
-                            file_to_rm, traceback.format_exc()
-                        )
+        # check if need to delete old files
+        if len(self.aliases_data[self.tf][host.name]) > self.max_files:
+            file_to_rm = self.aliases_data[self.tf][host.name].pop()
+            try:
+                os.remove(file_to_rm["filename"])
+            except:
+                log.error("nornir-salt:ToFileProcessor failed to remove file '{}':\n{}".format(
+                        file_to_rm, traceback.format_exc()
                     )
+                )
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
         pass # ignore subtasks

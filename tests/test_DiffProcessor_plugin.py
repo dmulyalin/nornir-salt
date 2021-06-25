@@ -20,7 +20,7 @@ from nornir_salt import ResultSerializer
 from nornir_salt import DictInventory
 from nornir_salt import nr_test
 from nornir_salt.plugins.processors.ToFileProcessor import ToFileProcessor
-
+from nornir_salt.plugins.processors.DiffProcessor import DiffProcessor
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -95,17 +95,19 @@ def clean_up_folder():
 # ----------------------------------------------------------------------
 
 @skip_if_no_nornir
-def test_to_file():
+def test_diff_processor():
     clean_up_folder()
         
-    # run test        
-    nr_with_tf = nr.with_processors([
-        ToFileProcessor(tf="config", base_url="./tofile_outputs/")   
+    # run test to generate the file       
+    nr_with_tests =nr.with_processors([
+        ToFileProcessor(tf="config_for_diff", base_url="./tofile_outputs/")   
     ])
-    output = nr_with_tf.run(
+    output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
             "IOL1": """
+Timestamp 12:12:12
+
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
@@ -115,74 +117,59 @@ ntp server 7.7.7.7
         },
         name="show run | inc ntp"
     )
-    files = os.listdir("./tofile_outputs/")
-    assert "tf_aliases.json" in files, "tf_aliases.json not found"
-    for file in files:
-        if "tf_aliases.json" in file:
-            continue
-        assert "config__" in file and ("__IOL1.txt" in file or "__IOL2.txt" in file)
     
-# test_to_file()
+    # run the test to make difference
+    nr_with_tests =nr.with_processors([
+        DiffProcessor(diff="config_for_diff", base_url="./tofile_outputs/")   
+    ])
+    output = nr_with_tests.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+Timestamp 14:14:14
 
+ntp server 7.7.7.8
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+ntp server 9.9.9.9
+        """
+        },
+        name="show run | inc ntp"
+    )
+    
+    res = ResultSerializer(output, add_details=True)
 
-@skip_if_no_nornir
-def test_to_file_max_files():
-    clean_up_folder()
+    # pprint.pprint(res)
+    # {'IOL1': {'config_for_diff_diff': {'changed': False,
+    #                                 'diff': '',
+    #                                 'exception': None,
+    #                                 'failed': False,
+    #                                 'result': '--- old '
+    #                                             './tofile_outputs/13_June_2021_09_36_48__IOL1__config_for_diff.txt\n'
+    #                                             '+++ new results\n'
+    #                                             '@@ -1,3 +1,2 @@\n'
+    #                                             '-Timestamp 12:12:12\n'
+    #                                             '+Timestamp 14:14:14\n'
+    #                                             ' ntp server 7.7.7.8\n'
+    #                                             '-ntp server 7.7.7.7\n'}},
+    # 'IOL2': {'config_for_diff_diff': {'changed': False,
+    #                                 'diff': '',
+    #                                 'exception': None,
+    #                                 'failed': False,
+    #                                 'result': '--- old '
+    #                                             './tofile_outputs/13_June_2021_09_36_48__IOL2__config_for_diff.txt\n'
+    #                                             '+++ new results\n'
+    #                                             '@@ -1 +1,2 @@\n'
+    #                                             ' ntp server 7.7.7.7\n'
+    #                                             '+ntp server 9.9.9.9\n'}}}
+
+    assert """-Timestamp 12:12:12
++Timestamp 14:14:14
+ ntp server 7.7.7.8
+-ntp server 7.7.7.7""" in res["IOL1"]["config_for_diff_diff"]["result"]
+    assert """
+ ntp server 7.7.7.7
++ntp server 9.9.9.9""" in res["IOL2"]["config_for_diff_diff"]["result"]    
         
-    # run test        
-    nr_with_tf =  nr.with_processors([
-        ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)   
-    ])
-    output = nr_with_tf.run(
-        task=nr_test,
-        ret_data_per_host={
-            "IOL1": """
-ntp server 7.7.7.8
-ntp server 7.7.7.7
-        """,
-            "IOL2": """
-ntp server 7.7.7.7
-        """
-        },
-        name="show run | inc ntp"
-    )
-    time.sleep(1)
-    nr_with_tf =  nr.with_processors([
-        ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)   
-    ])
-    output = nr_with_tf.run(
-        task=nr_test,
-        ret_data_per_host={
-            "IOL1": """
-ntp server 7.7.7.8
-ntp server 7.7.7.7
-        """,
-            "IOL2": """
-ntp server 7.7.7.7
-        """
-        },
-        name="show run | inc ntp"
-    )
-    time.sleep(1)
-    nr_with_tf =  nr.with_processors([
-        ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)   
-    ])
-    output = nr_with_tf.run(
-        task=nr_test,
-        ret_data_per_host={
-            "IOL1": """
-ntp server 7.7.7.8
-ntp server 7.7.7.7
-        """,
-            "IOL2": """
-ntp server 7.7.7.7
-        """
-        },
-        name="show run | inc ntp"
-    )
-    files = os.listdir("./tofile_outputs/")
-
-    assert "tf_aliases.json" in files, "tf_aliases.json not found"
-    assert len(files) == 5, "above max_files found in directory"
-        
-# test_to_file_max_files()
+# test_diff_processor()

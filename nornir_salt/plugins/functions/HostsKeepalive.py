@@ -73,6 +73,8 @@ def HostsKeepalive(nr):
                     conn_obj.connection.write_channel(chr(0))
                 elif "paramiko.channel.channel" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.active
+                elif "paramiko.client.sshclient" in str(type(conn_obj)).lower():
+                    pass
                 elif "napalm" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.connection.is_alive()
                 elif "scrapli" in str(type(conn_obj)).lower():

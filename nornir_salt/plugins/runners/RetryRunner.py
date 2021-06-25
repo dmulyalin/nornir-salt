@@ -272,10 +272,8 @@ def connector(
         if connection_name and connection_name not in host.connections:
             try:
                 time.sleep(random.randrange(0, connect_splay) / 1000)
-                if host.get("jumphost") and connection_name == "netmiko":
-                    extras = {}
-                    if host.connection_options.get("netmiko"):
-                        extras = host.connection_options["netmiko"].extras
+                if host.get("jumphost") and connection_name in ["netmiko", "ncclient"]:
+                    extras = host.get_connection_parameters(connection_name).extras
                     extras["sock"] = connect_to_device_behind_jumphost(
                         host, jumphosts_connections
                     )
