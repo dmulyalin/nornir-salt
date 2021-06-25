@@ -8,8 +8,7 @@ from .scrapli_netconf_call import scrapli_netconf_call
 __all__ = (
     "tcp_ping",
     "netmiko_send_commands",
-    "netmiko_send_command_ps"
-    "nr_test",
+    "netmiko_send_command_ps" "nr_test",
     "ncclient_call",
-    "scrapli_netconf_call"
+    "scrapli_netconf_call",
 )

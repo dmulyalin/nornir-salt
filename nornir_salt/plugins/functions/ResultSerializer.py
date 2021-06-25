@@ -180,7 +180,13 @@ log = logging.getLogger(__name__)
 
 supported_types = [list, tuple, dict, str, int, bool, set]
 
-def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=["severity_level", "stderr", "stdout", "host"]):
+
+def ResultSerializer(
+    nr_results,
+    add_details=False,
+    to_dict=True,
+    skip=["severity_level", "stderr", "stdout", "host"],
+):
     """
     :param nr_results: ``nornir.core.task.AggregatedResult`` object
     :param add_details: boolean to indicate if results should contain more info, default
@@ -198,19 +204,28 @@ def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=["severit
         ret = {}
         for hostname, results in nr_results.items():
             for index, i in enumerate(results):
-                exception = str(i.exception) if i.exception != None else i.host.get("exception", None)
+                exception = (
+                    str(i.exception)
+                    if i.exception != None
+                    else i.host.get("exception", None)
+                )
                 # skip tasks such as _task_foo_bar unless exception
                 if i.name and i.name.startswith("_") and not exception:
                     continue
                 # skip tasks if signaled to do so
-                elif hasattr(i, "skip_results") and i.skip_results is True and not exception:
+                elif (
+                    hasattr(i, "skip_results")
+                    and i.skip_results is True
+                    and not exception
+                ):
                     continue
                 # add hostname to results
                 ret.setdefault(hostname, {})
                 # add results details if requested to do so
                 if add_details:
                     ret[hostname][i.name] = {
-                        k: v for k, v in vars(i).items()
+                        k: v
+                        for k, v in vars(i).items()
                         if not k in skip and type(v) in supported_types
                     }
                     ret[hostname][i.name]["failed"] = True if exception else i.failed
@@ -225,28 +240,35 @@ def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=["severit
         ret = []
         for hostname, results in nr_results.items():
             for i in results:
-                exception = str(i.exception) if i.exception != None else i.host.get("exception", None)
+                exception = (
+                    str(i.exception)
+                    if i.exception != None
+                    else i.host.get("exception", None)
+                )
                 # skip group tasks such as _task_foo_bar unless exception
                 if i.name and i.name.startswith("_") and not exception:
                     continue
                 # skip tasks if signalled to do so
-                elif hasattr(i, "skip_results") and i.skip_results is True and not exception:
+                elif (
+                    hasattr(i, "skip_results")
+                    and i.skip_results is True
+                    and not exception
+                ):
                     continue
                 # add results details if requested to do so
                 elif add_details:
-                    ret.append({
-                        k: v for k, v in vars(i).items()
-                        if not k in skip and type(v) in supported_types
-                    })
+                    ret.append(
+                        {
+                            k: v
+                            for k, v in vars(i).items()
+                            if not k in skip and type(v) in supported_types
+                        }
+                    )
                     ret[-1]["failed"] = True if exception else i.failed
                     ret[-1]["exception"] = exception
                     ret[-1]["host"] = i.host.name
                 # form results for the rest of tasks
                 else:
-                    ret.append({
-                        "host": hostname,
-                        "name": i.name,
-                        "result": i.result
-                    })
+                    ret.append({"host": hostname, "name": i.name, "result": i.result})
 
     return ret

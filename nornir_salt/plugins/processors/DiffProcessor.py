@@ -76,7 +76,7 @@ def _to_raw(data):
 
 
 # formats dispatcher dictionary
-formatters = {"raw": _to_raw, "json": _to_json, "pprint": _to_pprint, "yaml": _to_yaml} 
+formatters = {"raw": _to_raw, "json": _to_json, "pprint": _to_pprint, "yaml": _to_yaml}
 
 
 class DiffProcessor:
@@ -96,7 +96,7 @@ class DiffProcessor:
     :param remove_patterns: (list) list of regular expression pattern to remove from lines
     :param diff_per_task: (bool) default is False, if True runs diff on a per-task basis,
         populating ``Results'`` object ``diff`` attribute with diff results
-        
+
     ``ignore_lines`` and ``remove_patterns`` arguments exists to clean difference results,
     for instance by ignoring timestamps, counters or other uninteresting data.
     """
@@ -120,7 +120,9 @@ class DiffProcessor:
         self.diff_per_task = diff_per_task
 
         self.aliases_file = os.path.join(base_url, "tf_aliases.json")
-        self.aliases_data = {}  # dictionary of {diff name: {hostname: [{filename: str, tasks: {task_name: file_span}}]}}
+        self.aliases_data = (
+            {}
+        )  # dictionary of {diff name: {hostname: [{filename: str, tasks: {task_name: file_span}}]}}
 
         self._load_aliases()
 
@@ -133,7 +135,7 @@ class DiffProcessor:
     def _filter_ignore_lines(self, data):
         """
         Helper function to filter lines using regex from ignore_lines list
-        
+
         :param data: (list) list of lines to filter
         """
         return [
@@ -143,11 +145,11 @@ class DiffProcessor:
                 map(lambda pt: True if re.search(pt, ln) else False, self.ignore_lines)
             )
         ]
-    
+
     def _remove_patterns(self, data):
         """
         Helper function to remove patterns using regex from remove_patterns list
-        
+
         :param data: (list) list of lines to remove patterns from
         """
         for index, ln in enumerate(data):
@@ -155,11 +157,11 @@ class DiffProcessor:
                 ln = re.sub(pattern, "", ln)
             data[index] = ln
         return data
-     
+
     def _run_diff(self, prev_result, new_result, fromfile, tofile):
         """
         Helper function to run diff
-        
+
         :param prev_result: (str) multiline string to run diff for
         :param new_result: (str) multiline string to run diff for
         :param fromfile: (str) from file name to use with difflib
@@ -167,7 +169,9 @@ class DiffProcessor:
         """
         # filter data through ignore_lines patterns
         if self.ignore_lines:
-            prev_result = self._filter_ignore_lines(prev_result.splitlines(keepends=True))
+            prev_result = self._filter_ignore_lines(
+                prev_result.splitlines(keepends=True)
+            )
             new_result = self._filter_ignore_lines(new_result.splitlines(keepends=True))
 
         # clean up data using remove_patterns
@@ -176,12 +180,9 @@ class DiffProcessor:
             new_result = self._remove_patterns(new_result)
 
         return difflib.unified_diff(
-            prev_result, 
-            new_result, 
-            fromfile=fromfile, 
-            tofile=tofile
+            prev_result, new_result, fromfile=fromfile, tofile=tofile
         )
-        
+
     def task_started(self, task: Task) -> None:
         pass  # ignore
 
@@ -194,13 +195,10 @@ class DiffProcessor:
         """Diff files with current task result"""
 
         # get previous results data
-        index = min(
-            self.last - 1, 
-            len(self.aliases_data[self.diff][host.name]) - 1
-        )
+        index = min(self.last - 1, len(self.aliases_data[self.diff][host.name]) - 1)
         prev_res_alias_data = self.aliases_data[self.diff][host.name][index]
         prev_res_filename = prev_res_alias_data["filename"]
-        
+
         # decide on results formatter to use
         data_format = "raw"
         if prev_res_filename.endswith("json"):
@@ -223,21 +221,27 @@ class DiffProcessor:
                     if i.exception != None
                     else i.host.get("exception", None)
                 )
-                if hasattr(i, "skip_results") and i.skip_results is True and not exception:
+                if (
+                    hasattr(i, "skip_results")
+                    and i.skip_results is True
+                    and not exception
+                ):
                     continue
                 else:
                     new_result = formatters[data_format](i.result) + "\n"
                     # check if task results exists
                     if not i.name in prev_res_alias_data["tasks"]:
-                        i.diff = "'{}' task results not in '{}''".format(i.name, prev_res_filename)
+                        i.diff = "'{}' task results not in '{}''".format(
+                            i.name, prev_res_filename
+                        )
                         continue
                     # run diff using portion of prev_result file with given task results only
                     spans = prev_res_alias_data["tasks"][i.name]
                     difference = self._run_diff(
-                        prev_result=prev_result[spans[0]:spans[1]], 
-                        new_result=new_result, 
-                        fromfile="old {}".format(prev_res_filename), 
-                        tofile="new results"
+                        prev_result=prev_result[spans[0] : spans[1]],
+                        new_result=new_result,
+                        fromfile="old {}".format(prev_res_filename),
+                        tofile="new results",
                     )
                     i.diff = "".join(difference)
         # make new task results text and run diff for whole of them
@@ -250,24 +254,30 @@ class DiffProcessor:
                     if i.exception != None
                     else i.host.get("exception", None)
                 )
-                if hasattr(i, "skip_results") and i.skip_results is True and not exception:
+                if (
+                    hasattr(i, "skip_results")
+                    and i.skip_results is True
+                    and not exception
+                ):
                     continue
                 else:
                     new_result += formatters[data_format](i.result) + "\n"
-            
+
             # run diff
             difference = self._run_diff(
-                prev_result, 
-                new_result, 
-                fromfile="old {}".format(prev_res_filename), 
-                tofile="new results"
+                prev_result,
+                new_result,
+                fromfile="old {}".format(prev_res_filename),
+                tofile="new results",
             )
-    
+
             # pop other results and add diff results
             while result:
                 _ = result.pop()
             result.append(
-                Result(host, result="".join(difference), name="{}_diff".format(self.diff))
+                Result(
+                    host, result="".join(difference), name="{}_diff".format(self.diff)
+                )
             )
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:

@@ -154,7 +154,7 @@ log = logging.getLogger(__name__)
 def FFun(nr, check_if_has_filter=False, **kwargs):
     """
     Inventory filters dispatcher function.
-    
+
     :param nr: Nornir object
     :param kwargs: Dictionary with filtering parameters e.g. {"FB": "host1*", "FL": ["host1", "host2"]}
     :param check_if_has_filter: (bool) default is False, if True, returns tuple ``(filtered_hosts, has_filter)``,
@@ -189,7 +189,7 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
         has_filter = True
     return (ret, has_filter) if check_if_has_filter else ret
 
-    
+
 def _filter_FO(nr, filter_data):
     """
     Function to filter hosts using Filter Object
@@ -225,7 +225,7 @@ def _filter_FP(ret, pfx):
     """
     import ipaddress
     import socket
-    
+
     socket.setdefaulttimeout(1)
 
     def _filter_net(host):
@@ -239,9 +239,7 @@ def _filter_FP(ret, pfx):
                 ip_addr = ipaddress.ip_address(ip_str)
             except Exception as e:
                 log.error(
-                    "FP failed to convert host IP '{}', error '{}'".format(
-                        host.name, e
-                    )
+                    "FP failed to convert host IP '{}', error '{}'".format(host.name, e)
                 )
                 return False
         # run filtering
@@ -251,19 +249,13 @@ def _filter_FP(ret, pfx):
         return False
 
     # make a list of network objects
-    prefixes = (
-        [i.strip() for i in pfx.split(",")] if isinstance(pfx, str) else pfx
-    )
+    prefixes = [i.strip() for i in pfx.split(",")] if isinstance(pfx, str) else pfx
     networks = []
     for prefix in prefixes:
         try:
             networks.append(ipaddress.ip_network(prefix))
         except Exception as e:
-            log.error(
-                "FP failed to convert prefix '{}', error '{}'".format(
-                    prefix, e
-                )
-            )
+            log.error("FP failed to convert prefix '{}', error '{}'".format(prefix, e))
     # filter hosts
     return ret.filter(filter_func=_filter_net)
 

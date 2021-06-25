@@ -124,6 +124,7 @@ class DictInventory:
     :param groups: dictionary with groups data
     :param defaults: dictionary with defaults data
     """
+
     def __init__(self, hosts: Dict, groups: Dict, defaults: Dict) -> None:
         self.hosts = hosts
         self.groups = groups

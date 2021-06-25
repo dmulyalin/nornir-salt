@@ -50,11 +50,8 @@ from nornir.core.task import Result, Task
 
 
 def tcp_ping(
-    task: Task, 
-    ports: List[int] = [], 
-    timeout: int = 1, 
-    host: Optional[str] = None
-    ) -> Result:
+    task: Task, ports: List[int] = [], timeout: int = 1, host: Optional[str] = None
+) -> Result:
     """
     :param ports: list of int, optional, tcp ports to ping, defaults to host's port or 22
     :param timeout: int, optional, connection timeout, defaults to 1

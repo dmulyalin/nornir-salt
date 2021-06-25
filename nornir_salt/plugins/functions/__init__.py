@@ -25,5 +25,5 @@ __all__ = (
     "RunTestSuite",
     "ParseTTP",
     "CustomFunctionTest",
-    "TabulateFormatter"
+    "TabulateFormatter",
 )

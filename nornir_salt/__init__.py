@@ -71,5 +71,5 @@ __all__ = (
     "ToFileProcessor",
     "TestsProcessor",
     "TabulateFormatter",
-    "DiffProcessor"
+    "DiffProcessor",
 )

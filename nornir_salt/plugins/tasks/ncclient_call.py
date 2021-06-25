@@ -73,7 +73,9 @@ try:
 
     HAS_XMLTODICT = True
 except ImportError:
-    log.warning("nornir_salt:ncclient_call failed to import xmltodict library, install it: pip install xmltodict")
+    log.warning(
+        "nornir_salt:ncclient_call failed to import xmltodict library, install it: pip install xmltodict"
+    )
     HAS_XMLTODICT = False
 
 try:
@@ -81,7 +83,9 @@ try:
 
     HAS_YAML = True
 except ImportError:
-    log.warning("nornir_salt:ncclient_call failed to import yaml library, install it: pip install pyyaml")
+    log.warning(
+        "nornir_salt:ncclient_call failed to import yaml library, install it: pip install pyyaml"
+    )
     HAS_YAML = False
 
 try:
@@ -93,7 +97,6 @@ except ImportError:
     from ncclient.operations import RPC
 
     class GenericRPC(RPC):
-
         def request(self, data, *args, **kwargs):
             """
             :param data: (str) rpc xml string
@@ -103,7 +106,7 @@ except ImportError:
             * Arista cEOS - not working, transport session closed error
             * Cisco IOS XR - working
             """
-            ele = etree.fromstring(data.encode('UTF-8'))
+            ele = etree.fromstring(data.encode("UTF-8"))
             return self._request(ele)
 
 
@@ -141,7 +144,7 @@ def _call_locked(manager, *args, **kwargs):
             r = manager.edit_config(
                 config=kwargs["config"],
                 target=kwargs["target"],
-                format=kwargs.get("format", "xml")
+                format=kwargs.get("format", "xml"),
             )
             result.append({"edit_config": etree.tostring(r._root, pretty_print=True)})
             # validate configuration
@@ -155,11 +158,11 @@ def _call_locked(manager, *args, **kwargs):
             try:
                 if kwargs.get("confirmed", True):
                     r = manager.commit(
-                        confirmed=True,
-                        timeout=kwargs.get("timeout", "60"),
-                        persist=pid
+                        confirmed=True, timeout=kwargs.get("timeout", "60"), persist=pid
                     )
-                    result.append({"commit_confirmed": etree.tostring(r._root, pretty_print=True)})
+                    result.append(
+                        {"commit_confirmed": etree.tostring(r._root, pretty_print=True)}
+                    )
                     # Could cancel but have to think about rollback criteria
                     # res = manager.cancel_commit(persist_id=pid)
             except MissingCapabilityError:
@@ -171,34 +174,41 @@ def _call_locked(manager, *args, **kwargs):
         except:
             tb = traceback.format_exc()
             log.error(
-                "nornir_salt:ncclient_call locked edit_config call error: {}".format(
-                    tb
-                )
+                "nornir_salt:ncclient_call locked edit_config call error: {}".format(tb)
             )
             result.append({"error": tb})
             failed = True
             # discard changes
             r = manager.discard_changes()
-            result.append({"discard_changes": etree.tostring(r._root, pretty_print=True)})
+            result.append(
+                {"discard_changes": etree.tostring(r._root, pretty_print=True)}
+            )
 
     return result, failed
+
 
 def _call_server_capabilities(manager, *args, **kwargs):
     """ Helper function to get server capabilities """
     return [c for c in manager.server_capabilities], False
 
+
 def _call_connected(manager, *args, **kwargs):
     """ Helper function to get connected status """
     return manager.connected, False
 
+
 def _call_dir(manager, *args, **kwargs):
     """ Function to return alist of available methods/operations """
-    methods = list(dir(manager)) + list(manager._vendor_operations.keys()) + list(OPERATIONS.keys())
-    result = sorted([
-        m for m in set(methods)
-        if (not m.startswith("_") and not m.isupper())
-    ])
+    methods = (
+        list(dir(manager))
+        + list(manager._vendor_operations.keys())
+        + list(OPERATIONS.keys())
+    )
+    result = sorted(
+        [m for m in set(methods) if (not m.startswith("_") and not m.isupper())]
+    )
     return result, False
+
 
 def _call_help(manager, method_name, *args, **kwargs):
     """
@@ -224,7 +234,8 @@ def ncclient_call(task: Task, call: str, fmt: str = "xml", *args, **kwargs) -> R
     :param *arg: (list) any arguments to use with call method
     :param **kwargs: (dict) any keyword arguments to use with call method
     """
-    log.debug("nornir_salt:ncclient_call calling '{}' with args: '{}'; kwargs: '{}'".format(
+    log.debug(
+        "nornir_salt:ncclient_call calling '{}' with args: '{}'; kwargs: '{}'".format(
             call, args, kwargs
         )
     )

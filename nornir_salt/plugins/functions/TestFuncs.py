@@ -359,6 +359,7 @@ log = logging.getLogger(__name__)
 
 try:
     import tabulate as tabulate_lib
+
     HAS_TABULATE = True
 except ImportError:
     HAS_TABULATE = False
@@ -366,6 +367,7 @@ except ImportError:
 
 try:
     from cerberus import Validator
+
     HAS_CERBERUS = True
 except ImportError:
     log.error("Failed to import Cerberus library, make sure it is installed")
@@ -378,9 +380,9 @@ ret_datum_template = {
     "task": "",
     "result": "PASS",
     "success": True,
-    "error": None ,
+    "error": None,
     "test_type": None,
-    "criteria": None
+    "criteria": None,
 }
 
 
@@ -403,8 +405,7 @@ def tabulate_formatter(data, tabulate):
         if isinstance(tabulate.get("headers"), list):
             try:
                 data_to_tabulate = [
-                    [item[i] for i in tabulate["headers"]]
-                    for item in data
+                    [item[i] for i in tabulate["headers"]] for item in data
                 ]
             except KeyError:
                 tabulate["headers"] = "keys"
@@ -416,30 +417,31 @@ def tabulate_formatter(data, tabulate):
         tabulate = {
             "tablefmt": "fancy_grid",
             "headers": ["host", "test_name", "result", "error"],
-            "showindex": True
+            "showindex": True,
         }
-        data_to_tabulate = [
-            [item[i] for i in tabulate["headers"]]
-            for item in data
-        ]
+        data_to_tabulate = [[item[i] for i in tabulate["headers"]] for item in data]
     else:
-        log.error("tabulate argument must be boolean, dictionary or 'brief' not '{}'".format(tabulate))
+        log.error(
+            "tabulate argument must be boolean, dictionary or 'brief' not '{}'".format(
+                tabulate
+            )
+        )
         return data
 
     return tabulate_lib.tabulate(data_to_tabulate, **tabulate)
 
 
 def _run_test(
-        result,
-        test_name,
-        tabulate,
-        test_function,
-        test_type,
-        task=None,
-        use_all_task=False,
-        serialize=False,
-        **kwargs
-    ):
+    result,
+    test_name,
+    tabulate,
+    test_function,
+    test_type,
+    task=None,
+    use_all_task=False,
+    serialize=False,
+    **kwargs
+):
     """
     Helper function to avoid code repetition.
 
@@ -492,7 +494,7 @@ def _run_test(
                 except IndexError:
                     pass
             else:
-                task_result=results[task]
+                task_result = results[task]
 
         # form return datum dictionary
         ret_datum = ret_datum_template.copy()
@@ -502,9 +504,11 @@ def _run_test(
         ret_datum["test_type"] = test_type
 
         # check if has results
-        if task_result == "_not_found_" :
+        if task_result == "_not_found_":
             ret_datum["success"] = False
-            ret_datum["error"] = "Failed to get output, is task name correct, is device reachable?"
+            ret_datum[
+                "error"
+            ] = "Failed to get output, is task name correct, is device reachable?"
             ret_datum["result"] = "FAIL"
             ret.append(ret_datum)
             continue
@@ -531,7 +535,6 @@ def _run_test(
             ret_datum["result"] = "ERROR"
             ret.append(ret_datum)
 
-
     # check if need to use tabulate to format return results
     if tabulate and HAS_TABULATE:
         return tabulate_formatter(ret, tabulate)
@@ -540,16 +543,16 @@ def _run_test(
 
 
 def ContainsTest(
-        result,
-        pattern,
-        task=-1,
-        test_name=None,
-        tabulate={},
-        revert=False,
-        use_re=False,
-        count=None,
-        **kwargs
-    ):
+    result,
+    pattern,
+    task=-1,
+    test_name=None,
+    tabulate={},
+    revert=False,
+    use_re=False,
+    count=None,
+    **kwargs
+):
     """
     Function to check if pattern contained in output of given
     ``task``'s result.
@@ -617,19 +620,13 @@ def ContainsTest(
         use_re=use_re,
         criteria=criteria,
         serialize=True,
-        count=count
+        count=count,
     )
 
 
 def ContainsLinesTest(
-        result,
-        pattern,
-        task=-1,
-        test_name=None,
-        tabulate={},
-        revert=False,
-        **kwargs
-    ):
+    result, pattern, task=-1, test_name=None, tabulate={}, revert=False, **kwargs
+):
     """
     Function to check that all lines contained in output.
 
@@ -649,6 +646,7 @@ def ContainsLinesTest(
     :param revert: (bool) if True flips the logic to opposite - check if lines
         not contained in results
     """
+
     def _contains_lines(task_result, pattern, **kwargs):
         ret = {"criteria": ""}
         lines_list = pattern.splitlines() if isinstance(pattern, str) else pattern
@@ -685,19 +683,13 @@ def ContainsLinesTest(
         tabulate=tabulate,
         test_function=_not_contains_lines if revert else _contains_lines,
         test_type="not contains lines" if revert else "contains lines",
-        serialize=True
+        serialize=True,
     )
 
 
 def EqualTest(
-        result,
-        pattern,
-        task=-1,
-        test_name=None,
-        tabulate={},
-        revert=False,
-        **kwargs
-    ):
+    result, pattern, task=-1, test_name=None, tabulate={}, revert=False, **kwargs
+):
     """
     Function to check that pattern equal to output from device.
 
@@ -743,19 +735,13 @@ def EqualTest(
         test_function=_not_equal if revert else _equal,
         test_type="not equal" if revert else "equal",
         criteria=criteria,
-        serialize=True
+        serialize=True,
     )
 
 
 def CerberusTest(
-        result,
-        schema,
-        task=-1,
-        test_name=None,
-        tabulate={},
-        allow_unknown=True,
-        **kwargs
-    ):
+    result, schema, task=-1, test_name=None, tabulate={}, allow_unknown=True, **kwargs
+):
     """
     Function to check results using ``Cerberus`` module schema.
 
@@ -786,7 +772,7 @@ def CerberusTest(
                 "success": False,
                 "error": "Cerberus lib not installed",
                 "test_type": "Cerberus",
-                "criteria": None
+                "criteria": None,
             }
         )
         return ret
@@ -798,7 +784,9 @@ def CerberusTest(
         ret = {}
         # validate results as is if they are dictionary
         if isinstance(task_result["result"], dict):
-            res = validator_engine.validate(document=task_result["result"], schema=schema)
+            res = validator_engine.validate(
+                document=task_result["result"], schema=schema
+            )
             if not res:
                 ret["result"] = "FAIL"
                 ret["success"] = False
@@ -811,11 +799,13 @@ def CerberusTest(
                     continue
                 res = validator_engine.validate(document=item, schema=schema)
                 if not res:
-                    ret.append({
-                        "result": "FAIL",
-                        "success": False,
-                        "error": validator_engine.errors
-                    })
+                    ret.append(
+                        {
+                            "result": "FAIL",
+                            "success": False,
+                            "error": validator_engine.errors,
+                        }
+                    )
         return ret
 
     return _run_test(
@@ -827,7 +817,7 @@ def CerberusTest(
         test_function=_cerberus_test,
         test_type="cerberus",
         validator_engine=validator_engine,
-        serialize=True
+        serialize=True,
     )
 
 
@@ -856,19 +846,19 @@ def _load_custom_fun_from_text(function_text, function_name):
 
 
 def CustomFunctionTest(
-        result,
-        function_file=None,
-        function_name="run",
-        function_text=None,
-        function_call=None,
-        task=-1,
-        test_name=None,
-        tabulate={},
-        test_type="custom",
-        use_all_task=False,
-        serialize=False,
-        **kwargs
-    ):
+    result,
+    function_file=None,
+    function_name="run",
+    function_text=None,
+    function_call=None,
+    task=-1,
+    test_name=None,
+    tabulate={},
+    test_type="custom",
+    use_all_task=False,
+    serialize=False,
+    **kwargs
+):
     """
     Wrapper around calling custom function to perform results checks.
 
@@ -952,7 +942,7 @@ def CustomFunctionTest(
                 "success": False,
                 "error": str(tb),
                 "test_type": "N/A",
-                "criteria": "N/A"
+                "criteria": "N/A",
             }
         ]
 
@@ -979,15 +969,17 @@ def _print_results(data):
 
         init()
     except ImportError:
-        log.error("_print_results failed importing colorama, install it to have output colorized")
+        log.error(
+            "_print_results failed importing colorama, install it to have output colorized"
+        )
 
     if not isinstance(data, str):
         return
 
-    R = "\033[0;31;40m" # RED
-    G = "\033[0;32;40m" # GREEN
-    N = "\033[0m" # Reset
-    fttr = "{}{}{}" # formatter
+    R = "\033[0;31;40m"  # RED
+    G = "\033[0;32;40m"  # GREEN
+    N = "\033[0m"  # Reset
+    fttr = "{}{}{}"  # formatter
     green_words = ["True", "PASS"]
     red_words = ["False", "FAIL"]
 
@@ -1001,13 +993,13 @@ def _print_results(data):
 
 
 def RunTestSuite(
-        result,
-        suite,
-        tabulate={},
-        print_results=False,
-        failed_only=False,
-        brief=False,
-    ):
+    result,
+    suite,
+    tabulate={},
+    print_results=False,
+    failed_only=False,
+    brief=False,
+):
     """
     Function that iterates over test cases defined in a test suite.
 
@@ -1067,8 +1059,14 @@ def RunTestSuite(
         "!contains_lines": {"fun": ContainsLinesTest, "kwargs": {"revert": True}},
         "ncontains_lines": {"fun": ContainsLinesTest, "kwargs": {"revert": True}},
         "contains_re": {"fun": ContainsTest, "kwargs": {"use_re": True}},
-        "!contains_re": {"fun": ContainsTest, "kwargs": {"revert": True, "use_re": True}},
-        "ncontains_re": {"fun": ContainsTest, "kwargs": {"revert": True, "use_re": True}},
+        "!contains_re": {
+            "fun": ContainsTest,
+            "kwargs": {"revert": True, "use_re": True},
+        },
+        "ncontains_re": {
+            "fun": ContainsTest,
+            "kwargs": {"revert": True, "use_re": True},
+        },
         "equal": {"fun": EqualTest},
         "!equal": {"fun": EqualTest, "kwargs": {"revert": True}},
         "nequal": {"fun": EqualTest, "kwargs": {"revert": True}},
@@ -1092,8 +1090,9 @@ def RunTestSuite(
                 test_case.update(fun_kwargs)
                 ret += test_func(**test_case)
             else:
-                raise KeyError("'{}' not in globals, nor in test functions dispatcher dictionary".format(
-                    test_func_name
+                raise KeyError(
+                    "'{}' not in globals, nor in test functions dispatcher dictionary".format(
+                        test_func_name
                     )
                 )
         except:
@@ -1108,7 +1107,7 @@ def RunTestSuite(
                     "success": None,
                     "error": str(tb),
                     "test_type": "N/A",
-                    "criteria": "N/A"
+                    "criteria": "N/A",
                 }
             )
 

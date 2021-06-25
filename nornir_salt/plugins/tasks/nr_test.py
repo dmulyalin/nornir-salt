@@ -27,14 +27,15 @@ nr_test reference
 """
 from nornir.core.task import Result
 
+
 def nr_test(
-        task,
-        ret_data_per_host={},
-        ret_data="__undefined_value__",
-        excpt=None,
-        excpt_msg="",
-        **kwargs
-    ):
+    task,
+    ret_data_per_host={},
+    ret_data="__undefined_value__",
+    excpt=None,
+    excpt_msg="",
+    **kwargs
+):
     """
     Dummy task that echoes data passed to it. Useful to debug and
     verification of Nornir object operation.
@@ -55,7 +56,9 @@ def nr_test(
     4. If ``**kwargs`` supplied, they are included in results
     """
     if ret_data_per_host:
-        return Result(host=task.host, result=ret_data_per_host.get(task.host.name, None))
+        return Result(
+            host=task.host, result=ret_data_per_host.get(task.host.name, None)
+        )
     elif excpt == True:
         raise RuntimeError(excpt_msg)
     elif excpt != None:

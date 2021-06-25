@@ -11,7 +11,9 @@ try:
 
     HAS_XMLTODICT = True
 except ImportError:
-    log.warning("nornir_salt:scrapli_netconf_call failed to import xmltodict library, install it: pip install xmltodict")
+    log.warning(
+        "nornir_salt:scrapli_netconf_call failed to import xmltodict library, install it: pip install xmltodict"
+    )
     HAS_XMLTODICT = False
 
 try:
@@ -19,17 +21,21 @@ try:
 
     HAS_YAML = True
 except ImportError:
-    log.warning("nornir_salt:scrapli_netconf_call failed to import yaml library, install it: pip install pyyaml")
+    log.warning(
+        "nornir_salt:scrapli_netconf_call failed to import yaml library, install it: pip install pyyaml"
+    )
     HAS_YAML = False
 
 
 def _call_dir(conn, *args, **kwargs):
     """ Helper function to return a list of supported tasks """
-    methods = [
-        m for m in dir(conn)
-        if not m.startswith("_")
-    ] + ["dir", "connected", "locked"]
+    methods = [m for m in dir(conn) if not m.startswith("_")] + [
+        "dir",
+        "connected",
+        "locked",
+    ]
     return sorted(methods), False
+
 
 def _call_help(conn, *args, **kwargs):
     """
@@ -45,9 +51,11 @@ def _call_help(conn, *args, **kwargs):
     h = function_obj.__doc__ if hasattr(function_obj, "__doc__") else ""
     return h, False
 
+
 def _call_connected(conn, *args, **kwargs):
     """ Helper function to return connection status """
     return conn.isalive(), False
+
 
 def _call_locked(conn, *args, **kwargs):
     """
@@ -81,10 +89,7 @@ def _call_locked(conn, *args, **kwargs):
         r = conn.discard()
         result.append({"discard_changes": r.result})
         # apply configuration
-        r = conn.edit_config(
-            config=kwargs["config"],
-            target=kwargs["target"]
-        )
+        r = conn.edit_config(config=kwargs["config"], target=kwargs["target"])
         result.append({"edit_config": r.result})
         # validate configuration
         try:
@@ -116,20 +121,23 @@ def _call_locked(conn, *args, **kwargs):
         r = conn.unlock(target=kwargs["target"])
         result.append({"unlock": r.result})
 
-
     return result, failed
+
 
 def _call_server_capabilities(conn, *args, **kwargs):
     """ Helper function to return server capabilities """
     return conn.server_capabilities, False
 
 
-def scrapli_netconf_call(task: Task, call: str, fmt: str = "xml", *args, **kwargs) -> Result:
+def scrapli_netconf_call(
+    task: Task, call: str, fmt: str = "xml", *args, **kwargs
+) -> Result:
     """
     Discpatcher function to call one of the supported scrapli_netconf methods
     or one of helper functions.
     """
-    log.debug("nornir_salt:scrapli_netconf_call calling '{}' with args: '{}'; kwargs: '{}'".format(
+    log.debug(
+        "nornir_salt:scrapli_netconf_call calling '{}' with args: '{}'; kwargs: '{}'".format(
             call, args, kwargs
         )
     )

@@ -258,7 +258,7 @@ def _get_result_by_path(data, path, host):
     :param data: (dict or list) structured data to retrieve data subset from
     :param path: (list) list of path items to get from data
     :param host: (obj)  Nornir host object
-	:return result: ``nornir.core.task.Result`` object with data at given path
+        :return result: ``nornir.core.task.Result`` object with data at given path
     """
     if path == []:
         yield Result(host=host, result=data)
@@ -268,21 +268,13 @@ def _get_result_by_path(data, path, host):
     elif path[0].isdigit() and isinstance(data, list):
         for result in _get_result_by_path(data[int(path[0])], path[1:], host):
             yield result
-    elif path[0]=="*" and isinstance(data, list):
+    elif path[0] == "*" and isinstance(data, list):
         for item in data:
             for result in _get_result_by_path(item, path[1:], host):
                 yield result
 
 
-def EvalTest(
-        host,
-        result,
-        expr,
-        revert=False,
-        err_msg=None,
-        globs={},
-        **kwargs
-    ):
+def EvalTest(host, result, expr, revert=False, err_msg=None, globs={}, **kwargs):
     """
     Function to check result running python built-in ``Eval`` or ``Exec``
     function against provided python expression.
@@ -341,9 +333,13 @@ def EvalTest(
 
     try:
         if expr.strip().startswith("assert"):
-            check_result = exec(expr, {"result": result.result, "host": host, **globs}, {})
+            check_result = exec(
+                expr, {"result": result.result, "host": host, **globs}, {}
+            )
         else:
-            check_result = eval(expr, {"result": result.result, "host": host, **globs}, {})
+            check_result = eval(
+                expr, {"result": result.result, "host": host, **globs}, {}
+            )
         if check_result == False:
             ret.update({"result": "FAIL", "success": False})
             ret["exception"] = err_msg if err_msg else "Expression evaluated to False"
@@ -571,7 +567,9 @@ def CustomFunctionTest(
         elif function_call:
             test_function = function_call
         else:
-            raise RuntimeError("nornir-salt:CustomFunctionTest no custom function found.")
+            raise RuntimeError(
+                "nornir-salt:CustomFunctionTest no custom function found."
+            )
     except:
         msg = "nornir-salt:CustomFunctionTest function loading error:\n{}".format(
             traceback.format_exc()
@@ -591,10 +589,10 @@ def CustomFunctionTest(
         return Result(host=host, **ret)
     # form and return results
     if (
-        test_function_result == [] or
-        test_function_result == {} or
-        test_function_result == None or
-        test_function_result == True
+        test_function_result == []
+        or test_function_result == {}
+        or test_function_result == None
+        or test_function_result == True
     ):
         return Result(host=host, **ret)
     elif test_function_result == False:
@@ -656,7 +654,14 @@ def EqualTest(host, result, pattern, revert=False, err_msg=None, **kwargs):
 
 
 def ContainsLinesTest(
-    host, result, pattern, use_re=False, count=None, revert=False, err_msg=None, **kwargs
+    host,
+    result,
+    pattern,
+    use_re=False,
+    count=None,
+    revert=False,
+    err_msg=None,
+    **kwargs
 ):
     """
     Function to check that all lines contained in result output.
@@ -689,7 +694,7 @@ def ContainsLinesTest(
             use_re=use_re,
             count=count,
             revert=revert,
-            err_msg=err_msg
+            err_msg=err_msg,
         )
         if not check_result.success:
             ret.update({"result": "FAIL", "success": False})
@@ -741,7 +746,9 @@ def ContainsTest(
             ret["exception"] = err_msg if err_msg else "Regex pattern not in output"
     elif count and result.result.count(pattern) != count:
         ret.update({"result": "FAIL", "success": False})
-        ret["exception"] = err_msg if err_msg else "Pattern not in output {} times".format(count)
+        ret["exception"] = (
+            err_msg if err_msg else "Pattern not in output {} times".format(count)
+        )
     elif pattern not in result.result:
         ret.update({"result": "FAIL", "success": False})
         ret["exception"] = err_msg if err_msg else "Pattern not in output"
@@ -755,7 +762,9 @@ def ContainsTest(
             if use_re:
                 ret["exception"] = err_msg if err_msg else "Regex pattern in output"
             elif count:
-                ret["exception"] = err_msg if err_msg else "Pattern in output {} times".format(count)
+                ret["exception"] = (
+                    err_msg if err_msg else "Pattern in output {} times".format(count)
+                )
             else:
                 ret["exception"] = err_msg if err_msg else "Pattern in output"
     return Result(host=host, **ret)
@@ -772,14 +781,20 @@ test_functions_dispatcher = {
     "!contains_lines": {"fun": ContainsLinesTest, "kwargs": {"revert": True}},
     "ncontains_lines": {"fun": ContainsLinesTest, "kwargs": {"revert": True}},
     "contains_lines_re": {"fun": ContainsLinesTest, "kwargs": {"use_re": True}},
-    "!contains_lines_re": {"fun": ContainsLinesTest, "kwargs": {"revert": True, "use_re": True}},
-    "ncontains_lines_re": {"fun": ContainsLinesTest, "kwargs": {"revert": True, "use_re": True}},
+    "!contains_lines_re": {
+        "fun": ContainsLinesTest,
+        "kwargs": {"revert": True, "use_re": True},
+    },
+    "ncontains_lines_re": {
+        "fun": ContainsLinesTest,
+        "kwargs": {"revert": True, "use_re": True},
+    },
     "equal": {"fun": EqualTest, "kwargs": {}},
     "!equal": {"fun": EqualTest, "kwargs": {"revert": True}},
     "nequal": {"fun": EqualTest, "kwargs": {"revert": True}},
     "cerberus": {"fun": CerberusTest, "kwargs": {}},
     "custom": {"fun": CustomFunctionTest, "kwargs": {}},
-    "eval": {"fun": EvalTest, "kwargs": {}}
+    "eval": {"fun": EvalTest, "kwargs": {}},
 }
 
 
@@ -883,7 +898,7 @@ class TestsProcessor:
                         for item in _get_result_by_path(
                             data=test.pop("result").result,
                             path=test.pop("path").split("."),
-                            host=host
+                            host=host,
                         )
                     ]
                     # leave only failed results
@@ -898,7 +913,9 @@ class TestsProcessor:
                 else:
                     res = test_func(host=host, **test)
             except:
-                msg = "nornir-salt:TestsProcessor run error:\n{}".format(traceback.format_exc())
+                msg = "nornir-salt:TestsProcessor run error:\n{}".format(
+                    traceback.format_exc()
+                )
                 log.error(msg)
                 ret = test_result_template.copy()
                 ret.update(test)
@@ -931,9 +948,7 @@ class TestsProcessor:
         if self.failed_only:
             for hostname, results in result.items():
                 good_tests = [
-                    index for index, i in enumerate(results)
-                    if i.success == True
+                    index for index, i in enumerate(results) if i.success == True
                 ]
                 for i in good_tests:
                     _ = results.pop(i)
-

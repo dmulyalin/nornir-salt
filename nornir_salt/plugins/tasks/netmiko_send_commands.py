@@ -42,16 +42,17 @@ from .netmiko_send_command_ps import netmiko_send_command_ps
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
 CONNECTION_NAME = "netmiko"
 
+
 def netmiko_send_commands(
-        task,
-        commands,
-        interval=0.01,
-        use_timing: bool = False,
-        use_ps = False,
-        enable: bool = False,
-        netmiko_kwargs: dict = {},
-        **kwargs
-    ):
+    task,
+    commands,
+    interval=0.01,
+    use_timing: bool = False,
+    use_ps=False,
+    enable: bool = False,
+    netmiko_kwargs: dict = {},
+    **kwargs
+):
     """
     Nornir Task function to send show commands to devices using
     ``nornir_netmiko.tasks.netmiko_send_command`` plugin

@@ -27,10 +27,12 @@ log = logging.getLogger(__name__)
 
 try:
     import tabulate as tabulate_lib
+
     HAS_TABULATE = True
 except ImportError:
     HAS_TABULATE = False
     log.error("Failed to import tabulate library, install it: pip install tabulate")
+
 
 def TabulateFormatter(result, tabulate=True, headers="keys"):
     """
@@ -48,7 +50,9 @@ def TabulateFormatter(result, tabulate=True, headers="keys"):
     * ``dict`` - ``**tabulate`` passed on to ``tabulate.tabulate`` method
     """
     if not HAS_TABULATE:
-        log.error("nornir-salt:TabulateFormatter failed import tabulate library, install: pip install tabulate")
+        log.error(
+            "nornir-salt:TabulateFormatter failed import tabulate library, install: pip install tabulate"
+        )
         return result
 
     # decide on results to tabulate
@@ -57,7 +61,11 @@ def TabulateFormatter(result, tabulate=True, headers="keys"):
     elif isinstance(result, list):
         result_to_tabulate = result
     else:
-        log.error("nornir-salt:TabulateFormatter unsupported results type '{}', supported - list or AggregatedResult".format(type(result)))
+        log.error(
+            "nornir-salt:TabulateFormatter unsupported results type '{}', supported - list or AggregatedResult".format(
+                type(result)
+            )
+        )
         return result
 
     # check headers
@@ -66,13 +74,21 @@ def TabulateFormatter(result, tabulate=True, headers="keys"):
 
     # form tabulate parameters
     if tabulate == "brief":
-        tabulate = {"tablefmt": "grid", "showindex": True, "headers": ["host", "name", "result", "exception"]}
+        tabulate = {
+            "tablefmt": "grid",
+            "showindex": True,
+            "headers": ["host", "name", "result", "exception"],
+        }
     elif tabulate == True:
         tabulate = {"headers": headers}
     elif isinstance(tabulate, dict):
         tabulate.setdefault("headers", headers)
     else:
-        log.error("nornir-salt:TabulateFormatter unsupported tabulate argument type '{}', supported - 'brief', bool, dict".format(type(tabulate)))
+        log.error(
+            "nornir-salt:TabulateFormatter unsupported tabulate argument type '{}', supported - 'brief', bool, dict".format(
+                type(tabulate)
+            )
+        )
         return result
 
     # transform result_to_tabulate to list of lists

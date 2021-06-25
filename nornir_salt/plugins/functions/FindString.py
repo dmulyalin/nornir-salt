@@ -65,6 +65,7 @@ from typing import Dict
 from collections import deque
 import re
 
+
 def FindString(nr_results: Dict, pattern: str, before: int = 0):
     """
     :param nr_results: Dictionary produced by ResultSerializer function.
@@ -90,7 +91,9 @@ def FindString(nr_results: Dict, pattern: str, before: int = 0):
             for line in iter(data_to_search.splitlines()):
                 if regex.search(line):
                     searched_result.append(
-                        line if before == 0 else "--\n{}\n{}".format("\n".join(lines_before), line)
+                        line
+                        if before == 0
+                        else "--\n{}\n{}".format("\n".join(lines_before), line)
                     )
                 lines_before.append(line)
 

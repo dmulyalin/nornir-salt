@@ -58,9 +58,7 @@ def HostsKeepalive(nr):
     :param nr: Nornir object
     :returns: stats dictionary with statistics about ``HostsKeepalive`` execution
     """
-    stats = {
-        "dead_connections_cleaned": 0
-    }
+    stats = {"dead_connections_cleaned": 0}
 
     for host_name, host_obj in nr.inventory.hosts.items():
         # to avoid "RuntimeError: dictionary changed size during iteration" error
@@ -84,8 +82,7 @@ def HostsKeepalive(nr):
                 else:
                     log.debug(
                         "nornir_salt:HostsKeepalive - uncknown connection '{}', type: '{}'".format(
-                            conn_name,
-                            str(type(conn_obj)).lower()
+                            conn_name, str(type(conn_obj)).lower()
                         )
                     )
             except:

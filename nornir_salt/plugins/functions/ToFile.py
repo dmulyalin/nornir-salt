@@ -62,8 +62,10 @@ import time
 import os
 import json
 import pprint
+
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -79,8 +81,10 @@ log = logging.getLogger(__name__)
 def _to_json(data):
     return json.dumps(data, sort_keys=True, indent=4, separators=(",", ": "))
 
+
 def _to_pprint(data):
     return pprint.pformat(data, indent=4)
+
 
 def _to_yaml(data):
     if HAS_YAML:
@@ -88,16 +92,13 @@ def _to_yaml(data):
     else:
         return _to_pprint(data)
 
+
 def _to_raw(data):
     return str(data)
 
+
 # formats dispatcher dictionary
-formatters = {
-    "raw": _to_raw,
-    "json": _to_json,
-    "pprint": _to_pprint,
-    "yaml": _to_yaml
-}
+formatters = {"raw": _to_raw, "json": _to_json, "pprint": _to_pprint, "yaml": _to_yaml}
 
 
 # --------------------------------------------------------------------------------
@@ -110,10 +111,11 @@ def _write(f, data, tf_format):
     Helper function mainly to re-use code
     """
     try:
-        f.write(formatters[tf_format](data)  + "\n")
+        f.write(formatters[tf_format](data) + "\n")
     except KeyError:
-        log.error("ToFile, unsupported format '{}'; supported '{}'".format(
-                tf_format. list(formatters.keys())
+        log.error(
+            "ToFile, unsupported format '{}'; supported '{}'".format(
+                tf_format.list(formatters.keys())
             )
         )
 
