@@ -28,7 +28,7 @@ except ImportError:
 
 
 def _call_dir(conn, *args, **kwargs):
-    """ Helper function to return a list of supported tasks """
+    """Helper function to return a list of supported tasks"""
     methods = [m for m in dir(conn) if not m.startswith("_")] + [
         "dir",
         "connected",
@@ -53,7 +53,7 @@ def _call_help(conn, *args, **kwargs):
 
 
 def _call_connected(conn, *args, **kwargs):
-    """ Helper function to return connection status """
+    """Helper function to return connection status"""
     return conn.isalive(), False
 
 
@@ -125,7 +125,7 @@ def _call_locked(conn, *args, **kwargs):
 
 
 def _call_server_capabilities(conn, *args, **kwargs):
-    """ Helper function to return server capabilities """
+    """Helper function to return server capabilities"""
     return conn.server_capabilities, False
 
 
@@ -136,20 +136,28 @@ def scrapli_netconf_call(
     Discpatcher function to call one of the supported scrapli_netconf methods
     or one of helper functions.
     """
+    # initiate local parameteres
+    result = None
+    failed = False
+    task.name = call
+
+    # get rendered data if any
+    if "__task__" in task.host.data:
+        kwargs.update(task.host.data["__task__"])
+
     log.debug(
         "nornir_salt:scrapli_netconf_call calling '{}' with args: '{}'; kwargs: '{}'".format(
             call, args, kwargs
         )
     )
-    result = None
-    failed = False
 
+    # get scrapli-netconf connection object
     conn = task.host.get_connection("scrapli_netconf", task.nornir.config)
 
     # check if need to call one of helper function
     if "_call_{}".format(call) in globals():
         result, failed = globals()["_call_{}".format(call)](conn, *args, **kwargs)
-    # call conn object method
+    # call conn object method otherwise
     else:
         result = getattr(conn, call)(*args, **kwargs)
 

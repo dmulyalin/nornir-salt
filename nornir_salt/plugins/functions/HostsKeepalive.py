@@ -68,13 +68,13 @@ def HostsKeepalive(nr):
             is_alive = True
             try:
                 if "netmiko" in str(type(conn_obj)).lower():
-                    conn_obj.connection.write_channel(chr(0))
+                    is_alive = conn_obj.connection.is_alive()
                 elif "paramiko.channel.channel" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.active
                 elif "paramiko.client.sshclient" in str(type(conn_obj)).lower():
                     pass
                 elif "napalm" in str(type(conn_obj)).lower():
-                    is_alive = conn_obj.connection.is_alive()
+                    is_alive = conn_obj.connection.is_alive()["is_alive"]
                 elif "scrapli" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.connection.isalive()
                 elif "ncclient" in str(type(conn_obj)).lower():

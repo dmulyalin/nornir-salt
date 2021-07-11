@@ -63,10 +63,16 @@ import pprint
 
 from nornir.core.task import Result, Task
 from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
-from ncclient.manager import OPERATIONS
-from ncclient.operations.errors import MissingCapabilityError
 
 log = logging.getLogger(__name__)
+
+try:
+    from ncclient.manager import OPERATIONS
+    from ncclient.operations.errors import MissingCapabilityError
+
+    HAS_NCCLIENT = True
+except ImportError:
+    HAS_NCCLIENT = False
 
 try:
     import xmltodict
@@ -188,17 +194,17 @@ def _call_locked(manager, *args, **kwargs):
 
 
 def _call_server_capabilities(manager, *args, **kwargs):
-    """ Helper function to get server capabilities """
+    """Helper function to get server capabilities"""
     return [c for c in manager.server_capabilities], False
 
 
 def _call_connected(manager, *args, **kwargs):
-    """ Helper function to get connected status """
+    """Helper function to get connected status"""
     return manager.connected, False
 
 
 def _call_dir(manager, *args, **kwargs):
-    """ Function to return alist of available methods/operations """
+    """Function to return alist of available methods/operations"""
     methods = (
         list(dir(manager))
         + list(manager._vendor_operations.keys())
@@ -216,7 +222,6 @@ def _call_help(manager, method_name, *args, **kwargs):
 
     :param method_name: (str) name of method or function to return docstring for
     """
-    method_name = kwargs["method_name"]
     if "_call_{}".format(method_name) in globals():
         function_obj = globals()["_call_{}".format(method_name)]
     else:
@@ -234,20 +239,47 @@ def ncclient_call(task: Task, call: str, fmt: str = "xml", *args, **kwargs) -> R
     :param *arg: (list) any arguments to use with call method
     :param **kwargs: (dict) any keyword arguments to use with call method
     """
+    # run sanity check
+    if not HAS_NCCLIENT:
+        return Result(
+            host=task.host,
+            failed=True,
+            exception="No Ncclient found, is it installed?",
+        )
+
+    # initiate parameters
+    failed = False
+    task.name = call
+
+    # get rendered data if any
+    if "__task__" in task.host.data:
+        kwargs.update(task.host.data["__task__"])
+
+    # check if filter formed properly - as per
+    # https://ncclient.readthedocs.io/en/latest/manager.html#filter-params
+    # filter should be a tuple of (type, criteria)
+    if kwargs.get("filter"):
+        if isinstance(kwargs["filter"], list):
+            kwargs["filter"] = tuple(kwargs["filter"])
+        elif isinstance(kwargs["filter"], str):
+            kwargs["filter"] = tuple([kwargs.pop("ftype", "subtree"), kwargs["filter"]])
+
+    # get Ncclient NETCONF connection object
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+
+    # add generic RPC operation to Ncclient manager object to support RPC call
+    manager._vendor_operations.update(rpc=GenericRPC)
+
     log.debug(
         "nornir_salt:ncclient_call calling '{}' with args: '{}'; kwargs: '{}'".format(
             call, args, kwargs
         )
     )
-    failed = False
-    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
-    # add generic RPC operation
-    manager._vendor_operations.update(rpc=GenericRPC)
 
     # check if need to call one of helper function
     if "_call_{}".format(call) in globals():
         result, failed = globals()["_call_{}".format(call)](manager, *args, **kwargs)
-    # call manager object method
+    # call manager object method otherwise
     else:
         result = getattr(manager, call)(*args, **kwargs)
 

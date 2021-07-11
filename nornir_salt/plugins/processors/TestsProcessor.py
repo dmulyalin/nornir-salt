@@ -863,17 +863,23 @@ class TestsProcessor:
                         test["result"].append(task_result)
             # use results for single task only
             else:
+                # try to find task by matching it's name
                 for task_result in result:
                     if task_result.name == test["task"]:
                         test["result"] = task_result
                         break
                 else:
-                    log.warning(
-                        "nornir-salt:TestsProcessor: no results for task '{}'".format(
-                            test["task"]
+                    # use first task if only one test and one task given
+                    tasks = [t for t in result if not hasattr(t, "skip_results")]
+                    if len(self.tests) == 1 and len(tasks) == 1:
+                        test["result"] = tasks[0]
+                    else:
+                        log.warning(
+                            "nornir-salt:TestsProcessor: no results for task '{}'".format(
+                                test["task"]
+                            )
                         )
-                    )
-                    continue
+                        continue
 
             # get test function and function kwargs
             if test["test"] in test_functions_dispatcher:
@@ -947,8 +953,10 @@ class TestsProcessor:
         # remove non failed tasks if requested to do so
         if self.failed_only:
             for hostname, results in result.items():
-                good_tests = [
-                    index for index, i in enumerate(results) if i.success == True
-                ]
-                for i in good_tests:
+                good_tests = []
+                for index, i in enumerate(results):
+                    if hasattr(i, "success") and i.success == True:
+                        good_tests.append(index)
+                # pop starting from last index to preserve lower indexes
+                for i in reversed(good_tests):
                     _ = results.pop(i)

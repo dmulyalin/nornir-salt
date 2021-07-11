@@ -38,6 +38,11 @@ from .plugins.tasks import tcp_ping
 from .plugins.tasks import netmiko_send_commands
 from .plugins.tasks import netmiko_send_command_ps
 from .plugins.tasks import nr_test
+from .plugins.tasks import salt_cfg_gen
+from .plugins.tasks import scrapli_send_commands
+from .plugins.tasks import netmiko_send_config
+from .plugins.tasks import napalm_configure
+from .plugins.tasks import scrapli_send_config
 
 # NETCONF related plugins
 from .plugins.tasks import ncclient_call
@@ -72,4 +77,9 @@ __all__ = (
     "TestsProcessor",
     "TabulateFormatter",
     "DiffProcessor",
+    "salt_cfg_gen",
+    "scrapli_send_commands",
+    "netmiko_send_config",
+    "napalm_configure",
+    "scrapli_send_config",
 )

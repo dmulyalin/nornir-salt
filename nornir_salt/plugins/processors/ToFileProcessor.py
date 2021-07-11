@@ -165,7 +165,7 @@ class ToFileProcessor:
     def task_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
-        """ save to file on a per-host basis """
+        """save to file on a per-host basis"""
 
         # form file name
         if self.tf_format == "json":
