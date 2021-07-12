@@ -2,7 +2,7 @@
 netmiko_send_commands
 #####################
 
-This test plugin uses ``nornir-netmiko`` ``netmiko_send_command`` task
+This task plugin uses ``nornir-netmiko`` ``netmiko_send_command`` task
 to send multiple commands to devices.
 
 Dependencies:

@@ -14,7 +14,10 @@ scrapli_send_commands sample usage
 
 Code to invoke ``scrapli_send_commands`` task::
 
+    from nornir import InitNornir
     from nornir_salt import scrapli_send_commands
+
+    nr = InitNornir(config_file="config.yaml")
 
     output = nr.run(
         task=scrapli_send_commands,

@@ -2,7 +2,7 @@
 ncclient_call
 #############
 
-Ncclient is a popular library to interract with devices using NETCONF, this
+Ncclient is a popular library to interact with devices using NETCONF, this
 plugin is a wrapper around ncclient connection manager object.
 
 NETCONF protocol has a specific set of RPC calls available for use, rather
@@ -15,8 +15,16 @@ ncclient_call sample usage
 
 Sample code to run ``ncclient_call`` task::
 
-    TBD
+    from nornir import InitNornir
+    from nornir_salt import ncclient_call
 
+    nr = InitNornir(config_file="config.yaml")
+    
+    output = nr.run(
+        task=ncclient_call,
+        call="get_config",
+        source="running"
+    )
 
 ncclient_call returns
 =====================
@@ -236,8 +244,8 @@ def ncclient_call(task: Task, call: str, fmt: str = "xml", *args, **kwargs) -> R
 
     :param call: (str) ncclient manager object method to call
     :param fmt: (str) result formatter to use - xml (default), raw_xml, json, yaml, pprint, py
-    :param *arg: (list) any arguments to use with call method
-    :param **kwargs: (dict) any keyword arguments to use with call method
+    :param arg: (list) any ``*args`` to use with call method
+    :param kwargs: (dict) any ``**kwargs`` to use with call method
     """
     # run sanity check
     if not HAS_NCCLIENT:

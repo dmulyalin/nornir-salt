@@ -220,6 +220,7 @@ def worker(
                 for r in task.results:
                     r.failed = False
                     r.exception = None
+                    r.skip_results = True # for ResultSerializer to skip failed attempts
                 if reconnect_on_fail:
                     # close host connections to retry them
                     close_host_connection(host, params["connection_name"])

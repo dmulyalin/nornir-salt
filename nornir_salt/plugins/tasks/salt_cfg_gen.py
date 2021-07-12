@@ -3,8 +3,8 @@ salt_cfg_gen
 ############
 
 This is a function to test configuration generation without applying
-it to devices. It goes through full cofiguration rendering and helps
-to verify configuration content or simply generage it.
+it to devices. It goes through full configuration rendering and helps
+to verify configuration content or simply generate it.
 
 Used in conjunction with ``nr.cfg_gen`` execution module function.
 

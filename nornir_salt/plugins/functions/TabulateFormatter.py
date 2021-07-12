@@ -4,6 +4,10 @@ TabulateFormatter function
 
 Function to transform results in a text table format using Tabulate module.
 
+TabulateFormatter works with a list of dictionaries to represent them as a table,
+if Nornir AggregatedResult object passed on to TabulateFormatter it uses 
+ResultSerializer function to serialize results into a list of dictionaries.
+
 Dependencies:
 
 * Nornir 3.0 and beyond
@@ -11,8 +15,28 @@ Dependencies:
 
 Sample code to use TabulateFormatter::
 
-    TBD
+    from nornir import InitNornir
+    from nornir_salt import TabulateFormatter
+    from nornir_netmiko import netmiko_send_command
 
+    nr = InitNornir(config_file="config.yaml")
+
+    result = NornirObj.run(
+        task=netmiko_send_command,
+        command_string="show clock"
+    )
+
+    print(TabulateFormatter(result))
+    # prints:
+    # result                    changed    diff    failed    name          connection_retry    task_retry  exception    host
+    # ------------------------  ---------  ------  --------  ----------  ------------------  ------------  -----------  ------
+    # Sun Jul 11 08:41:06 2021  False              False     show clock                   0             0               ceos1
+    # Timezone: UTC
+    # Clock source: local
+    # Sun Jul 11 08:41:06 2021  False              False     show clock                   0             0               ceos2
+    # Timezone: UTC
+    # Clock source: local
+   
 Reference
 =========
 
@@ -40,7 +64,7 @@ def TabulateFormatter(result, tabulate=True, headers="keys"):
 
     :param result: list of dictionaries or ``nornir.core.task.AggregatedResult`` object
     :param tabulate: (dict or str or bool) controls tabulate behaviour
-    :param headers: (list) list of table headers, comma-sepated string of headers or
+    :param headers: (list) list of table headers, comma-separated string of headers or
         one of tabulate supported values, e.g. ``keys``
 
     Supported values for ``tabulate`` attribute:

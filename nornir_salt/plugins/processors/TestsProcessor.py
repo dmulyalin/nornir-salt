@@ -481,26 +481,28 @@ def CustomFunctionTest(
     :param function_call: (callable) reference to callable python function
     :param use_all_tasks: (bool) if True passes all host results to custom function, default False
     :param globals_dictionary: (dict) dictionary to merge with global space of the custom function,
-        used only if ``function_file`` or ``function_text`` arguments provided.
+      used only if ``function_file`` or ``function_text`` arguments provided.
     :param function_kwargs: (dict) ``**function_kwargs`` to pass on to custom function
     :param kwargs: (dict) any additional key word arguments to include in results
 
     .. warning:: ``function_file`` and ``function_text`` use ``exec`` function
-        to compile python code, using test functions from untrusted sources can
-        be dangerous.
+       to compile python code, using test functions from untrusted sources can
+       be dangerous.
 
     Custom functions should accept one positional argument for results following these rules:
+   
     * if ``task`` is a string result is ``nornir.core.task.Result``
     * if ``task`` is a list of task names result is a list of ``nornir.core.task.Result`` objects
-        of corresponding tasks
+      of corresponding tasks
     * if ``use_all_tasks`` set to True result is ``nornir.core.task.MultiResult`` object
 
-    Any additional parameters can be passed to custom test function using ``**function_kwargs``
+    Any additional parameters can be passed to custom test function using ``function_kwargs``
     arguments.
 
     Custom function can return a dictionary or a list of dictionaries to include in
     results. Each dictionary can have any keys, but it is recommended to have at least
     these keys:
+   
     * ``exception`` - error description if any
     * ``result`` - "PASS", "FAIL" or "ERROR" string
     * ``success`` - boolean True or False

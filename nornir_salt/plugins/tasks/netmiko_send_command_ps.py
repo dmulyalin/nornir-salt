@@ -1,3 +1,76 @@
+"""
+netmiko_send_command_ps
+########################
+
+Send command string to device using promptless (ps) approach. Can be used for any 
+command, including commands that change device prompt. Multiple commands can be sent
+separated by '\n' newline.
+
+.. image:: ./_images/promptless_mode_v0.1.png
+
+Promptless mode allows to detect end of output from device without relying on timers or 
+correct prompt matching (hence the name - promptless). This mode still uses pattern to 
+decide if device finished emitting data, but that pattern is not dependent on device's prompt
+regex matching.
+
+Each reading cycle, data from device read as fast as possible until device either finishes or 
+pose to prepare more data. Latter case detected and handled using read timeout timer and checking 
+if new data received. To detect when device finishes producing output, algorithm sends two space
+character to device and checks in next read cycle if last line contains two additional spaces,
+concluding that end of output detected if so and continue cycling otherwise.
+
+Overall its similar to how Humans interact with device prompt to verify that its still operational 
+- try hitting space or type something in terminal to see if its appears on the screen.
+
+Dependencies:
+
+* `nornir-netmiko module <https://pypi.org/project/nornir-netmiko/>`_ required
+
+netmiko_send_command_ps sample usage
+=====================================
+
+Code to invoke ``netmiko_send_command_ps`` task::
+
+    from nornir import InitNornir
+    from nornir_salt import netmiko_send_command_ps
+
+    nr = InitNornir(config_file="config.yaml")
+	
+    commands = '''
+    show ip int brief
+    conf t
+    interface loopback 100
+    ip address 1.1.1.100 255.255.255.255
+    end
+    show ip int brief
+    wr
+    '''
+    
+    output = nr.run(
+        task=netmiko_send_command_ps,
+        commands="show run",
+        netmiko_kwargs={}
+    )
+
+    output_multiline = nr.run(
+        task=netmiko_send_command_ps,
+        commands=commands,
+        netmiko_kwargs={}
+    )
+    
+netmiko_send_command_ps returns
+================================
+
+Returns Nornir results object with individual tasks names set
+equal to commands sent to device.
+
+netmiko_send_command_ps reference
+==================================
+
+.. autofunction:: nornir_salt.plugins.tasks.netmiko_send_command_ps.netmiko_send_command_ps
+.. autofunction:: nornir_salt.plugins.tasks.netmiko_send_command_ps.send_command_ps
+"""
+
 import time
 import logging
 

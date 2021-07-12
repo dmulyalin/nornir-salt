@@ -1,3 +1,68 @@
+"""
+scrapli_netconf_call
+####################
+
+Scrapli Netconf is a library to interact with devices using NETCONF, this
+plugin is a wrapper around Scrapli Netconf connection object.
+
+NETCONF protocol has a specific set of RPC calls available for use, rather
+than coding separate task for each of them, ``scrapli_netconf_call`` made to execute
+any arbitrary method supported by Scrapli Netconf connection object plus a set 
+of additional helper methods for extended functionality.
+
+scrapli_netconf_call sample usage
+=================================
+
+Sample code to run ``scrapli_netconf_call`` task::
+
+    from nornir import InitNornir
+    from nornir_salt import scrapli_netconf_call
+
+    nr = InitNornir(config_file="config.yaml")
+    
+    output = nr.run(
+        task=scrapli_netconf_call,
+        call="get_config",
+        source="running"
+    )
+
+scrapli_netconf_call returns
+============================
+
+Returns XML text string by default, but can return XML data transformed
+in JSON, YAML or Python format.
+
+scrapli_netconf_call reference
+==============================
+
+.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call.scrapli_netconf_call
+
+scrapli_netconf_call additional methods reference
+=================================================
+
+scrapli_netconf_call - dir
+--------------------------
+.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_dir
+
+scrapli_netconf_call - help
+---------------------------
+.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_help
+
+scrapli_netconf_call - server_capabilities
+------------------------------------------
+
+.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_server_capabilities
+
+scrapli_netconf_call - connected
+--------------------------------
+
+.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_connected
+
+scrapli_netconf_call - locked
+-----------------------------
+
+.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_locked
+"""
 import logging
 import json
 import pprint
@@ -25,6 +90,11 @@ except ImportError:
         "nornir_salt:scrapli_netconf_call failed to import yaml library, install it: pip install pyyaml"
     )
     HAS_YAML = False
+
+
+# define connection name for RetryRunner to properly detect it using:
+# connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
+CONNECTION_NAME = "scrapli_netconf"
 
 
 def _call_dir(conn, *args, **kwargs):
@@ -135,6 +205,11 @@ def scrapli_netconf_call(
     """
     Discpatcher function to call one of the supported scrapli_netconf methods
     or one of helper functions.
+    
+    :param call: (str) Scrapli Netconf connection object method to call
+    :param fmt: (str) result formatter to use - xml (default), raw_xml, json, yaml, pprint, py
+    :param arg: (list) any ``*args`` to use with call method
+    :param kwargs: (dict) any ``**kwargs`` to use with call method
     """
     # initiate local parameteres
     result = None
