@@ -25,20 +25,19 @@ Test functions returns Nornir ``Result`` object and make use of these attributes
 * ``test`` - test type to perform e.g. ``contains``, ``custom``, ``cerberus`` etc.
 * ``criteria`` - criteria that failed the test e.g. pattern or string
 * ``failed`` - this attribute not used by test functions to signal any status
-    and should always be False
+  and should always be False
 
 Running tests
 =============
 
-Running tests as smple as defining a list of dictionaries - test suite - each dictionary
+Running tests as simple as defining a list of dictionaries - test suite - each dictionary
 represents single test definition. Reference to a particular test function API for
 description of test function specific arguments it supports.
 
 These are mandatory arguments/keys each test dictionary must contain:
 
 * ``name`` - name of the test
-* ``task`` - name of the task to check results for or list of task names to use with
-    custom test function
+* ``task`` - name of the task to check results for or list of task names to use with custom test function
 * ``test`` - name of test function to run
 
 Additional arguments/keys that test dictionary can contain:
@@ -46,7 +45,7 @@ Additional arguments/keys that test dictionary can contain:
 * ``err_msg`` - string, error message to use for exception in case of test failure
 * ``path`` - string, dot separated path to data to test within results
 * ``report_all`` - boolean, default is False, if ``path`` evaluates to a list of items
-    and ``report_all`` set to True, reports all tests, even successful ones
+  and ``report_all`` set to True, reports all tests, even successful ones
 
 To simplify test functions calls, ``TestsProcessor`` implements these set of aliases
 for ``test`` argument:
