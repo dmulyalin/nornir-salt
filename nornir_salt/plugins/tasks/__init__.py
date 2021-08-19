@@ -9,6 +9,7 @@ from .scrapli_send_commands import scrapli_send_commands
 from .netmiko_send_config import netmiko_send_config
 from .napalm_configure import napalm_configure
 from .scrapli_send_config import scrapli_send_config
+from .http_call import http_call
 
 __all__ = (
     "tcp_ping",
@@ -22,4 +23,5 @@ __all__ = (
     "netmiko_send_config",
     "napalm_configure",
     "scrapli_send_config",
+    "http_call",
 )

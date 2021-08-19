@@ -143,11 +143,11 @@ def send_command_ps(
     # Main loop to get output from device
     while True:
         if read_timeout != -1 and no_data_elapsed > read_timeout:
-            raise NetmikoTimeoutException(
+            raise TimeoutError(
                 "send_command_ps {}s read_timeout expired".format(read_timeout)
             )
         if timeout != -1 and (time.time() - start_time) > timeout:
-            raise NetmikoTimeoutException(
+            raise TimeoutError(
                 "send_command_ps {}s timeout expired".format(timeout)
             )
 

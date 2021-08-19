@@ -38,5 +38,6 @@ setuptools.setup(
 
     [nornir.plugins.connections]
     ncclient=nornir_salt:NcclientPlugin
+    http=nornir_salt:HTTPPlugin
     """,
 )

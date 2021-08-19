@@ -199,6 +199,48 @@ def _call_server_capabilities(conn, *args, **kwargs):
     return conn.server_capabilities, False
 
 
+def _flatten(data, parent_key="", separator='.'):
+    """
+    Turn a nested structure (combination of lists/disctionaries) into a 
+    flattened dictionary.
+    
+    This function is useful to exploredeeply nested structures such as XML
+    output obtained from devices over NETCONF.
+    
+    Another usecase is filtering of the keys in resulted dictionary, as
+    they are the strings, glob or regex matching can be applied on them.
+    
+    :param data: nested data to flatten
+    :param parent_key: string to prepend to dictionary's keys, used by recursion
+    :param separator: string to separate flattened keys
+    :return: flattened structure
+    
+    Based on Stackoverflow answer:
+    https://stackoverflow.com/a/62186053/12300761
+    
+    All credits for the idea to https://github.com/ScriptSmith
+    
+    Sample usage::
+    
+        _flatten({'a': 1, 'c': {'a': 2, 'b': {'x': 5, 'y' : 10}}, 'd': [1, 2, 3] })
+        
+        >> {'a': 1, 'c.a': 2, 'c.b.x': 5, 'c.b.y': 10, 'd.0': 1, 'd.1': 2, 'd.2': 3}
+    """
+
+    items = []
+    if isinstance(data, dict):
+        for key, value in data.items():
+            new_key = "{}{}{}".format(parent_key, separator, key) if parent_key else key
+            items.extend(_flatten(value, new_key, separator).items())
+    elif isinstance(data, list):
+        for k, v in enumerate(data):
+            new_key = "{}{}{}".format(parent_key, separator, k) if parent_key else k
+            items.extend(_flatten({str(new_key): v}).items())
+    else:
+        items.append((parent_key, data))        
+    return dict(items)
+
+
 def scrapli_netconf_call(
     task: Task, call: str, fmt: str = "xml", *args, **kwargs
 ) -> Result:
@@ -253,8 +295,11 @@ def scrapli_netconf_call(
             result = pprint.pformat(parsed_data, indent=4)
         elif fmt == "py" and HAS_XMLTODICT:
             result = xmltodict.parse(result.result)
+        elif fmt == "flatten":
+            result = xmltodict.parse(result.result)
+            result = _flatten(result)
         else:
-            result = etree.tostring(result._root, pretty_print=True).decode()
+            result = str(result.result)
     elif isinstance(result, (list, dict, bool)):
         pass
     else:

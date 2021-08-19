@@ -43,11 +43,14 @@ from .plugins.tasks import scrapli_send_commands
 from .plugins.tasks import netmiko_send_config
 from .plugins.tasks import napalm_configure
 from .plugins.tasks import scrapli_send_config
+from .plugins.tasks import http_call
 
 # NETCONF related plugins
 from .plugins.tasks import ncclient_call
 from .plugins.tasks import scrapli_netconf_call
 from .plugins.connections import NcclientPlugin
+
+from .plugins.connections import HTTPPlugin
 
 # processors plugins
 from .plugins.processors import ToFileProcessor
@@ -82,4 +85,6 @@ __all__ = (
     "netmiko_send_config",
     "napalm_configure",
     "scrapli_send_config",
+    "HTTPPlugin",
+    "http_call",
 )

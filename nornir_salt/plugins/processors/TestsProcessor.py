@@ -829,110 +829,122 @@ class TestsProcessor:
         """
         Method to iterate over individual hosts's result after task/sub-tasks completion.
         """
-        # record the len of tasks to clean them up if required
-        if self.remove_tasks:
-            self.len_tasks = len(result)
-        # do the tests
-        for test in self.tests:
-            test = test.copy()
-
-            # if test item is a list, transform it to dictionary
-            if isinstance(test, list):
-                test = {
-                    "task": test[0],
-                    "test": test[1],
-                    "pattern": test[2],
-                    "name": test[3] if len(test) == 4 else None,
-                }
-                if test["test"] in ["eval", "EvalTest"]:
-                    test["expr"] = test.pop("pattern")
-
-            # make sure we have test name defined
-            if not test.get("name"):
-                test["name"] = "{} {} {}..".format(
-                    test["task"], test["test"], test.get("pattern", "")[:9]
-                )
-
-            # get task results to use; use all results
-            if test.get("use_all_tasks") == True:
-                test["result"] = result
-            # use subset of task results
-            elif isinstance(test["task"], list):
-                test["result"] = []
-                for task_result in result:
-                    if task_result.name in test["task"]:
-                        test["result"].append(task_result)
-            # use results for single task only
-            else:
-                # try to find task by matching it's name
-                for task_result in result:
-                    if task_result.name == test["task"]:
-                        test["result"] = task_result
-                        break
-                else:
-                    # use first task if only one test and one task given
-                    tasks = [t for t in result if not hasattr(t, "skip_results")]
-                    if len(self.tests) == 1 and len(tasks) == 1:
-                        test["result"] = tasks[0]
-                    else:
-                        log.warning(
-                            "nornir-salt:TestsProcessor: no results for task '{}'".format(
-                                test["task"]
-                            )
-                        )
-                        continue
-
-            # get test function and function kwargs
-            if test["test"] in test_functions_dispatcher:
-                test_func = test_functions_dispatcher[test["test"]]["fun"]
-                test.update(test_functions_dispatcher[test["test"]]["kwargs"])
-            elif test["test"] in globals() and "Test" in test["test"]:
-                test_func = globals()[test["test"]]
-            else:
-                raise NameError(
-                    "nornir-salt:TestsProcessor unsupported test function '{}'".format(
-                        test["test"]
+        try:
+            # record the len of tasks to clean them up if required
+            if self.remove_tasks:
+                self.len_tasks = len(result)
+            # do the tests
+            for test in self.tests:
+                test = test.copy()
+    
+                # if test item is a list, transform it to dictionary
+                if isinstance(test, list):
+                    test = {
+                        "task": test[0],
+                        "test": test[1],
+                        "pattern": test[2],
+                        "name": test[3] if len(test) == 4 else None,
+                    }
+                    if test["test"] in ["eval", "EvalTest"]:
+                        test["expr"] = test.pop("pattern")
+    
+                # make sure we have test name defined
+                if not test.get("name"):
+                    test["name"] = "{} {} {}..".format(
+                        test["task"], test["test"], test.get("pattern", "")[:9]
                     )
-                )
-
-            # run the test
-            try:
-                # run test for data at given path
-                if test.get("path"):
-                    report_all = test.pop("report_all", False)
-                    res = [
-                        test_func(host=host, result=item, **test)
-                        for item in _get_result_by_path(
-                            data=test.pop("result").result,
-                            path=test.pop("path").split("."),
-                            host=host,
-                        )
-                    ]
-                    # leave only failed results
-                    if not report_all:
-                        res = [i for i in res if i.success == False]
-                        # add single successful test if no tests failed
-                        if not res:
-                            ret = test_result_template.copy()
-                            ret.update(test)
-                            _ = ret.pop("expr", None)
-                            res = Result(host=host, **ret)
+    
+                # get task results to use; use all results
+                if test.get("use_all_tasks") == True:
+                    test["result"] = result
+                # use subset of task results
+                elif isinstance(test["task"], list):
+                    test["result"] = []
+                    for task_result in result:
+                        if task_result.name in test["task"]:
+                            test["result"].append(task_result)
+                # use results for single task only
                 else:
-                    res = test_func(host=host, **test)
-            except:
-                msg = "nornir-salt:TestsProcessor run error:\n{}".format(
-                    traceback.format_exc()
+                    # try to find task by matching it's name
+                    for task_result in result:
+                        if task_result.name == test["task"]:
+                            test["result"] = task_result
+                            break
+                    else:
+                        # use first task if only one test and one task given
+                        tasks = [t for t in result if not hasattr(t, "skip_results")]
+                        if len(self.tests) == 1 and len(tasks) == 1:
+                            test["result"] = tasks[0]
+                        else:
+                            log.warning(
+                                "nornir-salt:TestsProcessor: no results for task '{}'".format(
+                                    test["task"]
+                                )
+                            )
+                            continue
+    
+                # get test function and function kwargs
+                if test["test"] in test_functions_dispatcher:
+                    test_func = test_functions_dispatcher[test["test"]]["fun"]
+                    test.update(test_functions_dispatcher[test["test"]]["kwargs"])
+                elif test["test"] in globals() and "Test" in test["test"]:
+                    test_func = globals()[test["test"]]
+                else:
+                    raise NameError(
+                        "nornir-salt:TestsProcessor unsupported test function '{}'".format(
+                            test["test"]
+                        )
+                    )
+    
+                # run the test
+                try:
+                    # run test for data at given path
+                    if test.get("path"):
+                        report_all = test.pop("report_all", False)
+                        res = [
+                            test_func(host=host, result=item, **test)
+                            for item in _get_result_by_path(
+                                data=test.pop("result").result,
+                                path=test.pop("path").split("."),
+                                host=host,
+                            )
+                        ]
+                        # leave only failed results
+                        if not report_all:
+                            res = [i for i in res if i.success == False]
+                            # add single successful test if no tests failed
+                            if not res:
+                                ret = test_result_template.copy()
+                                ret.update(test)
+                                _ = ret.pop("expr", None)
+                                res = Result(host=host, **ret)
+                    else:
+                        res = test_func(host=host, **test)
+                except:
+                    msg = "nornir-salt:TestsProcessor run error:\n{}".format(
+                        traceback.format_exc()
+                    )
+                    log.error(msg)
+                    ret = test_result_template.copy()
+                    ret.update(test)
+                    ret.update({"result": "ERROR", "success": False, "exception": msg})
+                    res = Result(host=host, **ret)
+    
+                if isinstance(res, list):
+                    result.extend(res)
+                else:
+                    result.append(res)
+        except:
+            result.append(
+                Result(
+                    host=host, 
+                    exception=traceback.format_exc(),
+                    result=traceback.format_exc(),
+                    success = False,
+                    name="nornir-salt:TestsProcessor task_instance_completed error"
                 )
-                log.error(msg)
-                ret = test_result_template.copy()
-                ret.update(test)
-                ret.update({"result": "ERROR", "success": False, "exception": msg})
-                res = Result(host=host, **ret)
-
-            if isinstance(res, list):
-                result.extend(res)
-            else:
-                result.append(res)
+            )
+            
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
         pass
@@ -950,7 +962,7 @@ class TestsProcessor:
                 if len(results) >= self.len_tasks:
                     for i in range(0, self.len_tasks):
                         _ = results.pop(0)
-
+        
         # remove non failed tasks if requested to do so
         if self.failed_only:
             for hostname, results in result.items():

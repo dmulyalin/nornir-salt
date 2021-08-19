@@ -8,9 +8,9 @@ to certain hosts/devices.
 
 Filtering order::
 
-    FO -> FB -> FG -> FP -> FL
+    FO -> FB -> FC -> FR -> FG -> FP -> FL -> FN
 
-.. note:: If multiple filters provided, filtered hosts must pass all checks - ``AND`` logic.
+.. note:: If multiple filters provided, hosts must pass all checks - ``AND`` logic - to succeed.
 
 
 FFun filters overview
@@ -42,6 +42,43 @@ Filter hosts by name using Glob Patterns matching `fnmatchcase <https://docs.pyt
 
     # Match R1, R2, R# hostnames but not R11 or R4:
     filtered_hosts = FFun(NornirObj, FB="R[123]")
+    
+    # Match R1, R2, and SW1 but not R11 or R4 or eSW1 using list of patterns:
+    filtered_hosts = FFun(NornirObj, FB=["R[12]", "SW*"])
+
+    # Match R1, R2, and SW1 but not R11 or R4 or eSW1 using comma separated list of patterns:
+    filtered_hosts = FFun(NornirObj, FB="R[12], SW*")
+    
+If list of patterns provided, host matching at least one pattern will pass this check.
+    
+FC - Filter Contains Any
+------------------------
+
+Filter hosts by checking if their name contains any of the string patterns.
+
+    # Match core-switch-1 but not switch-1:
+    filtered_hosts = FFun(NornirObj, FC="core-switch")
+    
+    # Match R1, R2, and SW1 but not ER33 or CR4 using list of patterns:
+    filtered_hosts = FFun(NornirObj, FC=["R1", "R2", "SW"])
+
+    # Match R1, R2, and SW1 but not ER33 or CR4 using comma separated list of patterns:
+    filtered_hosts = FFun(NornirObj, FC="R1, R2, SW")
+    
+If list of patterns provided, host matching at least one pattern will pass this check.
+
+FR - Filter Regex
+-----------------
+
+Filter hosts by checking if their name contains any of regular expression patterns.
+
+    # Match core-switch-1 but not switch-1:
+    filtered_hosts = FFun(NornirObj, FR=".+core-switch.+")
+    
+    # Match R1, R2, and SW1 but not ER33 or CR4 using list of patterns:
+    filtered_hosts = FFun(NornirObj, FR=["^R1$", "^R2$", "^SW$"])
+    
+If list of patterns provided, host matching at least one pattern will pass this check.
 
 FG - Filter Group
 -----------------
@@ -70,7 +107,18 @@ Match only hosts with names in provided list::
 
     filtered_hosts = FFun(NornirObj, FL="R1, R2")
 
+FN - Filter Negate
+------------------
 
+Negate matching results if ``FN`` argument set to ``True``::
+
+    # will match all hosts except R1 and R2
+    filtered_hosts = FFun(NornirObj, FL="R1, R2", FN=True)
+
+FFun passes through all the ``Fx`` functions filtering hosts normally, ``FN`` 
+function called at the end to form a set of non matched hosts, that set used 
+with ``FL`` function to provide final match result.
+    
 FFun sample usage
 =================
 
@@ -178,6 +226,12 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
     if kwargs.get("FB"):
         ret = _filter_FB(ret, kwargs.pop("FB"))
         has_filter = True
+    if kwargs.get("FC"):
+        ret = _filter_FC(ret, kwargs.pop("FC"))
+        has_filter = True
+    if kwargs.get("FR"):
+        ret = _filter_FR(ret, kwargs.pop("FR"))
+        has_filter = True
     if kwargs.get("FG"):
         ret = _filter_FG(ret, kwargs.pop("FG"))
         has_filter = True
@@ -187,6 +241,8 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
     if "FL" in kwargs:
         ret = _filter_FL(ret, kwargs.pop("FL"))
         has_filter = True
+    if "FN" in kwargs:
+        ret = _filter_FN(ret, nr, kwargs.pop("FN"))
     return (ret, has_filter) if check_if_has_filter else ret
 
 
@@ -209,9 +265,42 @@ def _filter_FB(ret, pattern):
     """
     Function to filter hosts by name using glob patterns
     """
-    return ret.filter(filter_func=lambda h: fnmatchcase(h.name, pattern))
+    # check if comma separated list of patterns given
+    if isinstance(pattern, str) and "," in pattern:
+        pattern = [i.strip() for i in pattern.split(",")]
+    # run filtering
+    if isinstance(pattern, list):
+        return ret.filter(filter_func=lambda h: any([fnmatchcase(h.name, p) for p in pattern]))        
+    else:
+        return ret.filter(filter_func=lambda h: fnmatchcase(h.name, pattern))
 
 
+def _filter_FC(ret, pattern):
+    """
+    Function to filter hosts by name using pattern containment check
+    """
+    # check if comma separated list of patterns given
+    if isinstance(pattern, str) and "," in pattern:
+        pattern = [i.strip() for i in pattern.split(",")]
+    # run filtering
+    if isinstance(pattern, list):
+        return ret.filter(filter_func=lambda h: any([p in h.name for p in pattern]))        
+    else:
+        return ret.filter(filter_func=lambda h: pattern in h.name)
+        
+        
+def _filter_FR(ret, pattern):
+    """
+    Function to filter hosts by name using regex pattern search
+    """
+    import re
+    # run filtering
+    if isinstance(pattern, list):
+        return ret.filter(filter_func=lambda h: any([re.search(p, h.name) for p in pattern]))        
+    else:
+        return ret.filter(filter_func=lambda h: True if re.search(pattern, h.name) else False)
+        
+    
 def _filter_FG(ret, group):
     """
     Function to filter hosts using Groups
@@ -273,3 +362,15 @@ def _filter_FL(ret, names_list):
         return ret
     else:
         return ret.filter(filter_func=lambda h: h.name in names_list)
+
+
+def _filter_FN(ret, nr, FN):
+    """
+    Function to negate hosts' match results
+    """
+    if FN != True:
+        return ret
+    all_hosts = set(nr.inventory.hosts.keys())
+    matched_hosts = set(ret.inventory.hosts.keys())
+    FNed_hosts = all_hosts.difference(matched_hosts)
+    return _filter_FL(nr, list(FNed_hosts))
