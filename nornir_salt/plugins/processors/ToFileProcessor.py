@@ -33,63 +33,12 @@ import logging
 import time
 import os
 import json
-import pprint
 import traceback
-
-try:
-    import yaml
-
-    HAS_YAML = True
-except ImportError:
-    HAS_YAML = False
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
 log = logging.getLogger(__name__)
-
-
-# --------------------------------------------------------------------------------
-# formatters helper functions
-# --------------------------------------------------------------------------------
-
-
-def _to_json(data):
-    return json.dumps(data, sort_keys=True, indent=4, separators=(",", ": "))
-
-
-def _to_pprint(data):
-    return pprint.pformat(data, indent=4)
-
-
-def _to_yaml(data):
-    if HAS_YAML:
-        return yaml.dump(data, default_flow_style=False)
-    else:
-        return _to_pprint(data)
-
-
-def _to_raw(data):
-    return str(data)
-
-
-# formats dispatcher dictionary
-formatters = {"raw": _to_raw, "json": _to_json, "pprint": _to_pprint, "yaml": _to_yaml}
-
-
-def _write(f, data, tf_format):
-    """
-    Helper function mainly to re-use code
-    """
-    try:
-        f.write(formatters[tf_format](data) + "\n")
-    except KeyError:
-        log.error(
-            "ToFile, unsupported format '{}'; supported '{}'".format(
-                tf_format, list(formatters.keys())
-            )
-        )
-
 
 class ToFileProcessor:
     """
@@ -97,38 +46,47 @@ class ToFileProcessor:
     If multiple tasks present, results of all of them saved in same file.
 
     :param tf: (str) alias name of the file content
-    :param tf_format: (str) formatter name to use on results before saving them
     :param base_url: (str) OS path to folder where to save files, default "/var/nornir-salt/"
     :param max_files: (int) default is 5, maximum number of file for given ``tf`` alias
 
-    Supported ``tf_format`` values:
+    Files saved under ``base_url`` location, where individual filename formed using string::
 
-    * ``raw`` - (default) converts data to string appending newline to the end
-    * ``pprint`` - uses ``pprint.pformat`` function to format data to string
-    * ``json`` - formats data to JSON format
-    * ``yaml`` - formats data to YAML format
-
-    Files saved under ``base_url`` location, where individual filename formed using
-    string::
-
-        {tf}__{timestamp}__{hostname}.{ext}
+        {tf}__{timestamp}__{hostname}.txt
 
     Where:
 
+    * tf - value of ``tf`` attribute
     * timestamp - ``%d_%B_%Y_%H_%M_%S`` time formatted string, e.g. "12_June_2021_21_48_11"
     * hostname - ``name`` attribute of host
-    * tf - value of ``tf`` attribute
-    * ext - file extension, json, yaml or txt depending on ``tf_format``
 
     In addition, ``tf_aliases.json`` file created under ``base_url`` to track files created
-    using dictionary structure of ``{tf: {hostname: [{filename: str, tasks: {task_name:
-    file_span}}]}}``. ``tf_aliases.json`` used by ``DiffProcessor`` to retrieve previous results
-    for the task.
+    using dictionary structure::
+    
+        {
+            "config": {
+                "IOL1": [
+                    {
+                        "filename": "./tofile_outputs/config__22_August_2021_14_08_33__IOL1.txt",
+                        "tasks": {
+                            "show run | inc ntp": {
+                                "span": [0, 48],
+                                "content_type": "str"
+                        }
+                    }
+                ]
+            }
+        }
+    
+    Where ``config`` is ``tf`` attribute value, ``"show run | inc ntp": [0, 48]`` - 
+    ``show run | inc ntp`` task results span indexes inside 
+    ``./tofile_outputs/config__22_August_2021_14_08_33__IOL1.txt`` text file.
+    
+    ``tf_aliases.json`` used by other plugins to retrieve previous results for the task,
+    it could be considered as a simplified index database.
     """
 
-    def __init__(self, tf, tf_format="raw", base_url="/var/nornir-salt/", max_files=5):
+    def __init__(self, tf, base_url="/var/nornir-salt/", max_files=5):
         self.tf = tf
-        self.tf_format = tf_format
         self.base_url = base_url
         self.max_files = max(1, max_files)
 
@@ -136,7 +94,7 @@ class ToFileProcessor:
         self.aliases_file = os.path.join(base_url, "tf_aliases.json")
         self.aliases_data = (
             {}
-        )  # dictionary of {tf name: {hostname: [{filename: str, tasks: {task_name: file_span}}]}}
+        )  # dictionary to store tf_aliases.json content
 
         self._load_aliases()
 
@@ -154,7 +112,7 @@ class ToFileProcessor:
     def _dump_aliases(self):
         # save aliases data
         with open(self.aliases_file, mode="w", encoding="utf-8") as f:
-            _write(f, self.aliases_data, "json")
+            f.write(json.dumps(self.aliases_data, sort_keys=True, indent=4, separators=(",", ": ")))
 
     def task_started(self, task: Task) -> None:
         pass  # ignore
@@ -167,18 +125,8 @@ class ToFileProcessor:
     ) -> None:
         """save to file on a per-host basis"""
 
-        # form file name
-        if self.tf_format == "json":
-            ext = "json"
-        elif self.tf_format == "yaml":
-            ext = "yaml"
-        elif self.tf_format == "pprint":
-            ext = "py"
-        else:
-            ext = "txt"
-
-        host_filename = "{tf}__{timestamp}__{hostname}.{ext}".format(
-            timestamp=self.timestamp, hostname=host.name, tf=self.tf, ext=ext
+        host_filename = "{tf}__{timestamp}__{hostname}.txt".format(
+            timestamp=self.timestamp, hostname=host.name, tf=self.tf
         )
         host_filename = os.path.join(self.base_url, host_filename)
 
@@ -208,11 +156,19 @@ class ToFileProcessor:
                 ):
                     continue
                 # save results to file
-                _write(f, i.result, self.tf_format)
+                if isinstance(i.result, (str, int, float, bool)):
+                    result_to_save = str(i.result)
+                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {"content_type": "str"}
+                # convert structured data to json
+                else:
+                    result_to_save = json.dumps(i.result, sort_keys=True, indent=4, separators=(",", ": "))
+                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {"content_type": "json"}
+                f.write(result_to_save + "\n")
+                
                 # add aliases data
-                span = (span_start, span_start + len(str(i.result)) + 1)
-                self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = span
-                span_start += len(str(i.result)) + 1  # _write appends \n hence +1
+                span = (span_start, span_start + len(result_to_save) + 1)
+                self.aliases_data[self.tf][host.name][0]["tasks"][i.name]["span"] = span
+                span_start += len(result_to_save) + 1  # f.write appends \n hence +1
 
         # check if need to delete old files
         if len(self.aliases_data[self.tf][host.name]) > self.max_files:

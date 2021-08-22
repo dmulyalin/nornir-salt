@@ -51,33 +51,6 @@ from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
 log = logging.getLogger(__name__)
 
-# --------------------------------------------------------------------------------
-# formatters helper functions
-# --------------------------------------------------------------------------------
-
-
-def _to_json(data):
-    return json.dumps(data, sort_keys=True, indent=4, separators=(",", ": "))
-
-
-def _to_pprint(data):
-    return pprint.pformat(data, indent=4)
-
-
-def _to_yaml(data):
-    if HAS_YAML:
-        return yaml.dump(data, default_flow_style=False)
-    else:
-        return _to_pprint(data)
-
-
-def _to_raw(data):
-    return str(data)
-
-
-# formats dispatcher dictionary
-formatters = {"raw": _to_raw, "json": _to_json, "pprint": _to_pprint, "yaml": _to_yaml}
-
 
 class DiffProcessor:
     """
@@ -199,15 +172,6 @@ class DiffProcessor:
         prev_res_alias_data = self.aliases_data[self.diff][host.name][index]
         prev_res_filename = prev_res_alias_data["filename"]
 
-        # decide on results formatter to use
-        data_format = "raw"
-        if prev_res_filename.endswith("json"):
-            data_format = "json"
-        elif prev_res_filename.endswith("yaml"):
-            data_format = "yaml"
-        elif prev_res_filename.endswith("py"):
-            data_format = "pprint"
-
         # open previous results file
         with open(prev_res_filename, mode="r", encoding="utf-8") as f:
             prev_result = f.read()
@@ -228,15 +192,20 @@ class DiffProcessor:
                 ):
                     continue
                 else:
-                    new_result = formatters[data_format](i.result) + "\n"
                     # check if task results exists
                     if not i.name in prev_res_alias_data["tasks"]:
                         i.diff = "'{}' task results not in '{}''".format(
                             i.name, prev_res_filename
                         )
                         continue
+                    # form new results
+                    if isinstance(i.result, (str, int, float, bool)):
+                        new_result = str(i.result) + "\n"
+                    # convert structured data to json
+                    else:
+                        new_result = json.dumps(i.result, sort_keys=True, indent=4, separators=(",", ": ")) + "\n"                    
                     # run diff using portion of prev_result file with given task results only
-                    spans = prev_res_alias_data["tasks"][i.name]
+                    spans = prev_res_alias_data["tasks"][i.name]["span"]
                     difference = self._run_diff(
                         prev_result=prev_result[spans[0] : spans[1]],
                         new_result=new_result,
@@ -260,9 +229,12 @@ class DiffProcessor:
                     and not exception
                 ):
                     continue
+                # form new results
+                if isinstance(i.result, (str, int, float, bool)):
+                    new_result += str(i.result) + "\n"
+                # convert structured data to json
                 else:
-                    new_result += formatters[data_format](i.result) + "\n"
-
+                    new_result += json.dumps(i.result, sort_keys=True, indent=4, separators=(",", ": ")) + "\n"    
             # run diff
             difference = self._run_diff(
                 prev_result,

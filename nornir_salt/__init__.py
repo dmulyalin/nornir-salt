@@ -44,6 +44,7 @@ from .plugins.tasks import netmiko_send_config
 from .plugins.tasks import napalm_configure
 from .plugins.tasks import scrapli_send_config
 from .plugins.tasks import http_call
+from .plugins.tasks import file_read
 
 # NETCONF related plugins
 from .plugins.tasks import ncclient_call
@@ -87,4 +88,5 @@ __all__ = (
     "scrapli_send_config",
     "HTTPPlugin",
     "http_call",
+    "file_read",
 )
