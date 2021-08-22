@@ -75,6 +75,9 @@ def http_call(task: Task, method: str, **kwargs) -> Result:
     # add auth
     if "auth" not in parameters and conn.get("hostname") and conn.get("password"):
         parameters["auth"] = (conn["username"], conn["password"])
+    # make sure auth is a tuple
+    elif "auth" in parameters:
+        parameters["auth"] = tuple(parameters["auth"])
         
     # form url
     if "url" in parameters:

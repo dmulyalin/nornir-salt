@@ -699,3 +699,354 @@ def test_xml_xpath_on_error():
     pprint.pprint(result, width=200)
     assert "lxml.etree.XPathEvalError: Invalid expression" in result["IOL1"]["show run | inc ntp"]["exception"]
 # test_xml_xpath_on_error()
+
+
+@skip_if_no_nornir
+def test_xml_rm_ns():
+    """ results are XML document without namespaces """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        ["xml_rm_ns"]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": xml_ntp_data,
+            "IOL2": xml_ntp_data,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output, to_dict=True)
+    # pprint.pprint(result, width=200)
+    
+    assert result == {'IOL1': {'show run | inc ntp': '<rpc-reply message-id="urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6">\n'
+                                '  <data time-modified="2021-07-15T19:54:35.034953141Z">\n'
+                                '    <system>\n'
+                                '      <ntp>\n'
+                                '        <config>\n'
+                                '          <enable-ntp-auth>false</enable-ntp-auth>\n'
+                                '          <enabled>true</enabled>\n'
+                                '        </config>\n'
+                                '        <servers>\n'
+                                '          <server>\n'
+                                '            <address>1.1.1.10</address>\n'
+                                '            <config>\n'
+                                '              <address>1.1.1.10</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          </server>\n'
+                                '          <server>\n'
+                                '            <address>1.1.1.11</address>\n'
+                                '            <config>\n'
+                                '              <address>1.1.1.11</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          </server>\n'
+                                '        </servers>\n'
+                                '      </ntp>\n'
+                                '    </system>\n'
+                                '  </data>\n'
+                                '</rpc-reply>\n'},
+ 'IOL2': {'show run | inc ntp': '<rpc-reply message-id="urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6">\n'
+                                '  <data time-modified="2021-07-15T19:54:35.034953141Z">\n'
+                                '    <system>\n'
+                                '      <ntp>\n'
+                                '        <config>\n'
+                                '          <enable-ntp-auth>false</enable-ntp-auth>\n'
+                                '          <enabled>true</enabled>\n'
+                                '        </config>\n'
+                                '        <servers>\n'
+                                '          <server>\n'
+                                '            <address>1.1.1.10</address>\n'
+                                '            <config>\n'
+                                '              <address>1.1.1.10</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          </server>\n'
+                                '          <server>\n'
+                                '            <address>1.1.1.11</address>\n'
+                                '            <config>\n'
+                                '              <address>1.1.1.11</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          </server>\n'
+                                '        </servers>\n'
+                                '      </ntp>\n'
+                                '    </system>\n'
+                                '  </data>\n'
+                                '</rpc-reply>\n'}}
+    
+# test_xml_rm_ns()
+
+@skip_if_no_nornir
+def test_xml_xpath_with_rm_ns():
+    """ results are XML filtered using XPATH without namespaces """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        xpath={"expr": "//config", "rm_ns": True}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": xml_ntp_data,
+            "IOL2": xml_ntp_data,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output, to_dict=True)
+    pprint.pprint(result, width=200)
+    assert result == {'IOL1': {'show run | inc ntp': '<config>\n'
+                                '          <enable-ntp-auth>false</enable-ntp-auth>\n'
+                                '          <enabled>true</enabled>\n'
+                                '        </config>\n'
+                                '        \n'
+                                '\n'
+                                '<config>\n'
+                                '              <address>1.1.1.10</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          \n'
+                                '\n'
+                                '<config>\n'
+                                '              <address>1.1.1.11</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          \n'},
+ 'IOL2': {'show run | inc ntp': '<config>\n'
+                                '          <enable-ntp-auth>false</enable-ntp-auth>\n'
+                                '          <enabled>true</enabled>\n'
+                                '        </config>\n'
+                                '        \n'
+                                '\n'
+                                '<config>\n'
+                                '              <address>1.1.1.10</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          \n'
+                                '\n'
+                                '<config>\n'
+                                '              <address>1.1.1.11</address>\n'
+                                '              <iburst>false</iburst>\n'
+                                '              <prefer>false</prefer>\n'
+                                '              <version>4</version>\n'
+                                '            </config>\n'
+                                '          \n'}}
+# test_xml_xpath_with_rm_ns()
+
+def test_parse_ttp():
+    """ results are XML filtered using XPATH without namespaces """
+    template = """
+interface {{ interface }}
+  description {{ description | ORPHRASE }}
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        parse_ttp={"template": template, "res_kwargs": {"structure": "flat_list"}}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+interface Port-Chanel11
+  description Storage Management
+interface Loopback0
+  description RID            
+            """,
+            "IOL2": """
+interface Port-Chanel11
+  description Storage Management
+interface Loopback0
+  description RID            
+            """,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output, to_dict=True)
+    # pprint.pprint(result, width=100)
+    assert result == {'IOL1': {'show run | inc ntp': [{'description': 'Storage Management',
+                                                    'interface': 'Port-Chanel11'},
+                                                   {'description': 'RID', 'interface': 'Loopback0'}]},
+                   'IOL2': {'show run | inc ntp': [{'description': 'Storage Management',
+                                                    'interface': 'Port-Chanel11'},
+                                                   {'description': 'RID', 'interface': 'Loopback0'}]}}
+    
+# test_parse_ttp()
+
+def test_match():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        match={"pattern": "description Storage .*"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+interface Port-Chanel11
+  description Storage Management
+interface Loopback0
+  description PID            
+            """,
+            "IOL2": """
+interface Port-Chanel11
+  description Storage Management Space
+interface Loopback0
+  description RID/PID         
+            """,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': '  description Storage Management'},
+                   'IOL2': {'show run | inc ntp': '  description Storage Management Space'}}
+                   
+# test_match()
+
+def test_match_with_before():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        match={"pattern": "description Storage .*", "before": 1}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+interface Port-Chanel11
+  description Storage Management
+interface Loopback0
+  description PID            
+            """,
+            "IOL2": """
+interface Port-Chanel11
+  description Storage Management Space
+interface Loopback0
+  description RID/PID         
+            """,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': '--\ninterface Port-Chanel11\n  description Storage Management'},
+                   'IOL2': {'show run | inc ntp': '--\n'
+                                                  'interface Port-Chanel11\n'
+                                                  '  description Storage Management Space'}}               
+# test_match_with_before()
+
+def test_lod_filter():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        lod_filter={"ip": "1.1.*"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}        
+# test_lod_filter()
+
+def test_lod_filter_with_glob_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        lod_filter={"G@ip": "1.1.*"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}        
+# test_lod_filter_with_glob_check_type_specifier()
+
+def test_lod_filter_with_uncknown_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        lod_filter={"XX@ip": "1.1.*"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': []},
+                      'IOL2': {'show run | inc ntp': []}}        
+# test_lod_filter_with_uncknown_check_type_specifier()
+
+def test_lod_filter_with_glob_check_type_specifier_multikey():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        lod_filter={"ip": "1.1.*", "interface": "Gi[12]"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'}]}}   
+                      
+# test_lod_filter_with_glob_check_type_specifier_multikey()
