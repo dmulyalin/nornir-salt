@@ -437,6 +437,27 @@ def xml_rm_ns(data, recover=True, ret_xml=True, **kwargs):
         return tree
 
 
+def path_(data, path, **kwargs):
+    """
+    Function to retrieve data at given path.
+    
+    :param path: (str) dot separated path to result
+    :param data: (dict) data to get results from
+    :return: results at given path
+    
+    Sample data::
+    
+        {
+            "ntp":
+                "cfg": 
+                    "servers": ["1.1.1.1", "2.2.2.2"]
+        }
+        
+    With ``path`` ``ntp.cfg.servers`` will return ``[ "1.1.1.1", "2.2.2.2"]``
+    """
+    pass
+
+
 # --------------------------------------------------------------------------------
 # filtering functions: filter structured/text data
 # --------------------------------------------------------------------------------
@@ -498,6 +519,11 @@ def key_filter(data, pattern, **kwargs):
             k: v for k, v in data.items() if any([fnmatchcase(k, p) for p in pattern])
         }
     else:
+        log.warning(
+            "nornir_salt:DataProcessor:key_filter skipping, data is not dictionary but {}".format(
+                type(data)
+            )
+        )
         return data
 
 
@@ -525,7 +551,7 @@ def lod_filter(data, pass_all=True, **kwargs):
     **Filtering mini-query-language specification**
     
     Key name may be prepended with check type specifier to instruct what type of check to execute 
-	with criteria against key value. For example ``G@key_name`` would use glob pattern matching.
+    with criteria against key value. For example ``G@key_name`` would use glob pattern matching.
     
     +------------+-----------------------------------------------------------+
     | Check Type |  Description                                              |
@@ -557,17 +583,17 @@ def lod_filter(data, pass_all=True, **kwargs):
     for key_name, criteria in kwargs.items():
         # check if key is XX@key or X@key where X is a check type
         if "@" in key_name[:2] and key_name.split("@")[0] in check_fun_dispatcher:
-            type = key_name.split("@")[0]
+            filter_type = key_name.split("@")[0]
             # account for cases when key_name contains other @
             name = "@".join(key_name.split("@")[1:])
         else:
-            type, name = (
+            filter_type, name = (
                 "G",
                 key_name,
             )
         checks.append(
             {
-                "fun": check_fun_dispatcher[type],
+                "fun": check_fun_dispatcher[filter_type],
                 "key": name,
                 "criteria": criteria,
             }
@@ -679,6 +705,37 @@ def xml_flake(data, pattern, **kwargs):
     return key_filter(xml_flatten(data), pattern=pattern, **kwargs)
 
 
+def find(data, path=None, **kwargs):
+    """
+    Function to dispatch data to one of the filtering functions.
+
+    :param data: (list, dict) data to search in
+    :param path: (str) dot separated path to results within data to process
+    
+    Dispatching process happens after evaluating ``path`` and retrieving
+    results to process from overall data.
+    
+    ``path`` only evaluated if provided data is a dictionary.
+    
+    Dispatch rules:
+    
+    * if result type is list uses ``lod_filter``
+    * if result type is dictionary uses ``key_filter``
+    * if result type is string uses ``match`` function
+    """
+    result = data
+    
+    if path and isinstance(data, dict):
+        result = path_(data, path)
+        
+    if isinstance(result, list):
+        return lod_filter(result, **kwargs)
+    elif isinstance(result, dict):
+        return key_filter(result, **kwargs)
+    elif isinstance(result, str):
+        return match(result, **kwargs)
+        
+        
 # --------------------------------------------------------------------------------
 # parsing functions: parse text data - return structured data
 # --------------------------------------------------------------------------------
@@ -740,10 +797,12 @@ dispatcher = {
     "match": match,  # similar to include
     "xml_flake": xml_flake,  # XML flatten key filter
     "lod_filter": lod_filter,  # list of dictionaries filter
-    # tranformers
+    "find": find,
+    # transformers
     "xml_to_json": xml_to_json,
     "xml_flatten": xml_flatten,
     "xml_rm_ns": xml_rm_ns,
+    "path": path_,
     # parsers
     "parse_ttp": parse_ttp,
 }
@@ -781,6 +840,10 @@ class DataProcessor:
         try:
             for i in result:
                 try:
+                    # check if need to skip this task
+                    if hasattr(i, "skip_results") and i.skip_results == True:
+                        continue
+                    # pass task result through functions
                     for dp_fun in self.dp:
                         i.result = dispatcher[dp_fun](
                             i.result, **self.dp_kwargs.get(dp_fun, self.dp_kwargs)

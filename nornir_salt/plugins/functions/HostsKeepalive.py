@@ -16,6 +16,10 @@ open, preventing it from timeout due to inactivity.
 - napalm - uses ``is_alive()`` method to check connection
 - scrapli - uses ``isalive()`` method to check connection
 - ncclient - uses ``connected`` attribute of connection manager to check connection status
+- http - HTTP connections non-persistent hence ``HostsKeepalive`` does nothing
+
+For other connection types ``HostsKeepalive`` logs warning message and keeps 
+connection intact.
 
 .. note:: HostsKeepalive only checks previously established connections, it
   does not creates new connections to hosts or tries to reopen dead connections.
@@ -79,6 +83,8 @@ def HostsKeepalive(nr):
                     is_alive = conn_obj.connection.isalive()
                 elif "ncclient" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.connection.connected
+                elif "http" in str(type(conn_obj)).lower():
+                    is_alive = True
                 else:
                     log.debug(
                         "nornir_salt:HostsKeepalive - uncknown connection '{}', type: '{}'".format(

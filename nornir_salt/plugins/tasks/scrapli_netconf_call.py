@@ -71,27 +71,6 @@ from nornir.core.task import Result, Task
 
 log = logging.getLogger(__name__)
 
-try:
-    import xmltodict
-
-    HAS_XMLTODICT = True
-except ImportError:
-    log.warning(
-        "nornir_salt:scrapli_netconf_call failed to import xmltodict library, install it: pip install xmltodict"
-    )
-    HAS_XMLTODICT = False
-
-try:
-    import yaml
-
-    HAS_YAML = True
-except ImportError:
-    log.warning(
-        "nornir_salt:scrapli_netconf_call failed to import yaml library, install it: pip install pyyaml"
-    )
-    HAS_YAML = False
-
-
 # define connection name for RetryRunner to properly detect it using:
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
 CONNECTION_NAME = "scrapli_netconf"
@@ -199,59 +178,17 @@ def _call_server_capabilities(conn, *args, **kwargs):
     return conn.server_capabilities, False
 
 
-def _flatten(data, parent_key="", separator='.'):
-    """
-    Turn a nested structure (combination of lists/disctionaries) into a 
-    flattened dictionary.
-    
-    This function is useful to exploredeeply nested structures such as XML
-    output obtained from devices over NETCONF.
-    
-    Another usecase is filtering of the keys in resulted dictionary, as
-    they are the strings, glob or regex matching can be applied on them.
-    
-    :param data: nested data to flatten
-    :param parent_key: string to prepend to dictionary's keys, used by recursion
-    :param separator: string to separate flattened keys
-    :return: flattened structure
-    
-    Based on Stackoverflow answer:
-    https://stackoverflow.com/a/62186053/12300761
-    
-    All credits for the idea to https://github.com/ScriptSmith
-    
-    Sample usage::
-    
-        _flatten({'a': 1, 'c': {'a': 2, 'b': {'x': 5, 'y' : 10}}, 'd': [1, 2, 3] })
-        
-        >> {'a': 1, 'c.a': 2, 'c.b.x': 5, 'c.b.y': 10, 'd.0': 1, 'd.1': 2, 'd.2': 3}
-    """
-
-    items = []
-    if isinstance(data, dict):
-        for key, value in data.items():
-            new_key = "{}{}{}".format(parent_key, separator, key) if parent_key else key
-            items.extend(_flatten(value, new_key, separator).items())
-    elif isinstance(data, list):
-        for k, v in enumerate(data):
-            new_key = "{}{}{}".format(parent_key, separator, k) if parent_key else k
-            items.extend(_flatten({str(new_key): v}).items())
-    else:
-        items.append((parent_key, data))        
-    return dict(items)
-
-
 def scrapli_netconf_call(
-    task: Task, call: str, fmt: str = "xml", *args, **kwargs
+    task: Task, call: str, *args, **kwargs
 ) -> Result:
     """
     Discpatcher function to call one of the supported scrapli_netconf methods
     or one of helper functions.
     
     :param call: (str) Scrapli Netconf connection object method to call
-    :param fmt: (str) result formatter to use - xml (default), raw_xml, json, yaml, pprint, py
     :param arg: (list) any ``*args`` to use with call method
     :param kwargs: (dict) any ``**kwargs`` to use with call method
+    :return: result of scrapli-netconf method call - XML string or other
     """
     # initiate local parameteres
     result = None
@@ -277,29 +214,11 @@ def scrapli_netconf_call(
     # call conn object method otherwise
     else:
         result = getattr(conn, call)(*args, **kwargs)
+        failed = result.failed if hasattr(result, "failed") else failed
 
     # format results
     if hasattr(result, "result"):
-        if fmt == "xml":
-            result = result.result
-        elif fmt == "raw_xml":
-            result = result.result
-        elif fmt == "json" and HAS_XMLTODICT:
-            parsed_data = xmltodict.parse(result.result)
-            result = json.dumps(parsed_data, sort_keys=True, indent=4)
-        elif fmt == "yaml" and HAS_XMLTODICT and HAS_YAML:
-            parsed_data = xmltodict.parse(result.result)
-            result = yaml.dump(parsed_data, default_flow_style=False)
-        elif fmt == "pprint" and HAS_XMLTODICT:
-            parsed_data = xmltodict.parse(result.result)
-            result = pprint.pformat(parsed_data, indent=4)
-        elif fmt == "py" and HAS_XMLTODICT:
-            result = xmltodict.parse(result.result)
-        elif fmt == "flatten":
-            result = xmltodict.parse(result.result)
-            result = _flatten(result)
-        else:
-            result = str(result.result)
+        result = result.result
     elif isinstance(result, (list, dict, bool)):
         pass
     else:

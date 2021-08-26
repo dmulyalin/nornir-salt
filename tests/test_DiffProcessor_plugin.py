@@ -145,49 +145,49 @@ ntp server 9.9.9.9
     res = ResultSerializer(output, add_details=True)
 
     # pprint.pprint(res)
-    # {'IOL1': {'config_for_diff_diff': {'changed': False,
-    #                                 'diff': '',
-    #                                 'exception': None,
-    #                                 'failed': False,
-    #                                 'result': '--- old '
-    #                                             './tofile_outputs/13_June_2021_09_36_48__IOL1__config_for_diff.txt\n'
-    #                                             '+++ new results\n'
-    #                                             '@@ -1,3 +1,2 @@\n'
-    #                                             '-Timestamp 12:12:12\n'
-    #                                             '+Timestamp 14:14:14\n'
-    #                                             ' ntp server 7.7.7.8\n'
-    #                                             '-ntp server 7.7.7.7\n'}},
-    # 'IOL2': {'config_for_diff_diff': {'changed': False,
-    #                                 'diff': '',
-    #                                 'exception': None,
-    #                                 'failed': False,
-    #                                 'result': '--- old '
-    #                                             './tofile_outputs/13_June_2021_09_36_48__IOL2__config_for_diff.txt\n'
-    #                                             '+++ new results\n'
-    #                                             '@@ -1 +1,2 @@\n'
-    #                                             ' ntp server 7.7.7.7\n'
-    #                                             '+ntp server 9.9.9.9\n'}}}
-
+    # {'IOL1': {'show run | inc ntp': {'changed': False,
+    #                                  'diff': '',
+    #                                  'exception': None,
+    #                                  'failed': False,
+    #                                  'result': '--- old '
+    #                                            './tofile_outputs/config_for_diff__23_August_2021_22_12_40__634__IOL1.txt\n'
+    #                                            '+++ new results\n'
+    #                                            '@@ -1,3 +1,2 @@\n'
+    #                                            '-Timestamp 12:12:12\n'
+    #                                            '+Timestamp 14:14:14\n'
+    #                                            ' ntp server 7.7.7.8\n'
+    #                                            '-ntp server 7.7.7.7\n'}},
+    #  'IOL2': {'show run | inc ntp': {'changed': False,
+    #                                  'diff': '',
+    #                                  'exception': None,
+    #                                  'failed': False,
+    #                                  'result': '--- old '
+    #                                            './tofile_outputs/config_for_diff__23_August_2021_22_12_40__397__IOL2.txt\n'
+    #                                            '+++ new results\n'
+    #                                            '@@ -1 +1,2 @@\n'
+    #                                            ' ntp server 7.7.7.7\n'
+    #                                            '+ntp server 9.9.9.9\n'}}}
+                                           
     assert (
         """-Timestamp 12:12:12
 +Timestamp 14:14:14
  ntp server 7.7.7.8
 -ntp server 7.7.7.7"""
-        in res["IOL1"]["config_for_diff_diff"]["result"]
+        in res["IOL1"]["show run | inc ntp"]["result"]
     )
     assert (
         """
  ntp server 7.7.7.7
 +ntp server 9.9.9.9"""
-        in res["IOL2"]["config_for_diff_diff"]["result"]
+        in res["IOL2"]["show run | inc ntp"]["result"]
     )
 
 
-# test_diff_processor()
+test_diff_processor()
 
 
 @skip_if_no_nornir
-def test_diff_processor_per_task():
+def test_diff_processor_in_diff_is_true():
     clean_up_folder()
 
     # run test to generate the file
@@ -212,7 +212,7 @@ ntp server 7.7.7.7
 
     # run the test to make difference
     nr_with_tests = nr.with_processors(
-        [DiffProcessor(diff="config_for_diff", base_url="./tofile_outputs/", diff_per_task=True)]
+        [DiffProcessor(diff="config_for_diff", base_url="./tofile_outputs/", in_diff=True)]
     )
     output = nr_with_tests.run(
         task=nr_test,
@@ -274,6 +274,6 @@ ntp server 9.9.9.9
  ntp server 7.7.7.7
 +ntp server 9.9.9.9"""
         in res["IOL2"]["show run | inc ntp"]["diff"]
-    )	
-	
-# test_diff_processor_per_task()
+    )    
+    
+# test_diff_processor_in_diff_is_true()

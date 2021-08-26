@@ -83,26 +83,6 @@ except ImportError:
     HAS_NCCLIENT = False
 
 try:
-    import xmltodict
-
-    HAS_XMLTODICT = True
-except ImportError:
-    log.warning(
-        "nornir_salt:ncclient_call failed to import xmltodict library, install it: pip install xmltodict"
-    )
-    HAS_XMLTODICT = False
-
-try:
-    import yaml
-
-    HAS_YAML = True
-except ImportError:
-    log.warning(
-        "nornir_salt:ncclient_call failed to import yaml library, install it: pip install pyyaml"
-    )
-    HAS_YAML = False
-
-try:
     # this import should work for ncclient >=0.6.10
     from ncclient.operations import GenericRPC
 
@@ -238,54 +218,11 @@ def _call_help(manager, method_name, *args, **kwargs):
     return h, False
 
 
-def _flatten(data, parent_key="", separator='.'):
-    """
-    Turn a nested structure (combination of lists/disctionaries) into a 
-    flattened dictionary.
-    
-    This function is useful to exploredeeply nested structures such as XML
-    output obtained from devices over NETCONF.
-    
-    Another usecase is filtering of the keys in resulted dictionary, as
-    they are the strings, glob or regex matching can be applied on them.
-    
-    :param data: nested data to flatten
-    :param parent_key: string to prepend to dictionary's keys, used by recursion
-    :param separator: string to separate flattened keys
-    :return: flattened structure
-    
-    Based on Stackoverflow answer:
-    https://stackoverflow.com/a/62186053/12300761
-    
-    All credits for the idea to https://github.com/ScriptSmith
-    
-    Sample usage::
-    
-        _flatten({'a': 1, 'c': {'a': 2, 'b': {'x': 5, 'y' : 10}}, 'd': [1, 2, 3] })
-        
-        >> {'a': 1, 'c.a': 2, 'c.b.x': 5, 'c.b.y': 10, 'd.0': 1, 'd.1': 2, 'd.2': 3}
-    """
-
-    items = []
-    if isinstance(data, dict):
-        for key, value in data.items():
-            new_key = "{}{}{}".format(parent_key, separator, key) if parent_key else key
-            items.extend(_flatten(value, new_key, separator).items())
-    elif isinstance(data, list):
-        for k, v in enumerate(data):
-            new_key = "{}{}{}".format(parent_key, separator, k) if parent_key else k
-            items.extend(_flatten({str(new_key): v}).items())
-    else:
-        items.append((parent_key, data))        
-    return dict(items)
-
-
-def ncclient_call(task: Task, call: str, fmt: str = "xml", *args, **kwargs) -> Result:
+def ncclient_call(task: Task, call: str, *args, **kwargs) -> Result:
     """
     Task to handle a call of NCClient manager object methods
 
     :param call: (str) ncclient manager object method to call
-    :param fmt: (str) result formatter to use - xml (default), raw_xml, json, yaml, pprint, py
     :param arg: (list) any ``*args`` to use with call method
     :param kwargs: (dict) any ``**kwargs`` to use with call method
     """
@@ -335,26 +272,7 @@ def ncclient_call(task: Task, call: str, fmt: str = "xml", *args, **kwargs) -> R
 
     # format results
     if hasattr(result, "_root"):
-        if fmt == "xml":
-            result = etree.tostring(result._root, pretty_print=True).decode()
-        elif fmt == "raw_xml":
-            result = etree.tostring(result._root, pretty_print=False).decode()
-        elif fmt == "json" and HAS_XMLTODICT:
-            parsed_data = xmltodict.parse(etree.tostring(result._root))
-            result = json.dumps(parsed_data, sort_keys=True, indent=4)
-        elif fmt == "yaml" and HAS_XMLTODICT and HAS_YAML:
-            parsed_data = xmltodict.parse(etree.tostring(result._root))
-            result = yaml.dump(parsed_data, default_flow_style=False)
-        elif fmt == "pprint" and HAS_XMLTODICT:
-            parsed_data = xmltodict.parse(etree.tostring(result._root))
-            result = pprint.pformat(parsed_data, indent=4)
-        elif fmt == "py" and HAS_XMLTODICT:
-            result = xmltodict.parse(etree.tostring(result._root))
-        elif fmt == "flatten":
-            result = xmltodict.parse(etree.tostring(result._root))
-            result = _flatten(result)
-        else:
-            result = etree.tostring(result._root, pretty_print=True).decode()
+        result = etree.tostring(result._root, pretty_print=True).decode()
     elif isinstance(result, (list, dict, bool)):
         pass
     else:

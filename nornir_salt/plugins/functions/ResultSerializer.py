@@ -178,7 +178,7 @@ from nornir.core.task import AggregatedResult
 
 log = logging.getLogger(__name__)
 
-supported_types = [list, tuple, dict, str, int, bool, set]
+supported_types = [list, tuple, dict, str, int, bool, set, type(None)]
 
 
 def ResultSerializer(

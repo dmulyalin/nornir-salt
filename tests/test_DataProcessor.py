@@ -196,7 +196,14 @@ InventoryPluginRegister.register("DictInventory", DictInventory)
 
 nr = init(lab_inventory_dict)
 
-
+def nr_test_grouped_subtasks(task, task_1, task_2):
+    """
+    Test grouped task
+    """
+    task.run(**task_1)    
+    task.run(**task_2)
+    return Result(host=task.host, skip_results=True)
+    
 # ----------------------------------------------------------------------
 # tests that need Nornir
 # ----------------------------------------------------------------------
@@ -1050,3 +1057,70 @@ def test_lod_filter_with_glob_check_type_specifier_multikey():
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'}]}}   
                       
 # test_lod_filter_with_glob_check_type_specifier_multikey()
+
+
+def test_parse_ttp_multiple_tasks():
+    """ 
+    Test TTP parsing for multiple task results with sorting across
+    multiple inputs using commands attribute
+    """
+    
+    template = """
+<group name="ntp*">
+ntp server {{ ntp_server }}
+</group>
+
+<group name="log*">
+logging host {{ log_server }}
+</group>
+    """
+    
+    iol1_res_ntp = """
+Timestamp 12:12:12
+
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol2_res_ntp = """
+ntp server 7.7.7.7
+        """
+    iol1_res_log = """
+logging host 1.2.3.4
+logging host 4.4.4.4
+        """
+    iol2_res_log = """
+logging host 5.5.5.5
+        """   
+        
+    nr_with_dp = nr.with_processors([DataProcessor(
+        parse_ttp={"template": template, "res_kwargs": {"structure": "flat_list"}}
+    )])
+
+    output = nr_with_dp.run(
+        task=nr_test_grouped_subtasks,
+        task_1={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_ntp,
+                "IOL2": iol2_res_ntp,
+            },
+            "name": "show run | inc ntp",
+        },
+        task_2={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_log,
+                "IOL2": iol2_res_log,
+            },
+            "name": "show run | inc logging",
+        },
+    )
+    res = ResultSerializer(output, to_dict=True)
+    # pprint.pprint(result, width=100)
+    assert res == {'IOL1': {'show run | inc logging': [{'log': [{'log_server': '1.2.3.4'},
+                                                                {'log_server': '4.4.4.4'}]}],
+                            'show run | inc ntp': [{'ntp': [{'ntp_server': '7.7.7.8'}, {'ntp_server': '7.7.7.7'}]}]},
+                   'IOL2': {'show run | inc logging': [{'log': [{'log_server': '5.5.5.5'}]}],
+                            'show run | inc ntp': [{'ntp': [{'ntp_server': '7.7.7.7'}]}]}}
+                             
+# test_parse_ttp_multiple_tasks()

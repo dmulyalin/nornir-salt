@@ -34,6 +34,7 @@ import time
 import os
 import json
 import traceback
+import random
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
@@ -48,18 +49,20 @@ class ToFileProcessor:
     :param tf: (str) alias name of the file content
     :param base_url: (str) OS path to folder where to save files, default "/var/nornir-salt/"
     :param max_files: (int) default is 5, maximum number of file for given ``tf`` alias
+    :param index: (str) index filename to read and store files data into
 
     Files saved under ``base_url`` location, where individual filename formed using string::
 
-        {tf}__{timestamp}__{hostname}.txt
+        {tf}__{timestamp}__{rand}__{hostname}.txt
 
     Where:
 
     * tf - value of ``tf`` attribute
     * timestamp - ``%d_%B_%Y_%H_%M_%S`` time formatted string, e.g. "12_June_2021_21_48_11"
-    * hostname - ``name`` attribute of host
+    * rand - random integer in range from 10 to 1000
+    * hostname - ``name`` attribute of host 
 
-    In addition, ``tf_aliases.json`` file created under ``base_url`` to track files created
+    In addition, ``tf_index_{index}.json`` file created under ``base_url`` to track files created
     using dictionary structure::
     
         {
@@ -81,20 +84,20 @@ class ToFileProcessor:
     ``show run | inc ntp`` task results span indexes inside 
     ``./tofile_outputs/config__22_August_2021_14_08_33__IOL1.txt`` text file.
     
-    ``tf_aliases.json`` used by other plugins to retrieve previous results for the task,
+    ``tf_index_{index}.json`` used by other plugins to retrieve previous results for the task,
     it could be considered as a simplified index database.
     """
 
-    def __init__(self, tf, base_url="/var/nornir-salt/", max_files=5):
+    def __init__(self, tf, base_url="/var/nornir-salt/", max_files=5, index=None):
         self.tf = tf
         self.base_url = base_url
         self.max_files = max(1, max_files)
+        self.index = index or "common"
 
-        self.timestamp = time.strftime("%d_%B_%Y_%H_%M_%S")
-        self.aliases_file = os.path.join(base_url, "tf_aliases.json")
+        self.aliases_file = os.path.join(base_url, "tf_index_{}.json".format(self.index))
         self.aliases_data = (
             {}
-        )  # dictionary to store tf_aliases.json content
+        )  # dictionary to store tf_index_{index}.json content
 
         self._load_aliases()
 
@@ -125,8 +128,11 @@ class ToFileProcessor:
     ) -> None:
         """save to file on a per-host basis"""
 
-        host_filename = "{tf}__{timestamp}__{hostname}.txt".format(
-            timestamp=self.timestamp, hostname=host.name, tf=self.tf
+        host_filename = "{tf}__{timestamp}__{rand}__{hostname}.txt".format(
+            timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"), 
+            rand=random.randint(0, 1000),
+            hostname=host.name, 
+            tf=self.tf
         )
         host_filename = os.path.join(self.base_url, host_filename)
 
@@ -138,7 +144,11 @@ class ToFileProcessor:
         os.makedirs(os.path.dirname(host_filename), exist_ok=True)
         with open(host_filename, mode="w", encoding="utf-8") as f:
             self.aliases_data[self.tf][host.name].insert(
-                0, {"filename": host_filename, "tasks": {}}
+                0, {
+                        "filename": host_filename, 
+                        "tasks": {}, 
+                        "timestamp": time.strftime("%d %b %Y %H:%M:%S %Z")
+                }
             )
             span_start = 0
 
