@@ -58,20 +58,25 @@ except ImportError:
     log.error("Failed to import tabulate library, install it: pip install tabulate")
 
 
-def TabulateFormatter(result, tabulate=True, headers="keys"):
+def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[]):
     """
     Function to format results in a text table.
 
     :param result: list of dictionaries or ``nornir.core.task.AggregatedResult`` object
     :param tabulate: (dict or str or bool) controls tabulate behaviour
-    :param headers: (list) list of table headers, comma-separated string of headers or
+    :param headers: (list or str) list of table headers, comma-separated string of headers or
         one of tabulate supported values, e.g. ``keys``
+    :param headers_exclude: (list) list of table headers, comma-separated string of headers
+        to exclude
 
     Supported values for ``tabulate`` attribute:
 
-    * ``brief`` - uses tablefmt grid, showindex True and headers - host, name, result, exception to form table
-    * ``True`` - uses headers provided or keys by default, no other formatting
-    * ``dict`` - ``**tabulate`` passed on to ``tabulate.tabulate`` method
+    * ``brief`` - uses ``tablefmt`` is ``grid``, ``showindex`` is ``True`` 
+        and ``headers`` set to ``host, name, result, exception``
+    * ``True`` - uses ``headers``, no other formatting
+    * ``False`` - does nothing, returns original results
+    * ``extend`` - if result is a list, extends it to form final table, appends it as is otherwise
+    * ``dictionary`` - dictionary value passed as ``**kwargs`` to ``tabulate.tabulate`` method
     """
     if not HAS_TABULATE:
         log.error(
@@ -95,8 +100,10 @@ def TabulateFormatter(result, tabulate=True, headers="keys"):
     # check headers
     if isinstance(headers, str) and "," in headers:
         headers = [i.strip() for i in headers.split(",")]
-
-    # form tabulate parameters
+    if isinstance(headers_exclude, str) and "," in headers_exclude:
+        headers_exclude = [i.strip() for i in headers_exclude.split(",")]
+        
+    # form tabulate parameters and results
     if tabulate == "brief":
         tabulate = {
             "tablefmt": "grid",
@@ -105,8 +112,24 @@ def TabulateFormatter(result, tabulate=True, headers="keys"):
         }
     elif tabulate == True:
         tabulate = {"headers": headers}
+    elif tabulate == "extend":
+        table_ = []
+        tabulate = {"headers": headers}
+        for res in result_to_tabulate:
+            if isinstance(res["result"], list):
+                table_.extend(
+                    [
+                        {**res, **i} if isinstance(i, dict) else {**res, "result": i}
+                        for i in res.pop("result")
+                    ]
+                )
+            else:
+                table_.append(res)
+        result_to_tabulate = table_
     elif isinstance(tabulate, dict):
         tabulate.setdefault("headers", headers)
+    elif tabulate == False:
+        return result        
     else:
         log.error(
             "nornir-salt:TabulateFormatter unsupported tabulate argument type '{}', supported - 'brief', bool, dict".format(
@@ -115,6 +138,13 @@ def TabulateFormatter(result, tabulate=True, headers="keys"):
         )
         return result
 
+    # filter result table if requested to do so
+    if headers_exclude:
+        result_to_tabulate = [
+            {k: v for k, v in res.items() if k not in headers_exclude}
+            for res in result_to_tabulate
+        ]        
+        
     # transform result_to_tabulate to list of lists
     if isinstance(tabulate["headers"], list):
         result_to_tabulate = [

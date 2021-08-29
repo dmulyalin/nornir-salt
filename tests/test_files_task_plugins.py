@@ -573,8 +573,8 @@ def test_file_read_task_struct_data_last2():
     res_last_1 = ResultSerializer(res1, add_details=True)
     res_last_2 = ResultSerializer(res2, add_details=True)
 
-    # pprint.pprint(res_last_1)
-    # pprint.pprint(res_last_2)
+    pprint.pprint(res_last_1)
+    pprint.pprint(res_last_2)
     _ = res_last_1["IOL1"]['show run | inc ntp'].pop("timestamp")
     _ = res_last_1["IOL2"]['show run | inc ntp'].pop("timestamp")
     _ = res_last_2["IOL1"]['show run | inc ntp'].pop("timestamp")
@@ -915,7 +915,8 @@ def test_file_remove_all():
     # retrieve files list
     res = nr.run(
         task=file_remove,
-        base_url="./tofile_outputs/"
+        base_url="./tofile_outputs/",
+        filegroup=True,
     )
     res = ResultSerializer(res, add_details=True)
         
@@ -980,9 +981,5 @@ def test_file_remove_filegroup():
         
     assert index_data["interfaces"] == {}, "interfaces files data not removed from index"
     assert len(index_data["ip"]) == 2, "ip files data removed from index"
-	
+    
 # test_file_remove_filegroup()
-
-
-def test_file_find():
-	pass

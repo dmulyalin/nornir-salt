@@ -17,7 +17,7 @@ API reference
 .. autofunction:: nornir_salt.plugins.tasks.files.file_read
 .. autofunction:: nornir_salt.plugins.tasks.files.file_list
 .. autofunction:: nornir_salt.plugins.tasks.files.file_remove
-.. autofunction:: nornir_salt.plugins.tasks.files.file_find
+.. autofunction:: nornir_salt.plugins.tasks.files.files
 """
 import os
 import json
@@ -72,6 +72,7 @@ def file_read(
     task_name: str = None,
     last: int = 1,
     index:str = "common",
+    **kwargs
 ):
     """
     Function to read text files content saved by ``ToFileProcessor``.
@@ -87,6 +88,12 @@ def file_read(
     :param index: (str) ``ToFileProcessor`` index filename to read files information from
     :return: Result object with file read content
     """
+    # run sanity checks
+    if not filegroup:
+        raise RuntimeError(
+            "nornir-salt:file_read bad filegroup '{}'".format(filegroup)
+        )
+        
     # load index data
     index_data = _load_index_data(base_url, index)
     
@@ -99,11 +106,21 @@ def file_read(
                 Result(
                     host=task.host, 
                     result=None, 
-                    exception="nornir-salt:file_read '{}' files not found" .format(group)
+                    exception="nornir-salt:file_read '{}' files not found".format(group)
                 )
             )
             continue
-        
+        if not task.host.name in index_data[group]:
+            task.results.append(
+                Result(
+                    host=task.host, 
+                    result=None, 
+                    filegroup=group,
+                    exception="nornir-salt:file_read '{}' host, '{}' files not found".format(task.host.name, group)
+                )
+            )
+            continue  
+            
         # get previous results metadata
         res_index = min(last - 1, len(index_data[group][task.host.name]) - 1)
         prev_res_details = index_data[group][task.host.name][res_index]
@@ -130,6 +147,7 @@ def file_list(
     filegroup: [str, list] = [],
     base_url: str = "/var/nornir-salt/",
     index:str = "common",
+    **kwargs
 ):
     """
     Function to produce a list of text files saved by ``ToFileProcessor``
@@ -144,8 +162,10 @@ def file_list(
     # load index data
     index_data = _load_index_data(base_url, index)
     
-    filegroups = [filegroup] if isinstance(filegroup, str) else filegroup
-    filegroups = filegroups if filegroups else list(index_data.keys())
+    if filegroup:
+        filegroups = [filegroup] if isinstance(filegroup, str) else filegroup
+    else:
+        filegroups = list(index_data.keys())
     
     for group in filegroups:
         # do sanity check
@@ -177,15 +197,16 @@ def file_list(
     
 def file_remove(
     task,
-    filegroup: [str, list] = None,
+    filegroup: [str, list, bool],
     base_url: str = "/var/nornir-salt/",
     index:str = "common",
+    **kwargs
 ):
     """
     Function to remove files saved by ``ToFileProcessor`` 
     
-    :param filegroup: (str or list) ``tf`` group or list of ``tf`` file group names of files 
-        to remove, by default removes all filegroups.
+    :param filegroup: (str or list or bool) ``tf`` or list of ``tf`` file group names of files 
+        to remove. If set to True will remove all files        
     :param base_url: (str) OS path to folder with saved files, default "/var/nornir-salt/"    
     :param index: (str) ``ToFileProcessor`` index filename to read files information from
     :return: Result object with removed files summary
@@ -195,8 +216,11 @@ def file_remove(
     # load index data
     index_data = _load_index_data(base_url, index)
     
-    filegroups = filegroup if isinstance(filegroup, list) else [filegroup]
-    filegroups = filegroups if all(filegroups) else list(index_data.keys())
+    # check if need to remove files for all filegroups
+    if filegroup == True:
+        filegroups = list(index_data.keys())
+    else:
+        filegroups = filegroup if isinstance(filegroup, list) else [filegroup]
 
     for group in filegroups:
         # do sanity check
@@ -234,3 +258,26 @@ def file_remove(
        f.write(json.dumps(index_data, sort_keys=True, indent=4, separators=(",", ": ")))
         
     return Result(host=task.host, result=ret) 
+
+
+def files(task, call, *args, **kwargs):
+    """
+    Dispatcher function to call one of the functions.
+    
+    :param call: (str) nickname of function to call
+    :param arg: (list) function arguments
+    :param kwargs: (dict) function key-word arguments
+    :return: function execution results
+    
+    call function nicknames:
+    
+    * ls - calls file_list
+    * rm - calls file_remove
+    * read calls file_read
+    """
+    dispatcher = {
+        "ls": file_list,
+        "rm": file_remove,
+        "read": file_read,
+    }
+    return dispatcher[call](task, *args, **kwargs)

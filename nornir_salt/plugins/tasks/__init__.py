@@ -13,6 +13,7 @@ from .http_call import http_call
 from .files import file_read
 from .files import file_list
 from .files import file_remove
+from .files import files
 
 __all__ = (
     "tcp_ping",
@@ -30,4 +31,5 @@ __all__ = (
     "file_read",
     "file_list",
     "file_remove",
+    "files",
 )

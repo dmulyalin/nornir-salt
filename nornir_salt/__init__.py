@@ -37,6 +37,7 @@ from .plugins.tasks import http_call
 from .plugins.tasks import file_read
 from .plugins.tasks import file_list
 from .plugins.tasks import file_remove
+from .plugins.tasks import files
 
 # NETCONF related plugins
 from .plugins.tasks import ncclient_call
