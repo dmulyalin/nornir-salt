@@ -5,6 +5,7 @@ import logging
 import yaml
 import pytest
 import time
+import json 
 
 sys.path.insert(0, "..")
 
@@ -22,7 +23,7 @@ from nornir_salt import DictInventory
 from nornir_salt import nr_test
 from nornir_salt.plugins.processors.ToFileProcessor import ToFileProcessor
 from nornir_salt.plugins.processors.DataProcessor import DataProcessor
-from nornir_salt.plugins.tasks import file_read
+from nornir_salt.plugins.tasks import file_read, file_remove, file_list
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -101,6 +102,49 @@ def nr_test_grouped_subtasks(task, task_1, task_2):
     task.run(**task_2)
     return Result(host=task.host, skip_results=True)
     
+def generate_files(tf):
+    """
+    Helper function to generate files by running task
+    """
+    iol1_res_ntp = [
+{"ntp": "1.1.1.1"},   
+    ]
+    iol2_res_ntp = [
+{"ntp": "2.2.2.2"},       
+    ]
+    iol1_res_log = [
+{"log": "3.3.3.3"},       
+    ]
+    iol2_res_log = [
+{"log": "4.4.4.4"},       
+    ]     
+    
+    # run test to generate the file
+    nr_with_tf = nr.with_processors(
+        [ToFileProcessor(tf=tf, base_url="./tofile_outputs/")]
+    )
+    
+    # first task run
+    nr_with_tf.run(
+        task=nr_test_grouped_subtasks,
+        task_1={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_ntp,
+                "IOL2": iol2_res_ntp,
+            },
+            "name": "show run | inc ntp",
+        },
+        task_2={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_log,
+                "IOL2": iol2_res_log,
+            },
+            "name": "show run | inc logging",
+        },
+    )
+    
 # ----------------------------------------------------------------------
 # tests that need Nornir
 # ----------------------------------------------------------------------
@@ -136,7 +180,7 @@ ntp server 7.7.7.7
     # retrieve file content
     res = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
     )
     
@@ -204,13 +248,13 @@ ntp server 7.7.7.7
     # retrieve file content
     res1 = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
         last=1,
     )
     res2 = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
         last=2,
     )
@@ -278,7 +322,7 @@ logging host 5.5.5.5
     # retrieve file content
     res = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
     )
     
@@ -375,14 +419,14 @@ logging host 5.5.5.5
     # retrieve file content
     res = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
         task_name="show run | inc logging"
     )
     
     res = ResultSerializer(res, add_details=True)
 
-    # pprint.pprint(res)
+    pprint.pprint(res)
     # {'IOL1': {'show run | inc logging': {'changed': False,
     #                                      'diff': '',
     #                                      'exception': None,
@@ -437,7 +481,7 @@ def test_file_read_task_struct_data():
     # retrieve file content
     res = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
     )
     
@@ -449,6 +493,7 @@ def test_file_read_task_struct_data():
                                                    'diff': '',
                                                    'exception': None,
                                                    'failed': False,
+                                                   'filegroup': 'config_for_read',
                                                    'result': [{'interface': 'Gi123',
                                                                'ip': '1.2.3.4'},
                                                               {'interface': 'Gi2',
@@ -459,6 +504,7 @@ def test_file_read_task_struct_data():
                                                    'diff': '',
                                                    'exception': None,
                                                    'failed': False,
+                                                   'filegroup': 'config_for_read',
                                                    'result': [{'interface': 'Gi2',
                                                                'ip': '4.4.4.4'}]}}}
 
@@ -513,13 +559,13 @@ def test_file_read_task_struct_data_last2():
     # retrieve file content
     res1 = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
         last=1,
     )
     res2 = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
         last=2,
     )
@@ -537,6 +583,7 @@ def test_file_read_task_struct_data_last2():
                                                     'diff': '',
                                                     'exception': None,
                                                     'failed': False,
+                                                    'filegroup': 'config_for_read',
                                                     'result': [{'interface': 'Gi123',
                                                                 'ip': '1.2.3.4'},
                                                                {'interface': 'Gi3',
@@ -545,6 +592,7 @@ def test_file_read_task_struct_data_last2():
                                                     'diff': '',
                                                     'exception': None,
                                                     'failed': False,
+                                                    'filegroup': 'config_for_read',
                                                     'result': [{'interface': 'Gi2',
                                                                 'ip': '4.4.4.4'},
                                                                {'interface': 'Gi2',
@@ -553,6 +601,7 @@ def test_file_read_task_struct_data_last2():
                                                     'diff': '',
                                                     'exception': None,
                                                     'failed': False,
+                                                    'filegroup': 'config_for_read',
                                                     'result': [{'interface': 'Gi123',
                                                                 'ip': '1.2.3.4'},
                                                                {'interface': 'Gi2',
@@ -563,6 +612,7 @@ def test_file_read_task_struct_data_last2():
                                                     'diff': '',
                                                     'exception': None,
                                                     'failed': False,
+                                                    'filegroup': 'config_for_read',
                                                     'result': [{'interface': 'Gi2',
                                                                 'ip': '4.4.4.4'}]}}}
                                              
@@ -615,7 +665,7 @@ def test_file_read_task_struct_data_result_with_subtasks():
     # retrieve file content
     res = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
     )
     
@@ -630,21 +680,25 @@ def test_file_read_task_struct_data_result_with_subtasks():
                                                        'diff': '',
                                                        'exception': None,
                                                        'failed': False,
+                                                       'filegroup': 'config_for_read',
                                                        'result': [{'log': '3.3.3.3'}]},
                             'show run | inc ntp': {'changed': False,
                                                    'diff': '',
                                                    'exception': None,
                                                    'failed': False,
+                                                   'filegroup': 'config_for_read',
                                                    'result': [{'ntp': '1.1.1.1'}]}},
                    'IOL2': {'show run | inc logging': {'changed': False,
                                                        'diff': '',
                                                        'exception': None,
                                                        'failed': False,
+                                                       'filegroup': 'config_for_read',
                                                        'result': [{'log': '4.4.4.4'}]},
                             'show run | inc ntp': {'changed': False,
                                                    'diff': '',
                                                    'exception': None,
                                                    'failed': False,
+                                                   'filegroup': 'config_for_read',
                                                    'result': [{'ntp': '2.2.2.2'}]}}}
                                  
 # test_file_read_task_struct_data_result_with_subtasks()
@@ -697,7 +751,7 @@ def test_file_read_result_struct_data_with_subtasks_task_name():
     # retrieve file content
     res = nr.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
         task_name="show run | inc logging"
     )
@@ -711,11 +765,13 @@ def test_file_read_result_struct_data_with_subtasks_task_name():
                                                        'diff': '',
                                                        'exception': None,
                                                        'failed': False,
+                                                       'filegroup': 'config_for_read',
                                                        'result': [{'log': '3.3.3.3'}]}},
                    'IOL2': {'show run | inc logging': {'changed': False,
                                                        'diff': '',
                                                        'exception': None,
                                                        'failed': False,
+                                                       'filegroup': 'config_for_read',
                                                        'result': [{'log': '4.4.4.4'}]}}}
                                                        
 # test_file_read_result_struct_data_with_subtasks_task_name()
@@ -755,7 +811,7 @@ def test_file_read_struct_data_with_DataProcessor_lod_filter():
     
     res = nr_with_dp.run(
         task=file_read,
-        filename="config_for_read",
+        filegroup="config_for_read",
         base_url="./tofile_outputs/",
     )
     
@@ -768,12 +824,165 @@ def test_file_read_struct_data_with_DataProcessor_lod_filter():
                                                    'diff': '',
                                                    'exception': None,
                                                    'failed': False,
+                                                   'filegroup': 'config_for_read',
                                                    'result': [{'interface': 'Gi2',
                                                                'ip': '1.2.2.2'}]}},
                    'IOL2': {'show run | inc ntp': {'changed': False,
                                                    'diff': '',
                                                    'exception': None,
                                                    'failed': False,
+                                                   'filegroup': 'config_for_read',
                                                    'result': [{'interface': 'Gi2',
                                                                'ip': '1.2.4.4'}]}}}
 # test_file_read_struct_data_with_DataProcessor_lod_filter()
+
+@skip_if_no_nornir
+def test_file_list_get_all_files():
+    """ produces list of files """
+    clean_up_folder()
+
+    generate_files(tf="interfaces")
+    generate_files(tf="interfaces")
+    generate_files(tf="ip")
+    generate_files(tf="interfaces")
+    
+    # retrieve file content
+    res = nr.run(
+        task=file_list,
+        base_url="./tofile_outputs/",
+    )
+    
+    res = ResultSerializer(res, add_details=True)
+
+    # pprint.pprint(res)
+    
+    assert isinstance(res["IOL1"]["file_list"]["result"], list)
+    assert len(res["IOL1"]["file_list"]["result"]) == 4
+    assert res["IOL1"]["file_list"]["exception"] == None
+    assert isinstance(res["IOL2"]["file_list"]["result"], list)
+    assert len(res["IOL2"]["file_list"]["result"]) == 4
+    assert res["IOL2"]["file_list"]["exception"] == None
+    
+# test_file_list_get_all_files()
+
+
+@skip_if_no_nornir
+def test_file_list_get_one_filegroup():
+    """ produces list of files """
+    clean_up_folder()
+
+    generate_files(tf="interfaces")
+    generate_files(tf="interfaces")
+    generate_files(tf="ip")
+    generate_files(tf="interfaces")
+    
+    # retrieve files list
+    res = nr.run(
+        task=file_list,
+        base_url="./tofile_outputs/",
+        filegroup="ip"
+    )
+    
+    res = ResultSerializer(res, add_details=True)
+
+    # pprint.pprint(res)
+    
+    assert isinstance(res["IOL1"]["file_list"]["result"], list)
+    assert len(res["IOL1"]["file_list"]["result"]) == 1
+    assert res["IOL1"]["file_list"]["result"][0]["filegroup"] == "ip"
+    assert res["IOL1"]["file_list"]["exception"] == None
+    assert isinstance(res["IOL2"]["file_list"]["result"], list)
+    assert len(res["IOL2"]["file_list"]["result"]) == 1
+    assert res["IOL2"]["file_list"]["result"][0]["filegroup"] == "ip"
+    assert res["IOL2"]["file_list"]["exception"] == None
+    
+# test_file_list_get_one_filegroup()
+
+
+def test_file_remove_all():
+    clean_up_folder()
+
+    generate_files(tf="interfaces")
+    generate_files(tf="interfaces")
+    generate_files(tf="ip")
+    generate_files(tf="interfaces")
+    
+    # check if folder is not empty
+    if os.path.exists("./tofile_outputs/"):
+        assert len(list(os.listdir("./tofile_outputs/"))) == 9, "not all files saved"
+    
+    # run task to delete all data files
+    # retrieve files list
+    res = nr.run(
+        task=file_remove,
+        base_url="./tofile_outputs/"
+    )
+    res = ResultSerializer(res, add_details=True)
+        
+    # check if folder is cleaned
+    if os.path.exists("./tofile_outputs/"):
+        assert len(list(os.listdir("./tofile_outputs/"))) == 1, "not all files removed"
+        
+    # pprint.pprint(res)
+    assert len(res["IOL1"]["file_remove"]["result"]) == 4
+    assert len(res["IOL2"]["file_remove"]["result"]) == 4        
+
+    # retrieve files list
+    files_list = nr.run(
+        task=file_list,
+        base_url="./tofile_outputs/",
+        filegroup="ip"
+    )
+    files_list = ResultSerializer(files_list, add_details=True)
+    # pprint.pprint(files_list)
+    assert len(files_list["IOL1"]["file_list"]["result"]) == 0
+    assert len(files_list["IOL2"]["file_list"]["result"]) == 0
+    
+    # try to generate more files to check if it will not fail
+    generate_files(tf="interfaces")
+    
+# test_file_remove_all()    
+
+
+def test_file_remove_filegroup():
+    clean_up_folder()
+
+    generate_files(tf="interfaces")
+    generate_files(tf="interfaces")
+    generate_files(tf="ip")
+    generate_files(tf="interfaces")
+    
+    # check if folder is not empty
+    if os.path.exists("./tofile_outputs/"):
+        assert len(list(os.listdir("./tofile_outputs/"))) == 9, "not all files saved"
+    
+    # run task to delete all data files
+    # retrieve files list
+    res = nr.run(
+        task=file_remove,
+        base_url="./tofile_outputs/",
+        filegroup="interfaces"
+    )
+    res = ResultSerializer(res, add_details=True)
+        
+    # check if folder is cleaned
+    if os.path.exists("./tofile_outputs/"):
+        assert len(list(os.listdir("./tofile_outputs/"))) == 3, "Too many files removed"
+        
+    # pprint.pprint(res)
+    assert len(res["IOL1"]["file_remove"]["result"]) == 3
+    assert len(res["IOL2"]["file_remove"]["result"]) == 3        
+
+    # check index file was updated accordingly
+    index_file = "./tofile_outputs/tf_index_common.json"
+    with open(index_file, "r") as f:
+        index_data = json.loads(f.read())
+        
+    assert index_data["interfaces"] == {}, "interfaces files data not removed from index"
+    assert len(index_data["ip"]) == 2, "ip files data removed from index"
+	
+# test_file_remove_filegroup()
+
+
+def test_file_find():
+	pass

@@ -1124,3 +1124,378 @@ logging host 5.5.5.5
                             'show run | inc ntp': [{'ntp': [{'ntp_server': '7.7.7.7'}]}]}}
                              
 # test_parse_ttp_multiple_tasks()
+
+
+def test_path_function():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        path={"path": "0.ip"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result)
+    
+    assert result == {'IOL1': {'show run | inc ntp': '1.2.3.4'},
+                      'IOL2': {'show run | inc ntp': '1.2.3.4'}}
+
+# test_path_function()
+
+
+def test_path_highhly_nested_data_path_with_quotes():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        path={"path": "VIP_cfg.'1.1.1.1'.services.443.https.0.real_port"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {
+                "VIP_cfg": {
+                    "1.1.1.1": {
+                        "config_state": "dis",
+                        "services": {
+                            "443": {
+                                "https": [
+                                    {"real_port": "443"}
+                                ],
+                            }
+                        }
+                    }
+                }
+            },
+            "IOL2": {
+                "VIP_cfg": {
+                    "1.1.1.1": {
+                        "config_state": "dis",
+                        "services": {
+                            "443": {
+                                "https": [
+                                    {"real_port": "80"}
+                                ],
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result)
+
+    assert result == {'IOL1': {'show run | inc ntp': '443'}, 'IOL2': {'show run | inc ntp': '80'}}
+ 
+# test_path_highhly_nested_data_path_with_quotes()
+
+
+def test_path_highhly_nested_data_path_is_list():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        path={"path": ["VIP_cfg", "1.1.1.1", "services", "443", "https", 0, "real_port"]}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {
+                "VIP_cfg": {
+                    "1.1.1.1": {
+                        "config_state": "dis",
+                        "services": {
+                            "443": {
+                                "https": [
+                                    {"real_port": "443"}
+                                ],
+                            }
+                        }
+                    }
+                }
+            },
+            "IOL2": {
+                "VIP_cfg": {
+                    "1.1.1.1": {
+                        "config_state": "dis",
+                        "services": {
+                            "443": {
+                                "https": [
+                                    {"real_port": "80"}
+                                ],
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result)
+
+    assert result == {'IOL1': {'show run | inc ntp': '443'}, 'IOL2': {'show run | inc ntp': '80'}}
+ 
+# test_path_highhly_nested_data_path_is_list()
+
+
+
+def test_find_in_list():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        find={"ip": "1.1.*", "interface": "Gi[23]"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    
+    # pprint.pprint(result)
+    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}
+
+# test_find_in_list()
+
+
+def test_find_in_list_with_path():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        find={"ip": "1.1.*", "interface": "Gi[23]", "path": "interfaces.cfg"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {"interfaces": {"cfg": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ]}},
+            "IOL2": {"interfaces": {"cfg": [
+{"ip": "1.2.3.4", "interface": "Gi1"},
+{"ip": "1.1.2.3", "interface": "Gi2"},
+{"ip": "1.1.1.1", "interface": "Gi3"},
+            ]}},
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    
+    # pprint.pprint(result)
+    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}
+
+# test_find_in_list_with_path()
+
+
+
+def test_find_in_dict_key_filter():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        find={"pattern": "Gi[23]"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {
+                "Gi1": {"ip": "1.2.3.4"},
+                "Gi2": {"ip": "1.1.1.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            },
+            "IOL2": {
+                "Gi1": {"ip": "4.3.2.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            },
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    
+    # pprint.pprint(result)
+
+    assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
+                                                      'Gi3': {'ip': '2.2.2.2'}}},
+                      'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
+                      
+# test_find_in_dict_key_filter()
+
+
+def test_find_in_dict_key_filter_with_path():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        find={"pattern": "Gi[23]", "path": "interfaces.cfg"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {"interfaces": {"cfg": {
+                "Gi1": {"ip": "1.2.3.4"},
+                "Gi2": {"ip": "1.1.1.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            }}},
+            "IOL2": {"interfaces": {"cfg": {
+                "Gi1": {"ip": "4.3.2.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            }}},
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    
+    # pprint.pprint(result)
+
+    assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
+                                                      'Gi3': {'ip': '2.2.2.2'}}},
+                      'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
+                      
+# test_find_in_dict_key_filter_with_path()
+
+
+def test_find_in_text_match_filter():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        find={"pattern": "ip address .*"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+interface Lo0
+ description data_1 file
+ ip address 1.0.0.0 32
+!
+interface Lo1
+ description this interface has description
+ ip address 1.1.1.1 32    
+!
+            """,
+            "IOL2": """
+interface Lo0
+ description data_1 file
+ ip address 1.0.0.0 32
+            """,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    
+    # pprint.pprint(result)
+
+    assert result == {'IOL1': {'show run | inc ntp': ' ip address 1.0.0.0 32\n'
+                                                     ' ip address 1.1.1.1 32    '},
+                      'IOL2': {'show run | inc ntp': ' ip address 1.0.0.0 32'}}
+                      
+# test_find_in_text_match_filter()
+
+
+
+def test_find_in_text_match_filter_with_path():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        find={"pattern": "ip address .*", "path": "interfaces.cfg"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {"interfaces": {"cfg": """
+interface Lo0
+ description data_1 file
+ ip address 1.0.0.0 32
+!
+interface Lo1
+ description this interface has description
+ ip address 1.1.1.1 32    
+!
+            """}},
+            "IOL2": {"interfaces": {"cfg": """
+interface Lo0
+ description data_1 file
+ ip address 1.0.0.0 32
+            """}},
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    
+    # pprint.pprint(result)
+
+    assert result == {'IOL1': {'show run | inc ntp': ' ip address 1.0.0.0 32\n'
+                                                     ' ip address 1.1.1.1 32    '},
+                      'IOL2': {'show run | inc ntp': ' ip address 1.0.0.0 32'}}
+                      
+# test_find_in_text_match_filter_with_path()
+
+
+def test_key_filter_check_specifier_glob():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        key_filter={"G@pattern": "Gi[23]"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {
+                "Gi1": {"ip": "1.2.3.4"},
+                "Gi2": {"ip": "1.1.1.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            },
+            "IOL2": {
+                "Gi1": {"ip": "4.3.2.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            },
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result)
+    assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
+                                                      'Gi3': {'ip': '2.2.2.2'}}},
+                      'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
+                      
+# test_key_filter_check_specifier_glob()
+    
+def test_key_filter_check_specifier_re():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        key_filter={"RE@pattern": "Gi2|Gi3"}
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {
+                "Gi1": {"ip": "1.2.3.4"},
+                "Gi2": {"ip": "1.1.1.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            },
+            "IOL2": {
+                "Gi1": {"ip": "4.3.2.1"},
+                "Gi3": {"ip": "2.2.2.2"},
+            },
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result)
+    assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
+                                                      'Gi3': {'ip': '2.2.2.2'}}},
+                      'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
+                      
+# test_key_filter_check_specifier_re()

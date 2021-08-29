@@ -45,6 +45,8 @@ from .plugins.tasks import napalm_configure
 from .plugins.tasks import scrapli_send_config
 from .plugins.tasks import http_call
 from .plugins.tasks import file_read
+from .plugins.tasks import file_list
+from .plugins.tasks import file_remove
 
 # NETCONF related plugins
 from .plugins.tasks import ncclient_call
@@ -89,4 +91,6 @@ __all__ = (
     "HTTPPlugin",
     "http_call",
     "file_read",
+    "file_list",
+    "file_remove"
 )

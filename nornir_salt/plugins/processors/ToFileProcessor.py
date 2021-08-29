@@ -46,9 +46,9 @@ class ToFileProcessor:
     ToFileProcessor can save task execution results to file on a per host basis.
     If multiple tasks present, results of all of them saved in same file.
 
-    :param tf: (str) alias name of the file content
+    :param tf: (str) name of the file groups content
     :param base_url: (str) OS path to folder where to save files, default "/var/nornir-salt/"
-    :param max_files: (int) default is 5, maximum number of file for given ``tf`` alias
+    :param max_files: (int) default is 5, maximum number of file for given ``tf`` file group
     :param index: (str) index filename to read and store files data into
 
     Files saved under ``base_url`` location, where individual filename formed using string::

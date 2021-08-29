@@ -31,6 +31,20 @@ Code to demonstrate how to use ``DataProcessor`` plugin::
         command_string="show run"
     )
 
+Filtering mini-query-language specification
+===========================================
+
+``lod_filter`` -  key name may be prepended with check type specifier to instruct 
+what type of check to execute with criteria against key value. For example 
+``G@key_name`` would use glob pattern matching.
+
++------------+-----------------------------------------------------------+
+| Check Type |  Description                                              |
+| Specifier  |                                                           |
++------------+-----------------------------------------------------------+
+| ``G@``     | glob case sensitive pattern matching                      |
++------------+-----------------------------------------------------------+
+    
 DataProcessor reference
 =======================
 
@@ -67,6 +81,7 @@ Take structured data and return transformed structured data
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_to_json
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_flatten
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_rm_ns
+.. autofunction:: nornir_salt.plugins.processors.DataProcessor.path_
 
 Filter functions
 ----------------
@@ -79,6 +94,7 @@ Filter structured or text data
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_flake
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.match
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.lod_filter
+.. autofunction:: nornir_salt.plugins.processors.DataProcessor.find
 
 Parse functions
 ---------------
@@ -203,8 +219,8 @@ def to_yaml(data, **kwargs):
     if HAS_YAML:
         return yaml.dump(data, **kwargs)
     else:
-        return to_pprint(data)
-
+        return to_pprint(data)		
+		
 
 # --------------------------------------------------------------------------------
 # loader functions: load json, yaml etc. text into python structured data
@@ -439,29 +455,122 @@ def xml_rm_ns(data, recover=True, ret_xml=True, **kwargs):
 
 def path_(data, path, **kwargs):
     """
+    Reference name ``path_``
+    
     Function to retrieve data at given path.
     
-    :param path: (str) dot separated path to result
+    :param path: (str, list) dot separated path to result or list of path items
     :param data: (dict) data to get results from
     :return: results at given path
     
     Sample data::
     
         {
-            "ntp":
-                "cfg": 
-                    "servers": ["1.1.1.1", "2.2.2.2"]
+            "VIP_cfg": {
+                "1.1.1.1": {
+                    "config_state": "dis",
+                    "services": {
+                        "443": {
+                            "https": [
+                                {"real_port": "443"}
+                            ],
+                        }
+                    }
+                }
+            }
         }
         
-    With ``path`` ``ntp.cfg.servers`` will return ``[ "1.1.1.1", "2.2.2.2"]``
+    With ``path`` ``"VIP_cfg.'1.1.1.1'.services.443.https.0.real_port"`` 
+    will return ``443``
     """
-    pass
+    ret = data
+
+    # form path list
+    if isinstance(path, str):
+        # perform path split accounting for quotes inside path
+        path_list = [""]
+        inside_quotes = False
+        for char in path:
+            if char == "." and not inside_quotes:
+                path_list.append("")
+            elif char in ["'", '"']:
+                inside_quotes = not inside_quotes
+            else:
+                path_list[-1] += char
+    elif isinstance(path, list):
+        path_list = path
+    else:
+        raise TypeError("nornir-salt:DataProcessor:path unsupported path type {}".format(type(path)))
+            
+    # descend down the data path 
+    for item in path_list:
+        if item in ret or isinstance(item, int):
+            ret = ret[item]
+        elif item.isdigit():
+            ret = ret[int(item)]
+    
+    return ret
 
 
 # --------------------------------------------------------------------------------
 # filtering functions: filter structured/text data
 # --------------------------------------------------------------------------------
 
+
+# check functions
+def _check_glob(value, criteria):
+    # returns True if glob pattern matches value
+    return fnmatchcase(str(value), criteria)
+
+def _check_regex(value, criteria):
+    # returns True if regex pattern matches value
+    return True if re.search(criteria, value) else False
+    
+check_fun_dispatcher = {
+    "G": _check_glob,
+    "RE": _check_regex,
+}
+    
+def _form_check_list(checks_dictionary):
+    """
+    Helper function to form a list of filtering checks.
+    
+    :param checks_dictionary: (dict) dictionary where keys used to indicate 
+        check type and value is the criteria to check. Default check type is 
+        glob case sensitive pattern matching.
+    :return: list of dictionaries
+    
+    ``checks_dictionary`` keys can use filtering mini-query-language specifiers
+    to indicate check type.
+    
+    Returns list of dictionaries::
+    
+        [
+            {
+                "fun": _check_fun_reference,
+                "key": checks_dictionary_key_name,
+                "criteria": checks_dictionary_key_value,                
+            }
+        ]
+    """
+    checks = []
+    for key_name, criteria in checks_dictionary.items():
+        if key_name.split("@")[0] in check_fun_dispatcher:
+            check_type = key_name.split("@")[0]
+            # account for cases when pattern contains other @
+            key_name = "@".join(key_name.split("@")[1:])
+            
+        else:
+            check_type, key_name = ("G", key_name,)
+        checks.append(
+            {
+                "fun": check_fun_dispatcher[check_type],
+                "key": key_name,
+                "criteria": criteria,
+            }
+        )
+    return checks
+        
 
 def xpath(data, expr, rm_ns=False, recover=False, **kwargs):
     """
@@ -500,7 +609,7 @@ def xpath(data, expr, rm_ns=False, recover=False, **kwargs):
     return etree.tostring(filtered, pretty_print=True, encoding="utf-8").decode()
 
 
-def key_filter(data, pattern, **kwargs):
+def key_filter(data, pattern=None, **kwargs):
     """
     Reference Name ``key_filter``
 
@@ -508,24 +617,51 @@ def key_filter(data, pattern, **kwargs):
     patterns.
 
     :param data: (dictionary) Python dictionary
-    :param pattern: (str or list) comma separated string or list of glob patterns
+    :param kwargs: (dict) any additional kwargs are key and value pairs, where key 
+        used to indicate check type and value is the criteria to check. Default check 
+        type is glob case sensitive pattern matching.
     :return: filtered python dictionary
-    """
-    pattern = (
-        [i.strip() for i in pattern.split(",")] if isinstance(pattern, str) else pattern
-    )
-    if isinstance(data, dict):
-        return {
-            k: v for k, v in data.items() if any([fnmatchcase(k, p) for p in pattern])
+    
+    Sample usage::
+    
+        filters = {
+            "G@glob_sample": "abc*",
+            "RE@re_sample": "abc.*",
         }
-    else:
+        
+        key_filter(
+            data=data_dictionary,
+            pattern="1234*",
+            **filters
+        )
+    """
+    if not isinstance(data, dict):
         log.warning(
             "nornir_salt:DataProcessor:key_filter skipping, data is not dictionary but {}".format(
                 type(data)
             )
         )
         return data
-
+        
+    if pattern:
+        kwargs["pattern"] = pattern
+        
+    checks = _form_check_list(kwargs)
+    log.debug(
+        "nornir_salt:DataProcessor:key_filter running filter checks {}".format(checks)
+    )
+    
+    return {
+        k: data[k]
+        for k in data.keys()
+        if any(
+            [
+                c["fun"](k, c["criteria"])
+                for c in checks
+            ]
+        )
+    }
+        
 
 def lod_filter(data, pass_all=True, **kwargs):
     """
@@ -547,18 +683,6 @@ def lod_filter(data, pass_all=True, **kwargs):
     :param pass_all: (bool) if True (default) logic is AND - dictionary must pass all checks to
         be included in filtered results, if False logic is ANY
     :return: filtered list of dictionaries
-    
-    **Filtering mini-query-language specification**
-    
-    Key name may be prepended with check type specifier to instruct what type of check to execute 
-    with criteria against key value. For example ``G@key_name`` would use glob pattern matching.
-    
-    +------------+-----------------------------------------------------------+
-    | Check Type |  Description                                              |
-    | Specifier  |                                                           |
-    +------------+-----------------------------------------------------------+
-    | ``G@``     | glob case sensitive pattern matching, default check type  |
-    +------------+-----------------------------------------------------------+
     """
     if not isinstance(data, list):
         log.warning(
@@ -569,36 +693,7 @@ def lod_filter(data, pass_all=True, **kwargs):
         return data
 
     ret = []
-
-    # check functions
-    def check_glob(value, criteria):
-        return fnmatchcase(str(value), criteria)
-
-    check_fun_dispatcher = {
-        "G": check_glob,
-    }
-
-    # form checks list extracting check function type from key name
-    checks = []
-    for key_name, criteria in kwargs.items():
-        # check if key is XX@key or X@key where X is a check type
-        if "@" in key_name[:2] and key_name.split("@")[0] in check_fun_dispatcher:
-            filter_type = key_name.split("@")[0]
-            # account for cases when key_name contains other @
-            name = "@".join(key_name.split("@")[1:])
-        else:
-            filter_type, name = (
-                "G",
-                key_name,
-            )
-        checks.append(
-            {
-                "fun": check_fun_dispatcher[filter_type],
-                "key": name,
-                "criteria": criteria,
-            }
-        )
-
+    checks = _form_check_list(kwargs)
     log.debug(
         "nornir_salt:DataProcessor:lod_filter running filter checks {}".format(checks)
     )
@@ -636,7 +731,7 @@ def match(data, pattern, before=0, **kwargs):
     devices ``include/match`` pipe statements.
 
     :param data: multiline string to search in
-    :param pattern: regular expression pattern to search for
+    :param pattern: pattern to search for, glob (default) or regex
     :param before: number of lines before match to include in results
     :return: filtered string
     """
@@ -644,13 +739,11 @@ def match(data, pattern, before=0, **kwargs):
     if not isinstance(data, str):
         return data
 
-    regex = re.compile(str(pattern))
-
-    # iterate over results and search for matches
+    regex = re.compile(pattern)
     searched_result = []
     lines_before = deque([], abs(before))
 
-    # search for pattern in lines
+    # iterate over results and search for matches
     for line in iter(data.splitlines()):
         if regex.search(line):
             searched_result.append(
@@ -707,10 +800,14 @@ def xml_flake(data, pattern, **kwargs):
 
 def find(data, path=None, **kwargs):
     """
+    Reference name ``find``
+        
     Function to dispatch data to one of the filtering functions.
 
-    :param data: (list, dict) data to search in
-    :param path: (str) dot separated path to results within data to process
+    :param data: (list, dict, str) data to search in
+    :param path: (str) dot separated path or list of path items to results 
+        within data to search in
+    :return: filtered results
     
     Dispatching process happens after evaluating ``path`` and retrieving
     results to process from overall data.
@@ -725,7 +822,7 @@ def find(data, path=None, **kwargs):
     """
     result = data
     
-    if path and isinstance(data, dict):
+    if path:
         result = path_(data, path)
         
     if isinstance(result, list):
