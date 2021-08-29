@@ -14,17 +14,7 @@ that many of the plugins developed can be useful outside of salt-nornir proxy mo
 # misc functions
 from .plugins.functions import ResultSerializer
 from .plugins.functions import FFun
-from .plugins.functions import FindString
-from .plugins.functions import ParseTTP
 from .plugins.functions import TabulateFormatter
-
-# check functions
-from .plugins.functions import ContainsTest
-from .plugins.functions import ContainsLinesTest
-from .plugins.functions import EqualTest
-from .plugins.functions import CerberusTest
-from .plugins.functions import RunTestSuite
-from .plugins.functions import CustomFunctionTest
 
 # inventory plugins
 from .plugins.inventory import DictInventory
@@ -63,18 +53,12 @@ from .plugins.processors import DiffProcessor
 __all__ = (
     "ResultSerializer",
     "FFun",
-    "FindString",
     "DictInventory",
     "QueueRunner",
     "RetryRunner",
     "tcp_ping",
-    "ContainsTest",
-    "EqualTest",
-    "CerberusTest",
     "netmiko_send_commands",
     "netmiko_send_command_ps",
-    "RunTestSuite",
-    "CustomFunctionTest",
     "nr_test",
     "NcclientPlugin",
     "ncclient_call",
