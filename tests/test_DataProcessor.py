@@ -979,7 +979,7 @@ def test_lod_filter():
 
 def test_lod_filter_with_glob_check_type_specifier():
     nr_with_dp = nr.with_processors([DataProcessor(
-        lod_filter={"G@ip": "1.1.*"}
+        lod_filter={"ip__glob": "1.1.*"}
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1007,7 +1007,7 @@ def test_lod_filter_with_glob_check_type_specifier():
 
 def test_lod_filter_with_uncknown_check_type_specifier():
     nr_with_dp = nr.with_processors([DataProcessor(
-        lod_filter={"XX@ip": "1.1.*"}
+        lod_filter={"ip__XX": "1.1.*"}
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1475,7 +1475,7 @@ def test_key_filter_check_specifier_glob():
     
 def test_key_filter_check_specifier_re():
     nr_with_dp = nr.with_processors([DataProcessor(
-        key_filter={"RE@pattern": "Gi2|Gi3"}
+        key_filter={"pattern__re": "Gi2|Gi3"}
     )])
     output = nr_with_dp.run(
         task=nr_test,

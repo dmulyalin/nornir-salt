@@ -34,15 +34,15 @@ Code to demonstrate how to use ``DataProcessor`` plugin::
 Filtering mini-query-language specification
 ===========================================
 
-``lod_filter`` -  key name may be prepended with check type specifier to instruct 
+``lod_filter`` -  key name may be appended with check type specifier to instruct 
 what type of check to execute with criteria against key value. For example 
-``G@key_name`` would use glob pattern matching.
+``key_name__glob`` would use glob pattern matching.
 
 +------------+-----------------------------------------------------------+
 | Check Type |  Description                                              |
 | Specifier  |                                                           |
 +------------+-----------------------------------------------------------+
-| ``G@``     | glob case sensitive pattern matching                      |
+| ``__glob`` | glob case sensitive pattern matching                      |
 +------------+-----------------------------------------------------------+
     
 DataProcessor reference
@@ -527,8 +527,8 @@ def _check_regex(value, criteria):
     return True if re.search(criteria, value) else False
     
 check_fun_dispatcher = {
-    "G": _check_glob,
-    "RE": _check_regex,
+    "glob": _check_glob,
+    "re": _check_regex,
 }
     
 def _form_check_list(checks_dictionary):
@@ -555,13 +555,12 @@ def _form_check_list(checks_dictionary):
     """
     checks = []
     for key_name, criteria in checks_dictionary.items():
-        if key_name.split("@")[0] in check_fun_dispatcher:
-            check_type = key_name.split("@")[0]
-            # account for cases when pattern contains other @
-            key_name = "@".join(key_name.split("@")[1:])
-            
+        if key_name.split("__")[-1] in check_fun_dispatcher:
+            check_type = key_name.split("__")[-1]
+            # account for cases when pattern contains other __
+            key_name = "__".join(key_name.split("__")[:-1])
         else:
-            check_type, key_name = ("G", key_name,)
+            check_type, key_name = ("glob", key_name,)
         checks.append(
             {
                 "fun": check_fun_dispatcher[check_type],
@@ -623,16 +622,12 @@ def key_filter(data, pattern=None, **kwargs):
     :return: filtered python dictionary
     
     Sample usage::
-    
-        filters = {
-            "G@glob_sample": "abc*",
-            "RE@re_sample": "abc.*",
-        }
         
         key_filter(
             data=data_dictionary,
             pattern="1234*",
-            **filters
+            key__glob="abc*",
+            key__re="abc.*"
         )
     """
     if not isinstance(data, dict):
@@ -663,7 +658,7 @@ def key_filter(data, pattern=None, **kwargs):
     }
         
 
-def lod_filter(data, pass_all=True, **kwargs):
+def lod_filter(data, pass_all=True, strict=True, **kwargs):
     """
     Reference Name ``lod_filter``
 
@@ -680,8 +675,10 @@ def lod_filter(data, pass_all=True, **kwargs):
     :param kwargs: (dict) any additional kwargs are key and value pairs, where key is a name
         of the dictionary key to search for and value is the criteria to check. Default check 
         type is glob case sensitive pattern matching.
-    :param pass_all: (bool) if True (default) logic is AND - dictionary must pass all checks to
-        be included in filtered results, if False logic is ANY
+    :param pass_all: (bool) if True (default) logic is AND - dictionary must pass ALL 
+        checks, if False logic is ANY
+    :param strict: (bool) if True (default) invalidates list dictionary item 
+        if no criteria key found in dictionary
     :return: filtered list of dictionaries
     """
     if not isinstance(data, list):
@@ -705,7 +702,8 @@ def lod_filter(data, pass_all=True, **kwargs):
             for i in data
             if all(
                 [
-                    c["fun"](i[c["key"]], c["criteria"]) if c["key"] in i else False
+                    c["fun"](i[c["key"]], c["criteria"]) 
+                    if c["key"] in i else not strict
                     for c in checks
                 ]
             )
@@ -716,7 +714,8 @@ def lod_filter(data, pass_all=True, **kwargs):
             for i in data
             if any(
                 [
-                    c["fun"](i[c["key"]], c["criteria"]) if c["key"] in i else False
+                    c["fun"](i[c["key"]], c["criteria"]) 
+                    if c["key"] in i else not strict
                     for c in checks
                 ]
             )

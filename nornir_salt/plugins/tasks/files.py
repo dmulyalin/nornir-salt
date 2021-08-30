@@ -235,7 +235,7 @@ def file_remove(
             continue
         
         # iterate over previous results
-        for file_details in index_data[group][task.host.name]:
+        for file_details in index_data[group].get(task.host.name, []):
             filename = file_details["filename"]
             tasks = file_details.pop("tasks")
             if os.path.exists(filename):
@@ -250,7 +250,7 @@ def file_remove(
                 )
                 
         # clean up index data
-        _ = index_data[group].pop(task.host.name)
+        _ = index_data[group].pop(task.host.name, None)
 
     # save new index data
     index_file = os.path.join(base_url, "tf_index_{}.json".format(index))
