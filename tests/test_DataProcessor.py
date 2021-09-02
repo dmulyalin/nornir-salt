@@ -234,7 +234,7 @@ def test_struct_to_json():
 def test_struct_to_json_kwargs():
     """ results are dictionaries convert it to json string """
     nr_with_dp = nr.with_processors([DataProcessor(
-        to_json={"indent": 2}
+        [{"fun": "to_json", "indent": 2}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -250,29 +250,6 @@ def test_struct_to_json_kwargs():
                       'IOL2': {'show run | inc ntp': '{\n  "c": 3,\n  "d": 4\n}'}}
                       
 # test_struct_to_json_kwargs()
-
-
-@skip_if_no_nornir
-def test_struct_to_json_list_kwargs():
-    """ results are dictionaries convert it to json string """
-    nr_with_dp = nr.with_processors([DataProcessor(
-        ["to_json"], to_json={"indent": 2}
-    )])
-    output = nr_with_dp.run(
-        task=nr_test,
-        ret_data_per_host={
-            "IOL1": {"a": 1, "b": 2},
-            "IOL2": {"c": 3, "d": 4},
-        },
-        name="show run | inc ntp",
-    )
-    result = ResultSerializer(output, to_dict=True)
-    # pprint.pprint(result)
-    assert result == {'IOL1': {'show run | inc ntp': '{\n  "a": 1,\n  "b": 2\n}'},
-                      'IOL2': {'show run | inc ntp': '{\n  "c": 3,\n  "d": 4\n}'}}
-                      
-# test_struct_to_json_list_kwargs()
-
 
 @skip_if_no_nornir
 def test_struct_to_yaml():
@@ -526,9 +503,9 @@ def test_struct_to_unflatten_list_first_non_0_index():
 @skip_if_no_nornir
 def test_xml_xpath_with_namespaces():
     """ results are XML filtered using XPATH """
-    nr_with_dp = nr.with_processors([DataProcessor(
-        xpath={"expr": "//a:config", "namespaces": {"a": "http://openconfig.net/yang/system"}}
-    )])
+    nr_with_dp = nr.with_processors([DataProcessor([
+        {"fun": "xpath", "expr": "//a:config", "namespaces": {"a": "http://openconfig.net/yang/system"}}
+    ])])
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
@@ -587,9 +564,9 @@ def test_xml_xpath_with_namespaces():
 @skip_if_no_nornir
 def test_xml_xpath_elem_by_value():
     """ results are XML filtered using XPATH """
-    nr_with_dp = nr.with_processors([DataProcessor(
-        xpath={"expr": '//a:config/a:address[text()="1.1.1.11"]', "namespaces": {"a": "http://openconfig.net/yang/system"}}
-    )])
+    nr_with_dp = nr.with_processors([DataProcessor([
+        {"fun": "xpath", "expr": '//a:config/a:address[text()="1.1.1.11"]', "namespaces": {"a": "http://openconfig.net/yang/system"}}
+    ])])
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
@@ -611,7 +588,7 @@ def test_xml_xpath_smart_string_false():
     Test that smart_string=False works for ethree.xpath
     """
     nr_with_dp = nr.with_processors([DataProcessor(
-        xpath={"expr": "//text()"}
+        [{"fun": "xpath", "expr": "//text()"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -631,7 +608,7 @@ def test_xml_xpath_smart_string_false():
 def test_xml_xpath_ignore_namespaces():
     """ results are XML filtered using XPATH """
     nr_with_dp = nr.with_processors([DataProcessor(
-        xpath={"expr": "//*[local-name() = 'config']"}
+        [{"fun": "xpath", "expr": "//*[local-name() = 'config']"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -692,7 +669,7 @@ def test_xml_xpath_ignore_namespaces():
 def test_xml_xpath_on_error():
     """ results are XML filtered using XPATH """
     nr_with_dp = nr.with_processors([DataProcessor(
-        xpath={"expr": "//"}, on_error="except"
+        [{"fun": "xpath", "expr": "//", "on_error": "except"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -796,7 +773,7 @@ def test_xml_rm_ns():
 def test_xml_xpath_with_rm_ns():
     """ results are XML filtered using XPATH without namespaces """
     nr_with_dp = nr.with_processors([DataProcessor(
-        xpath={"expr": "//config", "rm_ns": True}
+        [{"fun": "xpath", "expr": "//config", "rm_ns": True}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -859,7 +836,7 @@ interface {{ interface }}
   description {{ description | ORPHRASE }}
     """
     nr_with_dp = nr.with_processors([DataProcessor(
-        parse_ttp={"template": template, "res_kwargs": {"structure": "flat_list"}}
+        [{"fun": "parse_ttp", "template": template, "res_kwargs": {"structure": "flat_list"}}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -892,7 +869,7 @@ interface Loopback0
 
 def test_match():
     nr_with_dp = nr.with_processors([DataProcessor(
-        match={"pattern": "description Storage .*"}
+        [{"fun": "match", "pattern": "description Storage .*"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -921,7 +898,7 @@ interface Loopback0
 
 def test_match_with_before():
     nr_with_dp = nr.with_processors([DataProcessor(
-        match={"pattern": "description Storage .*", "before": 1}
+        [{"fun": "match", "pattern": "description Storage .*", "before": 1}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -951,7 +928,7 @@ interface Loopback0
 
 def test_lod_filter():
     nr_with_dp = nr.with_processors([DataProcessor(
-        lod_filter={"ip": "1.1.*"}
+        [{"fun": "lod_filter", "ip": "1.1.*"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -979,7 +956,7 @@ def test_lod_filter():
 
 def test_lod_filter_with_glob_check_type_specifier():
     nr_with_dp = nr.with_processors([DataProcessor(
-        lod_filter={"ip__glob": "1.1.*"}
+        [{"fun": "lod_filter", "ip__glob": "1.1.*"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1007,7 +984,7 @@ def test_lod_filter_with_glob_check_type_specifier():
 
 def test_lod_filter_with_uncknown_check_type_specifier():
     nr_with_dp = nr.with_processors([DataProcessor(
-        lod_filter={"ip__XX": "1.1.*"}
+        [{"fun": "lod_filter", "ip__XX": "1.1.*"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1033,7 +1010,7 @@ def test_lod_filter_with_uncknown_check_type_specifier():
 
 def test_lod_filter_with_glob_check_type_specifier_multikey():
     nr_with_dp = nr.with_processors([DataProcessor(
-        lod_filter={"ip": "1.1.*", "interface": "Gi[12]"}
+        [{"fun": "lod_filter", "ip": "1.1.*", "interface": "Gi[12]"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1093,7 +1070,7 @@ logging host 5.5.5.5
         """   
         
     nr_with_dp = nr.with_processors([DataProcessor(
-        parse_ttp={"template": template, "res_kwargs": {"structure": "flat_list"}}
+        [{"fun": "parse_ttp", "template": template, "res_kwargs": {"structure": "flat_list"}}]
     )])
 
     output = nr_with_dp.run(
@@ -1128,7 +1105,7 @@ logging host 5.5.5.5
 
 def test_path_function():
     nr_with_dp = nr.with_processors([DataProcessor(
-        path={"path": "0.ip"}
+        [{"fun": "path", "path": "0.ip"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1157,7 +1134,7 @@ def test_path_function():
 
 def test_path_highhly_nested_data_path_with_quotes():
     nr_with_dp = nr.with_processors([DataProcessor(
-        path={"path": "VIP_cfg.'1.1.1.1'.services.443.https.0.real_port"}
+        [{"fun": "path", "path": "VIP_cfg.'1.1.1.1'.services.443.https.0.real_port"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1203,7 +1180,7 @@ def test_path_highhly_nested_data_path_with_quotes():
 
 def test_path_highhly_nested_data_path_is_list():
     nr_with_dp = nr.with_processors([DataProcessor(
-        path={"path": ["VIP_cfg", "1.1.1.1", "services", "443", "https", 0, "real_port"]}
+        [{"fun": "path", "path": ["VIP_cfg", "1.1.1.1", "services", "443", "https", 0, "real_port"]}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1250,7 +1227,7 @@ def test_path_highhly_nested_data_path_is_list():
 
 def test_find_in_list():
     nr_with_dp = nr.with_processors([DataProcessor(
-        find={"ip": "1.1.*", "interface": "Gi[23]"}
+        [{"fun": "find", "ip": "1.1.*", "interface": "Gi[23]"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1282,7 +1259,7 @@ def test_find_in_list():
 
 def test_find_in_list_with_path():
     nr_with_dp = nr.with_processors([DataProcessor(
-        find={"ip": "1.1.*", "interface": "Gi[23]", "path": "interfaces.cfg"}
+        [{"fun": "find", "ip": "1.1.*", "interface": "Gi[23]", "path": "interfaces.cfg"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1315,7 +1292,7 @@ def test_find_in_list_with_path():
 
 def test_find_in_dict_key_filter():
     nr_with_dp = nr.with_processors([DataProcessor(
-        find={"pattern": "Gi[23]"}
+        [{"fun": "find", "pattern": "Gi[23]"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1345,7 +1322,7 @@ def test_find_in_dict_key_filter():
 
 def test_find_in_dict_key_filter_with_path():
     nr_with_dp = nr.with_processors([DataProcessor(
-        find={"pattern": "Gi[23]", "path": "interfaces.cfg"}
+        [{"fun": "find", "pattern": "Gi[23]", "path": "interfaces.cfg"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1375,7 +1352,7 @@ def test_find_in_dict_key_filter_with_path():
 
 def test_find_in_text_match_filter():
     nr_with_dp = nr.with_processors([DataProcessor(
-        find={"pattern": "ip address .*"}
+        [{"fun": "find", "pattern": "ip address .*"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1412,7 +1389,7 @@ interface Lo0
 
 def test_find_in_text_match_filter_with_path():
     nr_with_dp = nr.with_processors([DataProcessor(
-        find={"pattern": "ip address .*", "path": "interfaces.cfg"}
+        [{"fun": "find", "pattern": "ip address .*", "path": "interfaces.cfg"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1448,7 +1425,7 @@ interface Lo0
 
 def test_key_filter_check_specifier_glob():
     nr_with_dp = nr.with_processors([DataProcessor(
-        key_filter={"G@pattern": "Gi[23]"}
+        [{"fun": "key_filter", "pattern__glob": "Gi[23]"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1475,7 +1452,7 @@ def test_key_filter_check_specifier_glob():
     
 def test_key_filter_check_specifier_re():
     nr_with_dp = nr.with_processors([DataProcessor(
-        key_filter={"pattern__re": "Gi2|Gi3"}
+        [{"fun": "key_filter", "pattern__re": "Gi2|Gi3"}]
     )])
     output = nr_with_dp.run(
         task=nr_test,
@@ -1499,3 +1476,271 @@ def test_key_filter_check_specifier_re():
                       'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
                       
 # test_key_filter_check_specifier_re()
+
+
+def test_parse_ttp_task_start_commands_extraction():
+    template = """
+<input name="ntp_cfg">
+commands = ["show run | inc ntp"]
+</input>
+
+<input name="log_cfg">
+commands = ["show run | inc logging"]
+</input>
+
+<group name="ntp*" input="ntp_cfg">
+ntp server {{ ntp_server }}
+</group>
+
+<group name="log*" input="log_cfg">
+logging host {{ log_server }}
+</group>    
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "run_ttp", "template": template, "remove_tasks": False}]
+    )])    
+    output = nr_with_dp.run(
+        task=nr_test,
+        commands=[]
+    )    
+    result = ResultSerializer(output)
+    pprint.pprint(result)
+    assert result == {'IOL1': {'nr_test': {'commands': ['show run | inc ntp',
+                                                        'show run | inc logging']},
+                               'run_ttp': [[{}, {}]]},
+                      'IOL2': {'nr_test': {'commands': ['show run | inc ntp',
+                                                        'show run | inc logging']},
+                               'run_ttp': [[{}, {}]]}}
+                                   
+# test_parse_ttp_task_start_commands_extraction()
+
+
+def test_parse_ttp_run_non_default_inputs_only():
+    iol1_res_ntp = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol2_res_ntp = """
+ntp server 7.7.7.7
+        """
+    iol1_res_log = """
+logging host 1.2.3.4
+logging host 4.4.4.4
+        """
+    iol2_res_log = """
+logging host 5.5.5.5
+        """ 
+        
+    template = """
+<input name="ntp_cfg">
+commands = ["show run | inc ntp"]
+</input>
+
+<input name="log_cfg">
+commands = ["show run | inc logging"]
+</input>
+
+<group name="ntp*" input="ntp_cfg">
+ntp server {{ ntp_server }}
+</group>
+
+<group name="log*" input="log_cfg">
+logging host {{ log_server }}
+</group>    
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "run_ttp", "template": template}]
+    )])    
+    output = nr_with_dp.run(
+        task=nr_test_grouped_subtasks,
+        task_1={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_ntp,
+                "IOL2": iol2_res_ntp,
+            },
+            "name": "show run | inc ntp",
+        },
+        task_2={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_log,
+                "IOL2": iol2_res_log,
+            },
+            "name": "show run | inc logging",
+        },
+    )
+    result = ResultSerializer(output, add_details=True, to_dict=False)
+    # pprint.pprint(result)
+    assert result == [{'changed': False,
+                       'diff': '',
+                       'exception': None,
+                       'failed': False,
+                       'host': 'IOL1',
+                       'name': 'run_ttp',
+                       'result': [[{'ntp': [{'ntp_server': '7.7.7.8'}, {'ntp_server': '7.7.7.7'}]},
+                                   {'log': [{'log_server': '1.2.3.4'},
+                                            {'log_server': '4.4.4.4'}]}]]},
+                      {'changed': False,
+                       'diff': '',
+                       'exception': None,
+                       'failed': False,
+                       'host': 'IOL2',
+                       'name': 'run_ttp',
+                       'result': [[{'ntp': [{'ntp_server': '7.7.7.7'}]},
+                                   {'log': [{'log_server': '5.5.5.5'}]}]]}]
+# test_parse_ttp_run_for_inputs()
+    
+    
+def test_parse_ttp_run_inputs_with_default_input():
+    iol1_res_ntp = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol2_res_ntp = """
+ntp server 7.7.7.7
+        """
+    iol1_res_log = """
+logging host 1.2.3.4
+logging host 4.4.4.4
+        """
+    iol2_res_log = """
+logging host 5.5.5.5
+        """ 
+        
+    template = """
+<input>
+commands = ["show run | inc ntp"]
+</input>
+
+<input name="log_cfg">
+commands = ["show run | inc logging"]
+</input>
+
+<group name="ntp*">
+ntp server {{ ntp_server }}
+</group>
+
+<group name="log*" input="log_cfg">
+logging host {{ log_server }}
+</group>    
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "run_ttp", "template": template}]
+    )])    
+    output = nr_with_dp.run(
+        task=nr_test_grouped_subtasks,
+        task_1={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_ntp,
+                "IOL2": iol2_res_ntp,
+            },
+            "name": "show run | inc ntp",
+        },
+        task_2={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_log,
+                "IOL2": iol2_res_log,
+            },
+            "name": "show run | inc logging",
+        },
+    )
+    result = ResultSerializer(output, add_details=True, to_dict=False)
+    # pprint.pprint(result)
+    assert result == [{'changed': False,
+                       'diff': '',
+                       'exception': None,
+                       'failed': False,
+                       'host': 'IOL1',
+                       'name': 'run_ttp',
+                       'result': [[{'ntp': [{'ntp_server': '7.7.7.8'}, {'ntp_server': '7.7.7.7'}]},
+                                   {'log': [{'log_server': '1.2.3.4'},
+                                            {'log_server': '4.4.4.4'}]}]]},
+                      {'changed': False,
+                       'diff': '',
+                       'exception': None,
+                       'failed': False,
+                       'host': 'IOL2',
+                       'name': 'run_ttp',
+                       'result': [[{'ntp': [{'ntp_server': '7.7.7.7'}]},
+                                   {'log': [{'log_server': '5.5.5.5'}]}]]}]
+                                   
+# test_parse_ttp_run_inputs_with_default_input()
+
+def test_parse_ttp_run_default_input_only():
+    iol1_res_ntp = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol2_res_ntp = """
+ntp server 7.7.7.7
+        """
+    iol1_res_log = """
+logging host 1.2.3.4
+logging host 4.4.4.4
+        """
+    iol2_res_log = """
+logging host 5.5.5.5
+        """ 
+        
+    template = """
+<input>
+commands = [
+    "show run | inc ntp",
+    "show run | inc logging"
+]
+</input>
+
+<group name="ntp*">
+ntp server {{ ntp_server }}
+</group>
+
+<group name="log*">
+logging host {{ log_server }}
+</group>    
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "run_ttp", "template": template}]
+    )])    
+    output = nr_with_dp.run(
+        task=nr_test_grouped_subtasks,
+        task_1={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_ntp,
+                "IOL2": iol2_res_ntp,
+            },
+            "name": "show run | inc ntp",
+        },
+        task_2={
+            "task": nr_test,
+            "ret_data_per_host": {
+                "IOL1": iol1_res_log,
+                "IOL2": iol2_res_log,
+            },
+            "name": "show run | inc logging",
+        },
+    )
+    result = ResultSerializer(output, add_details=True, to_dict=False)
+    # pprint.pprint(result)
+    assert result == [{'changed': False,
+                       'diff': '',
+                       'exception': None,
+                       'failed': False,
+                       'host': 'IOL1',
+                       'name': 'run_ttp',
+                       'result': [[{'log': [{'log_server': '1.2.3.4'}, {'log_server': '4.4.4.4'}],
+                                    'ntp': [{'ntp_server': '7.7.7.8'},
+                                            {'ntp_server': '7.7.7.7'}]}]]},
+                      {'changed': False,
+                       'diff': '',
+                       'exception': None,
+                       'failed': False,
+                       'host': 'IOL2',
+                       'name': 'run_ttp',
+                       'result': [[{'log': [{'log_server': '5.5.5.5'}],
+                                    'ntp': [{'ntp_server': '7.7.7.7'}]}]]}]
+                                   
+# test_parse_ttp_run_default_input_only()

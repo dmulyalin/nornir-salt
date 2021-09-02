@@ -806,7 +806,7 @@ def test_file_read_struct_data_with_DataProcessor_lod_filter():
 
     # retrieve file content passing it through data processor
     nr_with_dp = nr.with_processors([DataProcessor(
-        lod_filter={"ip": "1.2.*", "interface": "Gi[23]"}
+        [{"fun": "lod_filter", "ip": "1.2.*", "interface": "Gi[23]"}]
     )])
     
     res = nr_with_dp.run(

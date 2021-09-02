@@ -101,7 +101,7 @@ def netmiko_send_commands(
         commands = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
         commands = task.host.data["__task__"]["filename"]
-
+        
     # run commands
     if use_ps:
         # normilize commands to a list
@@ -119,7 +119,7 @@ def netmiko_send_commands(
             )
             time.sleep(interval)
     else:
-        # normilize commands to a list
+        # normalize commands to a list
         if isinstance(commands, str):
             commands = commands.splitlines()
         # send commands
