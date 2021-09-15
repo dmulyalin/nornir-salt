@@ -40,26 +40,26 @@ ncclient_call reference
 additional methods reference
 ============================
 
-dir
----
+ncclient_call - dir
+-------------------
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_dir
 
-help
-----
+ncclient_call - help
+--------------------
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_help
 
-server_capabilities
--------------------
+ncclient_call - server_capabilities
+-----------------------------------
 
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_server_capabilities
 
-connected
----------
+ncclient_call - connected
+-------------------------
 
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_connected
 
-locked
-------
+ncclient_call - locked
+----------------------
 
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_locked
 """

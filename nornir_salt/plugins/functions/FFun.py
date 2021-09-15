@@ -207,11 +207,15 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
     :param kwargs: Dictionary with filtering parameters e.g. {"FB": "host1*", "FL": ["host1", "host2"]}
     :param check_if_has_filter: (bool) default is False, if True, returns tuple ``(filtered_hosts, has_filter)``,
         where ``has_filter`` is boolean set to True if any of ``Fx`` filters provided
-    :param FO: Nornir Filter object dictionary
-    :param FB: Gloab string to filter based on hosts' names
-    :param FG: Name of inventory group to return only hosts that part of it
-    :param FP: string, comma separated list of IPv4 or IPv6 prefixes e.g. 102.168.1.0/24
-    :param FL: string, comma separated list of hosts' names to return
+    :param FO: (str) Nornir Filter object dictionary
+    :param FB: (str or list) glob pattern or comma separate list of patterns to filter based on hosts' names
+    :param FC: (str or list) pattern or comma separate list of patterns to check for containment in hostname
+    :param FR: (str or list) regex pattern or list of patterns to filter based on hosts' names
+    :param FG: (str) Name of inventory group to return only hosts that part of it
+    :param FP: (str) string, comma separated list of IPv4 or IPv6 prefixes e.g. 102.168.1.0/24
+    :param FL: (str) string, comma separated list of hosts' names to return
+    :param FN: (bool) default is False, if True, will negate match results to opposite
+        set of hosts
     """
     ret = nr
     has_filter = False

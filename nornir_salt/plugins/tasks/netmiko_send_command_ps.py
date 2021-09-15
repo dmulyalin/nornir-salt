@@ -6,7 +6,7 @@ Send command string to device using promptless (ps) approach. Can be used for an
 command, including commands that change device prompt. Multiple commands can be sent
 separated by '\n' newline.
 
-.. image:: ./_images/promptless_mode_v0.1.png
+.. image:: ../_images/promptless_mode_v0.1.png
 
 Promptless mode allows to detect end of output from device without relying on timers or 
 correct prompt matching (hence the name - promptless). This mode still uses pattern to 

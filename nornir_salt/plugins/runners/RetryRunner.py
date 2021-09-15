@@ -13,7 +13,7 @@ RetryRunner plugin implements retry logic to improve task execution reliability.
 RetryRunner Architecture
 ========================
 
-.. image:: ./_images/RetryRunner_v0.png
+.. image:: ../_images/RetryRunner_v0.png
 
 RetryRunner Sample Usage
 ========================
@@ -140,8 +140,6 @@ RetryRunner - Connect to hosts behind jumphost
 
 RetryRunner implements logic to connect with hosts behind bastion/jumphosts.
 
-.. note:: Only Netmiko tasks, `connection_name="netmiko"`, support connecting via Jumphosts.
-
 To connect to devices behind jumphost, need to define jumphost parameters in host's inventory data::
 
     hosts:
@@ -157,6 +155,9 @@ To connect to devices behind jumphost, need to define jumphost parameters in hos
             password: jump_host_password
             username: jump_host_user
 
+.. note:: Only Netmiko `connection_name="netmiko"` and Ncclient `connection_name="ncclient"`
+    tasks, support connecting to hosts behind Jumphosts using above inventory data.
+	
 RetryRunner Reference
 =====================
 

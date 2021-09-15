@@ -78,8 +78,8 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
             'Content-Type': 'application/yang-data+json',
             'Accept': 'application/yang-data+json'
             
-    If no ``auth`` attribute provided in task ``kwargs``, uses host's username and 
-    password inventory parameters to form ``auth`` tuple. 
+    If no ``auth`` attribute provided in task ``kwargs``, host's username and 
+    password inventory parameters used to form ``auth`` tuple. 
     """
     result = None
     
@@ -131,6 +131,8 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
                 )
             else:
                 raise RuntimeError("nornir-salt:http_call cannot form URL. base_url or transport required, params given: {}".format(parameters))
+        else:
+            parameters["url"] = url
     # use base_url if no url provided
     elif base_url:
         parameters["url"] = base_url

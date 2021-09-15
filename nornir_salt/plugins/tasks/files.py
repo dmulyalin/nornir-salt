@@ -1,18 +1,18 @@
 """
-Nornir Files Task Plugin
-########################
+files
+#####
 
 Collection of task plugins to work with files saved by ``TofileProcessor``.
 
-Sample usage
-============
+Files Plugin Sample usage
+=========================
 
 Code to invoke ``files`` task plugins::
 
     TBD
 
-API reference
-=============
+Files Plugin API reference
+==========================
 
 .. autofunction:: nornir_salt.plugins.tasks.files.file_read
 .. autofunction:: nornir_salt.plugins.tasks.files.file_list

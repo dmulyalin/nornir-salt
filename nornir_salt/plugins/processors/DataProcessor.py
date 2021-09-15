@@ -34,8 +34,8 @@ Code to demonstrate how to use ``DataProcessor`` plugin::
 Filtering mini-query-language specification
 ===========================================
 
-``lod_filter`` -  key name may be appended with check type specifier to instruct 
-what type of check to execute with criteria against key value. For example 
+``lod_filter`` -  key name may be appended with check type specifier suffix
+to instruct what type of check to execute with criteria against key value. For example 
 ``key_name__glob`` would use glob pattern matching.
 
 +------------+-----------------------------------------------------------+
@@ -44,7 +44,9 @@ what type of check to execute with criteria against key value. For example
 +------------+-----------------------------------------------------------+
 | ``__glob`` | glob case sensitive pattern matching                      |
 +------------+-----------------------------------------------------------+
-    
+| ``__re``   | Regular Expression pattern matching                       |
++------------+-----------------------------------------------------------+
+
 DataProcessor reference
 =======================
 
@@ -589,7 +591,7 @@ def xpath(data, expr, rm_ns=False, recover=False, **kwargs):
     :param expr: (str) xpath expression to use
     :param rm_ns: (bool) if True removes namespace from XML string using
         ``xml_rm_ns`` function, default is False
-    :param kwarg: (dict) **kwargs to use for LXML etree.xpath method
+    :param kwarg: (dict) ``**kwargs`` to use for LXML etree.xpath method
     :return: XML filtered string
     """
     if not HAS_LXML:

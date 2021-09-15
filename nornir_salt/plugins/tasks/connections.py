@@ -1,6 +1,6 @@
 """
-Connections Task Plugin
-#######################
+connections
+###########
 
 Collection of task plugins to work with Nornir hosts' connections
 

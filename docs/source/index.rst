@@ -10,8 +10,8 @@ Welcome to nornir-salt's documentation!
    Getting started
    Inventory Plugins
    Connection Plugins
-   Runner Plugins
-   Task Plugins
-   Processors/Processors Plugins
-   Functions
+   Runners/index
+   Tasks/index
+   Processors/index
+   Functions/index
 

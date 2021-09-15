@@ -6,6 +6,12 @@ Helper function to transform Nornir results object in python dictionary to
 ease programmatic consumption or further transformation in other formats
 such as JSON or YAML
 
+ResultSerializer supports serialization of these object types::
+
+    list, tuple, dict, str, int, bool, set, type(None)
+    
+Exception object transformed to string.
+
 ResultSerializer Sample Usage
 =============================
 
@@ -193,7 +199,8 @@ def ResultSerializer(
         is False
     :param to_dict: (bool) default is True, forms nested dictionary structure, if False
         forms results in a list.
-    :param skip: (list) list of Result object attributes names to omit
+    :param skip: (list) list of Result object attributes names to omit, default is
+        "severity_level", "stderr", "stdout", "host"
     """
     # run check
     if not isinstance(nr_results, AggregatedResult):

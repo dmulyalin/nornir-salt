@@ -20,7 +20,7 @@ beneficial in certain situations, e.g. QueueRunner pros:
 QueueRunner Architecture
 ========================
 
-.. image:: ./_images/QueueRunner_v0.png
+.. image:: ../_images/QueueRunner_v0.png
 
 QueueRunner Sample Usage
 ========================
