@@ -10,10 +10,8 @@ from .netmiko_send_config import netmiko_send_config
 from .napalm_configure import napalm_configure
 from .scrapli_send_config import scrapli_send_config
 from .http_call import http_call
-from .files import file_read
-from .files import file_list
-from .files import file_remove
-from .files import files
+from .files import files, file_read, file_list, file_remove, file_diff
+from .connections import connections, conn_close, conn_list
 
 __all__ = (
     "tcp_ping",
@@ -31,5 +29,9 @@ __all__ = (
     "file_read",
     "file_list",
     "file_remove",
+    "file_diff",
     "files",
+    "connections",
+    "conn_close",
+    "conn_list",
 )

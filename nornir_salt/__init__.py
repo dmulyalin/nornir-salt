@@ -15,6 +15,7 @@ that many of the plugins developed can be useful outside of salt-nornir proxy mo
 from .plugins.functions import ResultSerializer
 from .plugins.functions import FFun
 from .plugins.functions import TabulateFormatter
+from .plugins.functions import DumpResults
 
 # inventory plugins
 from .plugins.inventory import DictInventory
@@ -34,10 +35,8 @@ from .plugins.tasks import netmiko_send_config
 from .plugins.tasks import napalm_configure
 from .plugins.tasks import scrapli_send_config
 from .plugins.tasks import http_call
-from .plugins.tasks import file_read
-from .plugins.tasks import file_list
-from .plugins.tasks import file_remove
-from .plugins.tasks import files
+from .plugins.tasks import file_read, file_list, file_remove, file_diff, files
+from .plugins.tasks import connections, conn_close, conn_list
 
 # NETCONF related plugins
 from .plugins.tasks import ncclient_call
@@ -77,5 +76,11 @@ __all__ = (
     "http_call",
     "file_read",
     "file_list",
-    "file_remove"
+    "file_remove",
+    "file_diff",
+    "files",
+    "DumpResults",
+    "connections",
+    "conn_close",
+    "conn_list",
 )

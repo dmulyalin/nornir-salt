@@ -100,6 +100,12 @@ Parse functions
 ---------------
 
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.parse_ttp
+.. autofunction:: nornir_salt.plugins.processors.DataProcessor.run_ttp
+
+Misc functions
+--------------
+
+.. autofunction:: nornir_salt.plugins.processors.DataProcessor.add_commands_from_ttp_template
 """
 import logging
 import os
@@ -837,7 +843,7 @@ def find(data, path=None, **kwargs):
 # --------------------------------------------------------------------------------
 
 
-def parse_ttp(data, template, task=None, ttp_kwargs={}, res_kwargs={}, remove_tasks=True, **kwargs):
+def parse_ttp(data: str, template: str, ttp_kwargs={}, res_kwargs={}, **kwargs):
     """
     Reference name ``parse_ttp``
 
@@ -845,14 +851,10 @@ def parse_ttp(data, template, task=None, ttp_kwargs={}, res_kwargs={}, remove_ta
 
     Function to parse text output from device and return structured data
 
-    :param data: (str or obj) Nornir MultiResult object or string
+    :param data: (str) string to parse
     :param template: (str) TTP template string or reference to ``ttp://`` templates
     :param ttp_kwargs: (dict) dictionary to use while instantiating TTP parse object
     :param res_kwargs: (dict) dictionary to use with ``result`` method
-    :param remove_tasks: (bool) if set to True and data is MultiResult object will remove
-        other task results
-    :param task: (obj) Nornir Task object, used to form parsing results when data is 
-        MultiResult object
     :return: parsed structure
     """
     if not HAS_TTP:
@@ -865,35 +867,76 @@ def parse_ttp(data, template, task=None, ttp_kwargs={}, res_kwargs={}, remove_ta
         parser.parse(one=True)
     
         return parser.result(**res_kwargs)
-    elif isinstance(data, MultiResult):
+    else:
+        log.warning(
+            "nornir_salt:DataProcessor:parse_ttp skipping, data is not string but {}".format(
+                type(data)
+            )
+        )
+        return data
+
+
+def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_tasks=True, **kwargs):
+    """
+    Reference name ``run_ttp``
+
+    Dependencies: requires TTP library - ``pip install ttp``
+
+    Function to parse text output from device and return structured data
+
+    :param data: (str) Nornir MultiResult object
+    :param template: (str) TTP template string or reference to ``ttp://`` templates
+    :param ttp_kwargs: (dict) dictionary to use while instantiating TTP parse object
+    :param res_kwargs: (dict) dictionary to use with ``result`` method
+    :param remove_tasks: (bool) if set to True and data is MultiResult object will remove
+        other task results
+    :param task: (obj) Nornir Task object, used to form parsing results when data is 
+        MultiResult object
+    :return: parsed structure
+    
+    Provided Nornir MultiResult object processed by sorting task results across TTP 
+    Template inputs to parse. After parsing, all other tasks' results removed from
+    MultiResult object and parsing results appended to it. If ``remove_tasks`` set to 
+    False, other tasks results not removed.
+    """
+    if not HAS_TTP:
+        log.warning("nornir_salt:DataProcessor:parse_ttp failed import TTP library")
+        return data
+
+    if isinstance(data, MultiResult):
         parser = ttp(template=template, **ttp_kwargs)
         ttp_inputs_load = parser.get_input_load()
-        result_added_to_inputs = set()
         
         # go over template's inputs and add output from devices
         for template_name, inputs in ttp_inputs_load.items():
-            for input_name, input_params in inputs.items():
-                commands = input_params.get("commands", [])
-                input_data = []
-                # go over task results and add them to input
-                for index, i in enumerate(data):
-                    if i.name in commands and isinstance(i.result, str):
-                        input_data.append(i.result)
-                        result_added_to_inputs.add(index)
-                parser.add_input(
-                    data="\n".join(input_data), input_name=input_name, template_name=template_name
-                )
-                
-        # go over results one more time to populate default input
-        default_input_data = [
-            i.result for index, i in enumerate(data)
-            if index not in result_added_to_inputs and
-            isinstance(i.result, str)
-        ]
-        if default_input_data:
-            parser.add_input(
-                data="\n".join(default_input_data), input_name="Default_Input", template_name="_root_template_"
-            )          
+            # if no inputs defined, add all to default input
+            if not inputs:
+                default_input_data = []
+                for i in data:
+                    # check if need to skip this task
+                    if hasattr(i, "skip_results") and i.skip_results == True:
+                        continue                         
+                    if isinstance(i.result, str):
+                        default_input_data.append(i.result)
+                if default_input_data:
+                    parser.add_input(
+                        data="\n".join(default_input_data), input_name="Default_Input", template_name=template_name
+                    )    
+            # sort results across inputs with commands
+            else:
+                for input_name, input_params in inputs.items():
+                    commands = input_params.get("commands", [])
+                    input_data = []
+                    for i in data:
+                        # check if need to skip this task
+                        if hasattr(i, "skip_results") and i.skip_results == True:
+                            continue                         
+                        if i.name in commands and isinstance(i.result, str):
+                            input_data.append(i.result)
+                    if input_data:
+                        parser.add_input(
+                            data="\n".join(input_data), input_name=input_name, template_name=template_name
+                        )   
             
         # run parsing in single process
         parser.parse(one=True)
@@ -913,46 +956,49 @@ def parse_ttp(data, template, task=None, ttp_kwargs={}, res_kwargs={}, remove_ta
         )
     else:
         log.warning(
-            "nornir_salt:DataProcessor:parse_ttp skipping, data is not string or MultiResult but {}".format(
+            "nornir_salt:DataProcessor:parse_ttp skipping, data is not MultiResult but {}".format(
                 type(data)
             )
         )
         return data
-
-
+    
+    
 # --------------------------------------------------------------------------------
 # misc
 # --------------------------------------------------------------------------------
 
 
-def get_commands_from_ttp_template(task, template, **kwargs):
+def add_commands_from_ttp_template(task, template, **kwargs):
     """
     Function to extract commands from TTP template and add them 
-    to task params.
+    to task params. Used in conjunction with ``run_ttp`` parsing function.
     
-    This function called at task_started point, allowing to update
-    task params with commands to collect from devices prior to further
-    executing the task.
+    This function called at ``task_started`` point, allowing to update
+    task's ``params`` dictionary with ``commands`` to collect from devices 
+    prior to further executing the task.
     
-    Dependencies: requires TTP library - ``pip install ttp``
+    Commands extracted from TTP Template inputs that may contain definitions
+    of ``commands`` list.
+    
+    Dependencies: requires TTP library - ``pip install ttp``.
     
     :param task: (obj) Nornir task object
     :param template: (str) TTP Template string
     """
-    # run sanity checks
-    if "commands" not in task.params:
-        return
     if not HAS_TTP:
         log.warning("nornir_salt:DataProcessor:extract_commands_from_ttp failed import TTP library")
         return
-           
+    
+    task.params.setdefault("commands", [])           
     parser = ttp(template=template)
-    ttp_inputs_load = parser.get_input_load()    
-
+    ttp_inputs_load = parser.get_input_load()
+    
     # go over template's inputs and collect commands to get from devices
     for template_name, inputs in ttp_inputs_load.items():
         for input_name, input_params in inputs.items():
-            task.params["commands"].extend(input_params.get("commands", []))
+            for cmd in input_params.get("commands", []):
+                if cmd not in task.params["commands"]:
+                    task.params["commands"].append(cmd)
 
             
 # --------------------------------------------------------------------------------
@@ -984,16 +1030,17 @@ task_instance_completed_dispatcher_per_task = {
     "xml_flatten": xml_flatten,
     "xml_rm_ns": xml_rm_ns,
     "path": path_,
+    # parsers
     "parse_ttp": parse_ttp,
 }
 
 task_instance_completed_dispatcher_multiresult = {
     # parsers
-    "run_ttp": parse_ttp,
+    "run_ttp": run_ttp,
 }
 
 task_started_dispatcher = {
-    "run_ttp": get_commands_from_ttp_template,
+    "run_ttp": add_commands_from_ttp_template,
 }
 
 class DataProcessor:
@@ -1047,7 +1094,8 @@ class DataProcessor:
             dp_dict_copy = dp_dict.copy()
             try:
                 fun = dp_dict_copy.pop("fun")
-                task_started_dispatcher[fun](task, **dp_dict_copy)
+                if fun in task_started_dispatcher:
+                    task_started_dispatcher[fun](task, **dp_dict_copy)
             except:
                 log.error(
                     "nornir-salt:DataProcessor task pre-processing task {} dp '{}' error:\n{}".format(
@@ -1062,6 +1110,12 @@ class DataProcessor:
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
         """ Process results from device once main task completed """
+        # check if has failed tasks, do nothing in such a case
+        if result.failed:
+            log.error("nornir_salt:DataProcessor do nothing, return, has failed tasks")
+            return
+        
+        # run DataProcessor function
         for dp_dict in self.dp:
             dp_dict_copy = dp_dict.copy()
             try:
@@ -1094,6 +1148,8 @@ class DataProcessor:
                                     host.name, fun, traceback.format_exc()
                                 )
                             )
+                else:
+                    raise KeyError(fun)
             except:
                 log.error(
                     "nornir-salt:DataProcessor host {} dp '{}' error:\n{}".format(

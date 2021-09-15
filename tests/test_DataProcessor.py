@@ -196,7 +196,7 @@ InventoryPluginRegister.register("DictInventory", DictInventory)
 
 nr = init(lab_inventory_dict)
 
-def nr_test_grouped_subtasks(task, task_1, task_2):
+def nr_test_grouped_subtasks(task, task_1, task_2, **kwargs):
     """
     Test grouped task
     """
@@ -1507,10 +1507,10 @@ logging host {{ log_server }}
     pprint.pprint(result)
     assert result == {'IOL1': {'nr_test': {'commands': ['show run | inc ntp',
                                                         'show run | inc logging']},
-                               'run_ttp': [[{}, {}]]},
+                               'run_ttp': [[]]},
                       'IOL2': {'nr_test': {'commands': ['show run | inc ntp',
                                                         'show run | inc logging']},
-                               'run_ttp': [[{}, {}]]}}
+                               'run_ttp': [[]]}}
                                    
 # test_parse_ttp_task_start_commands_extraction()
 
@@ -1589,7 +1589,7 @@ logging host {{ log_server }}
                        'name': 'run_ttp',
                        'result': [[{'ntp': [{'ntp_server': '7.7.7.7'}]},
                                    {'log': [{'log_server': '5.5.5.5'}]}]]}]
-# test_parse_ttp_run_for_inputs()
+# test_parse_ttp_run_non_default_inputs_only()
     
     
 def test_parse_ttp_run_inputs_with_default_input():

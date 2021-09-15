@@ -201,12 +201,12 @@ def worker(
                 work_q.put(work)
                 work_q.task_done()
                 continue
-        log.info("{} - running task '{}'".format(host.name, task.name))
+        log.info("nornir_salt:RetryRunner {} - running task '{}'".format(host.name, task.name))
         time.sleep(random.randrange(0, task_splay) / 1000)
         work_result = task.start(host)
         if task.results.failed:
             log.error(
-                "{} - task execution retry attempt {} failed: '{}'".format(
+                "nornir_salt:RetryRunner {} - task execution retry attempt {} failed: '{}'".format(
                     host.name, params["task_retry"], work_result[0].exception
                 )
             )
@@ -238,7 +238,7 @@ def worker(
             result[host.name] = work_result
             del work_result
         work_q.task_done()
-        log.info("{} - task '{}' completed".format(host.name, task.name))
+        log.info("nornir_salt:RetryRunner {} - task '{}' completed".format(host.name, task.name))
 
 
 def connector(
@@ -288,13 +288,13 @@ def connector(
                         connection_name, configuration=task.nornir.config
                     )
                 log.info(
-                    "{} - started connection: '{}'".format(host.name, connection_name)
+                    "nornir_salt:RetryRunner {} - started connection: '{}'".format(host.name, connection_name)
                 )
             except Exception as e:
                 # close host connections to retry them
                 close_host_connection(host, connection_name)
                 log.error(
-                    "{} - connection retry attempt {}, error: '{}'".format(
+                    "nornir_salt:RetryRunner {} - connection retry attempt {}, error: '{}'".format(
                         host.name, params["connection_retry"], e
                     )
                 )
@@ -361,7 +361,7 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
                 "jumphost_{}".format(jumphost["hostname"])
             ] = jumphost_ssh_client
             log.info(
-                "Started connection to jumphost '{}' - '{}'".format(
+                "nornir_salt:RetryRunner Started connection to jumphost '{}' - '{}'".format(
                     jumphost["hostname"], jumphost_ssh_client
                 )
             )
@@ -369,7 +369,7 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
             with LOCK:
                 jumphosts_connections[jumphost["hostname"]] = "__failed__"
             # add exception info to host data to include in results
-            error_msg = "Failed connection to jumphost '{}', error - {}".format(
+            error_msg = "nornir_salt:RetryRunner failed connection to jumphost '{}', error - {}".format(
                 host["jumphost"]["hostname"], e
             )
             host["exception"] = error_msg
@@ -381,7 +381,7 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
             time.sleep(random.randrange(0, 500) / 1000)
         if jumphosts_connections[jumphost["hostname"]] == "__failed__":
             # add exception info to host data to include in results
-            error_msg = "Failed connection to jumphost '{}' in another thread".format(
+            error_msg = "nornir_salt:RetryRunner failed connection to jumphost '{}' in another thread".format(
                 host["jumphost"]["hostname"]
             )
             host["exception"] = error_msg
@@ -401,7 +401,7 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
         )
         host.connections[channel_name] = channel
         log.info(
-            "{} - started new channel via jumphost '{}' - '{}'".format(
+            "nornir_salt:RetryRunner {} - started new channel via jumphost '{}' - '{}'".format(
                 host.name,
                 jumphost["hostname"],
                 jumphosts_connections[jumphost["hostname"]]["jumphost_ssh_client"],
@@ -514,7 +514,7 @@ class RetryRunner:
             time.sleep(0.1)
         else:
             log.warning(
-                "RetryRunner task '{}', '{}'s task_timeout reached, hosts no results '{}'".format(
+                "nornir_salt:RetryRunner task '{}', '{}'s task_timeout reached, hosts no results '{}'".format(
                     task.name, self.task_timeout, hosts_no_result
                 )
             )

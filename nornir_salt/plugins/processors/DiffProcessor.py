@@ -38,13 +38,6 @@ import traceback
 import difflib
 import re
 
-try:
-    import yaml
-
-    HAS_YAML = True
-except ImportError:
-    HAS_YAML = False
-
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
@@ -57,12 +50,9 @@ class DiffProcessor:
     DiffProcessor can report difference between current task's results and previously
     saved results.
 
-    :param diff: (str) alias name of the file content
+    :param diff: (str) filegroup name to run diff for
     :param base_url: (str) OS path to folder with files, default "/var/nornir-salt/"
     :param last: (int) default is 1, file index to compare with
-    :param use_deepdiff: (bool or dict) default is False, if True will use ``deepdiff``
-        library to form difference between structured data, if ``use_deepdiff`` is a
-        dictionary, will pass it on to deepdiff method.
     :param ignore_lines: (list) list of regular expression pattern to filter lines through,
         if line matches any of the patterns, it is ignored by removing it; by default any
         line that contains only space characters ignored
@@ -80,7 +70,6 @@ class DiffProcessor:
         diff,
         base_url="/var/nornir-salt/",
         last=1,
-        use_deepdiff=False,
         in_diff=False,
         ignore_lines=[r"^\s*[\n\r]+$"],
         remove_patterns=[],
@@ -89,7 +78,6 @@ class DiffProcessor:
         self.diff = diff
         self.base_url = base_url
         self.last = last
-        self.use_deepdiff = use_deepdiff
         self.ignore_lines = ignore_lines
         self.remove_patterns = remove_patterns
         self.in_diff = in_diff
@@ -169,55 +157,64 @@ class DiffProcessor:
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
         """Diff files with current task result"""
-
-        # get previous results data
-        index = min(self.last - 1, len(self.aliases_data[self.diff][host.name]) - 1)
-        prev_res_alias_data = self.aliases_data[self.diff][host.name][index]
-        prev_res_filename = prev_res_alias_data["filename"]
-
-        # open previous results file
-        with open(prev_res_filename, mode="r", encoding="utf-8") as f:
-            prev_result = f.read()
-
-        # run diff for each task
-        for i in result:
-            # check if need to skip this task results
-            exception = (
-                str(i.exception)
-                if i.exception != None
-                else i.host.get("exception", None)
-            )
-            if (
-                hasattr(i, "skip_results")
-                and i.skip_results is True
-                and not exception
-            ):
-                continue
-            else:
+        # check if has failed tasks, do nothing in such a case
+        if result.failed:
+            log.error("nornir_salt:DiffProcessor do nothing, return, has failed tasks")
+            return
+        
+        try:
+            # get previous results data
+            index = min(self.last - 1, len(self.aliases_data[self.diff][host.name]) - 1)
+            prev_res_alias_data = self.aliases_data[self.diff][host.name][index]
+            prev_res_filename = prev_res_alias_data["filename"]
+    
+            # open previous results file
+            with open(prev_res_filename, mode="r", encoding="utf-8") as f:
+                prev_result = f.read()
+    
+            # run diff for each task
+            for i in result:
+                # check if need to skip this task results
+                if (
+                    hasattr(i, "skip_results")
+                    and i.skip_results is True
+                ):
+                    continue
+                    
                 # check if task results exists
                 if not i.name in prev_res_alias_data["tasks"]:
                     i.diff = "'{}' task results not in '{}''".format(
                         i.name, prev_res_filename
                     )
                     continue
+                    
                 # form new results
                 if isinstance(i.result, (str, int, float, bool)):
                     new_result = str(i.result) + "\n"
                 # convert structured data to json
                 else:
-                    new_result = json.dumps(i.result, sort_keys=True, indent=4, separators=(",", ": ")) + "\n"                    
+                    new_result = json.dumps(i.result, sort_keys=True, indent=4, separators=(",", ": ")) + "\n"       
+                    
                 # run diff using portion of prev_result file with given task results only
                 spans = prev_res_alias_data["tasks"][i.name]["span"]
                 difference = self._run_diff(
                     prev_result=prev_result[spans[0] : spans[1]],
                     new_result=new_result,
-                    fromfile="old {}".format(prev_res_filename),
-                    tofile="new results",
+                    fromfile=prev_res_filename,
+                    tofile="current",
                 )
+                diff_res = "".join(difference)
+                diff_res = diff_res if diff_res else True
                 if self.in_diff:
-                    i.diff = "".join(difference)
+                    i.diff = diff_res
                 else:
-                    i.result = "".join(difference)
+                    i.result = diff_res
+        except:
+            log.error(
+                "nornir-salt:DiffProcessor host {} error:\n{}".format(
+                    host.name, traceback.format_exc()
+                )
+            )
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
         pass  # ignore subtasks

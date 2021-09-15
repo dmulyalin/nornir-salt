@@ -21,8 +21,13 @@ API reference
 """
 import os
 import json
+import traceback
+import difflib
+import logging
 
 from nornir.core.task import Result
+
+log = logging.getLogger(__name__)
 
 def _read_content(task, task_name:str, task_details:dict, data:str, timestamp:str, group:str) -> None:
     """
@@ -260,6 +265,130 @@ def file_remove(
     return Result(host=task.host, result=ret) 
 
 
+def file_diff(
+    task,
+    filegroup: [str, list],
+    base_url: str = "/var/nornir-salt/",
+    task_name: str = None,
+    last: [int, list, str] = [1, 2],
+    index:str = "common",
+    **kwargs
+):
+    """
+    Function to read text files content saved by ``ToFileProcessor`` and
+    return preform diff.
+
+    :param filegroup: (str or list) ``tf`` file group name of files to use for diff, if list,
+        runs diff for first filegroup only
+    :param base_url: (str) OS path to folder with saved files, default "/var/nornir-salt/"  
+    :param last: (int or list or str) files to diff, default is - [1, 2] - last 1 and last 2
+    :param task_name: (str) name of task to read previous results for, diffs all results
+        if ``task_name`` is empty.
+    :param index: (str) ``ToFileProcessor`` index filename to read files information from
+    :return: Result object with files diffrence, if files are identical reslt is True
+    """        
+    # load index data
+    index_data = _load_index_data(base_url, index)
+        
+    # get indexes of files to diff
+    if isinstance(last, int):
+        new = 1
+        old = last
+    elif isinstance(last, list) and len(last) == 2:
+        new, old = last 
+    elif isinstance(last, str) and "," in last:
+        new, old = [int(i.strip()) for i in last.split(",")][:2]
+    else:
+        raise TypeError("nornir_data:files:diff last is not list or int or string but {}, last: {}".format(type(last), last))
+ 
+    filegroups = filegroup if isinstance(filegroup, list) else [filegroup]
+    
+    # iterate over filegroups and produce diffs
+    for group in filegroups:
+        # run sanity checks
+        if group not in index_data:
+            task.results.append(
+                Result(
+                    host=task.host, 
+                    result=None, 
+                    exception="nornir-salt:files:diff {} files not found".format(group),
+                    name=group
+                )
+            )
+            continue
+        if task.host.name not in index_data[group]:
+            task.results.append(
+                Result(
+                    host=task.host, 
+                    result=None, 
+                    exception="nornir-salt:files:diff {} host, {} files not found".format(task.host.name, group),
+                    name=group
+                )
+            )            
+            continue
+        # get previous results metadata
+        new_res_index = min(new - 1, len(index_data[group][task.host.name]) - 1)
+        old_res_index = min(old - 1, len(index_data[group][task.host.name]) - 1)
+        
+        # check if new and old reference same file
+        if new_res_index == old_res_index:
+            task.results.append(
+                Result(
+                    host=task.host, 
+                    result=None, 
+                    exception="nornir-salt:files:diff new and old files are same - last {}, last {}".format(new_res_index+1, old_res_index+1),
+                    name=group
+                )
+            )  
+            continue
+            
+        new_res_details = index_data[group][task.host.name][new_res_index]
+        old_res_details = index_data[group][task.host.name][old_res_index]
+        
+        # load files content
+        with open(new_res_details["filename"], mode="r", encoding="utf-8") as f:
+            new_res_data = f.read()
+        with open(old_res_details["filename"], mode="r", encoding="utf-8") as f:
+            old_res_data = f.read()            
+                
+        # if task_name given, retrieve task results content
+        if task_name:
+            # get task details
+            new_task_details = new_res_details["tasks"][task_name]
+            old_task_details = old_res_details["tasks"][task_name]
+            # get task span
+            new_start, new_end = new_task_details["span"]
+            old_start, old_end = old_task_details["span"]
+            # get task text results to diff
+            new_todiff_data = new_res_data[new_start:new_end-1]
+            old_todiff_data = old_res_data[old_start:old_end-1]
+        # use all data for diff
+        else:
+            new_todiff_data = new_res_data
+            old_todiff_data = old_res_data        
+    
+        # run diff
+        difference = difflib.unified_diff(
+            a=old_todiff_data.splitlines(keepends=True), 
+            b=new_todiff_data.splitlines(keepends=True), 
+            fromfile=old_res_details["filename"], 
+            tofile=new_res_details["filename"]
+        )
+        
+        res = "".join(difference)
+        res = res if res else True
+        task.results.append(
+            Result(
+                host=task.host, 
+                result=res,
+                name=group
+            )
+        )
+        
+    return Result(host=task.host, skip_results=True)
+
+    
+    
 def files(task, call, *args, **kwargs):
     """
     Dispatcher function to call one of the functions.
@@ -269,15 +398,17 @@ def files(task, call, *args, **kwargs):
     :param kwargs: (dict) function key-word arguments
     :return: function execution results
     
-    call function nicknames:
+    Call function nicknames:
     
     * ls - calls file_list
     * rm - calls file_remove
-    * read calls file_read
+    * read - calls file_read
+    * diff - calls file_diff
     """
     dispatcher = {
         "ls": file_list,
         "rm": file_remove,
         "read": file_read,
+        "diff": file_diff,
     }
     return dispatcher[call](task, *args, **kwargs)

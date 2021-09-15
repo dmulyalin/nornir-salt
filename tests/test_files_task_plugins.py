@@ -23,7 +23,7 @@ from nornir_salt import DictInventory
 from nornir_salt import nr_test
 from nornir_salt.plugins.processors.ToFileProcessor import ToFileProcessor
 from nornir_salt.plugins.processors.DataProcessor import DataProcessor
-from nornir_salt.plugins.tasks import file_read, file_remove, file_list
+from nornir_salt.plugins.tasks import file_read, file_remove, file_list, file_diff, files
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -898,7 +898,7 @@ def test_file_list_get_one_filegroup():
     
 # test_file_list_get_one_filegroup()
 
-
+@skip_if_no_nornir
 def test_file_remove_all():
     clean_up_folder()
 
@@ -944,7 +944,7 @@ def test_file_remove_all():
     
 # test_file_remove_all()    
 
-
+@skip_if_no_nornir
 def test_file_remove_filegroup():
     clean_up_folder()
 
@@ -983,3 +983,345 @@ def test_file_remove_filegroup():
     assert len(index_data["ip"]) == 2, "ip files data removed from index"
     
 # test_file_remove_filegroup()
+
+
+
+
+@skip_if_no_nornir
+def test_file_diff_whole_result_last_1_2():
+    clean_up_folder()
+
+    # generate text files
+    iol1_res_old = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol1_res_new = """
+ntp server 7.7.6.8
+ntp server 7.7.7.7
+ntp server 1.1.1.1
+        """
+    iol2_res_old = """
+ntp server 7.7.7.7
+        """
+    iol2_res_new = """
+ntp server 7.7.7.9
+        """
+        
+    # run test to generate the file
+    nr_with_tf = nr.with_processors(
+        [ToFileProcessor(tf="ntp_config", base_url="./tofile_outputs/")]
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_old,
+            "IOL2": iol2_res_old,
+        },
+        name="show run | inc ntp",
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_new,
+            "IOL2": iol2_res_new,
+        },
+        name="show run | inc ntp",
+    )    
+    
+    # run task to diff
+    output = nr.run(
+        task=file_diff,
+        base_url="./tofile_outputs/",
+        filegroup="ntp_config",
+    )
+    res = ResultSerializer(output, add_details=True)
+    
+    # pprint.pprint(res, width=150)
+    # print(res["IOL1"]["ntp_config"]["result"])
+    # print(res["IOL2"]["ntp_config"]["result"])
+    
+    assert """-ntp server 7.7.7.8
++ntp server 7.7.6.8
+ ntp server 7.7.7.7
++ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
+    assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+    assert """-ntp server 7.7.7.7
++ntp server 7.7.7.9""" in res["IOL2"]["ntp_config"]["result"]
+    assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+# test_file_diff_whole_result()    
+    
+
+@skip_if_no_nornir
+def test_file_diff_whole_result_last_2_1():
+    clean_up_folder()
+
+    # generate text files
+    iol1_res_old = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol1_res_new = """
+ntp server 7.7.6.8
+ntp server 7.7.7.7
+ntp server 1.1.1.1
+        """
+    iol2_res_old = """
+ntp server 7.7.7.7
+        """
+    iol2_res_new = """
+ntp server 7.7.7.9
+        """
+        
+    # run test to generate the file
+    nr_with_tf = nr.with_processors(
+        [ToFileProcessor(tf="ntp_config", base_url="./tofile_outputs/")]
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_old,
+            "IOL2": iol2_res_old,
+        },
+        name="show run | inc ntp",
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_new,
+            "IOL2": iol2_res_new,
+        },
+        name="show run | inc ntp",
+    )    
+    
+    # run task to diff
+    output = nr.run(
+        task=file_diff,
+        base_url="./tofile_outputs/",
+        filegroup="ntp_config",
+        last=[2,1]
+    )
+    res = ResultSerializer(output, add_details=True)
+    
+    # pprint.pprint(res, width=150)
+    # print(res["IOL1"]["ntp_config"]["result"])
+    # print(res["IOL2"]["ntp_config"]["result"])
+    
+    assert """-ntp server 7.7.6.8
++ntp server 7.7.7.8
+ ntp server 7.7.7.7
+-ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
+    assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+    assert """-ntp server 7.7.7.9
++ntp server 7.7.7.7""" in res["IOL2"]["ntp_config"]["result"]
+    assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+# test_file_diff_whole_result_last_2_1()
+
+
+@skip_if_no_nornir
+def test_file_diff_whole_result_last_out_of_range():
+    clean_up_folder()
+
+    # generate text files
+    iol1_res_old = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol1_res_new = """
+ntp server 7.7.6.8
+ntp server 7.7.7.7
+ntp server 1.1.1.1
+        """
+    iol2_res_old = """
+ntp server 7.7.7.7
+        """
+    iol2_res_new = """
+ntp server 7.7.7.9
+        """
+        
+    # run test to generate the file
+    nr_with_tf = nr.with_processors(
+        [ToFileProcessor(tf="ntp_config", base_url="./tofile_outputs/")]
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_old,
+            "IOL2": iol2_res_old,
+        },
+        name="show run | inc ntp",
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_new,
+            "IOL2": iol2_res_new,
+        },
+        name="show run | inc ntp",
+    )    
+    
+    # run task to diff
+    output = nr.run(
+        task=file_diff,
+        base_url="./tofile_outputs/",
+        filegroup="ntp_config",
+        last=151
+    )
+    res = ResultSerializer(output, add_details=True)
+    
+    # pprint.pprint(res, width=150)
+    print(res["IOL1"]["ntp_config"]["result"])
+    print(res["IOL2"]["ntp_config"]["result"])
+    
+    assert """-ntp server 7.7.7.8
++ntp server 7.7.6.8
+ ntp server 7.7.7.7
++ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
+    assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+    assert """-ntp server 7.7.7.7
++ntp server 7.7.7.9""" in res["IOL2"]["ntp_config"]["result"]
+    assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+# test_file_diff_whole_result_last_out_of_range()
+
+
+@skip_if_no_nornir
+def test_file_diff_whole_result_last_both_out_of_range():
+    clean_up_folder()
+
+    # generate text files
+    iol1_res_old = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol1_res_new = """
+ntp server 7.7.6.8
+ntp server 7.7.7.7
+ntp server 1.1.1.1
+        """
+    iol2_res_old = """
+ntp server 7.7.7.7
+        """
+    iol2_res_new = """
+ntp server 7.7.7.9
+        """
+        
+    # run test to generate the file
+    nr_with_tf = nr.with_processors(
+        [ToFileProcessor(tf="ntp_config", base_url="./tofile_outputs/")]
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_old,
+            "IOL2": iol2_res_old,
+        },
+        name="show run | inc ntp",
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_new,
+            "IOL2": iol2_res_new,
+        },
+        name="show run | inc ntp",
+    )    
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_new,
+            "IOL2": iol2_res_new,
+        },
+        name="show run | inc ntp",
+    )    
+   
+    # run task to diff
+    output = nr.run(
+        task=file_diff,
+        base_url="./tofile_outputs/",
+        filegroup="ntp_config",
+        last=[100,151]
+    )
+    res = ResultSerializer(output, add_details=True)
+    
+    # pprint.pprint(res, width=150)
+    
+    assert res["IOL1"]["ntp_config"]["failed"] == True
+    assert "new and old files are same" in res["IOL1"]["ntp_config"]["exception"]
+    assert res["IOL2"]["ntp_config"]["failed"] == True
+    assert "new and old files are same" in res["IOL2"]["ntp_config"]["exception"]
+    
+# test_file_diff_whole_result_last_both_out_of_range()
+
+
+@skip_if_no_nornir
+def test_file_diff_whole_result_last_2_1_string():
+    clean_up_folder()
+
+    # generate text files
+    iol1_res_old = """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """
+    iol1_res_new = """
+ntp server 7.7.6.8
+ntp server 7.7.7.7
+ntp server 1.1.1.1
+        """
+    iol2_res_old = """
+ntp server 7.7.7.7
+        """
+    iol2_res_new = """
+ntp server 7.7.7.9
+        """
+        
+    # run test to generate the file
+    nr_with_tf = nr.with_processors(
+        [ToFileProcessor(tf="ntp_config", base_url="./tofile_outputs/")]
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_old,
+            "IOL2": iol2_res_old,
+        },
+        name="show run | inc ntp",
+    )
+    _ = nr_with_tf.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": iol1_res_new,
+            "IOL2": iol2_res_new,
+        },
+        name="show run | inc ntp",
+    )    
+    
+    # run task to diff
+    output = nr.run(
+        task=file_diff,
+        base_url="./tofile_outputs/",
+        filegroup="ntp_config",
+        last="2, 1"
+    )
+    res = ResultSerializer(output, add_details=True)
+    
+    # pprint.pprint(res, width=150)
+    # print(res["IOL1"]["ntp_config"]["result"])
+    # print(res["IOL2"]["ntp_config"]["result"])
+    
+    assert """-ntp server 7.7.6.8
++ntp server 7.7.7.8
+ ntp server 7.7.7.7
+-ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
+    assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+    assert """-ntp server 7.7.7.9
++ntp server 7.7.7.7""" in res["IOL2"]["ntp_config"]["result"]
+    assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+    
+# test_file_diff_whole_result_last_2_1_string()

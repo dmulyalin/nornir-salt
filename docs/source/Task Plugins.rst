@@ -3,6 +3,12 @@ Task Plugins
 
 Task plugins define tasks to run against hosts. Reference `documentation <https://nornir.readthedocs.io/en/latest/index.html>`_ for more information.
 
+.. automodule:: nornir_salt.plugins.tasks.connections
+
+.. automodule:: nornir_salt.plugins.tasks.files
+
+.. automodule:: nornir_salt.plugins.tasks.http_call
+
 .. automodule:: nornir_salt.plugins.tasks.napalm_configure
 
 .. automodule:: nornir_salt.plugins.tasks.ncclient_call

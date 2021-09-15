@@ -1,3 +1,14 @@
+"""
+HTTPPlugin
+##########
+
+HTTP Connection plugin to interact with devices over HTTP/HTTPS.
+
+HTTPPlugin reference
+====================
+
+.. autofunction:: nornir_salt.plugins.connections.HTTPPlugin.HTTPPlugin
+"""
 from typing import Any, Dict, Optional
 from nornir.core.configuration import Config
 
@@ -5,27 +16,49 @@ CONNECTION_NAME = "http"
 
 class HTTPPlugin:
     """
-    This plugin connects to the device via HTTP using requests library.
+    This plugin connects to the device via HTTP using Python 
+    requests library. 
     
-    Inventory extras see `here <https://docs.python-requests.org/en/latest/api/>`_
+    Connection reference name is ``http``
+    
+    Full list of inventory extras see `here <https://docs.python-requests.org/en/latest/api/>`_
         
-    Sample inventory::
+    Sample Nornir inventory::
     
-        ---
-        nc_device:
-            hostname: "https://192.168.1.1/"
-            username: admin
-            password: admin
-            port: 8088
+        hosts:
+          ceos1:
+            hostname: 10.0.1.4
+            platform: arista_eos
+            groups: [lab, connection_params]
+        
+          ceos2:
+            hostname: 10.0.1.5
+            platform: arista_eos
+            groups: [lab, connection_params]
+                  
+        groups: 
+          lab:
+            username: nornir
+            password: nornir
+          connection_params:
             connection_options:
-                http:
-                    extras:
-                        verify : False
-
-    Then it can be used like::
+              http:
+                port: 80
+                extras:
+                  transport: http
+                  verify: False
+                  base_url: "http://device1.lab/api/v1/"
+                  headers:
+                    Content-Type: "application/yang-data+json"
+                    Accept: "application/yang-data+json"
     
-        TBD
-        
+    Anything under inventory extras section passed on to 
+    ``requests.request(method, url, **kwargs)`` call in a form of ``**kwargs`` 
+    except for ``transport`` and ``base_url``. Inventory parameters can be 
+    overridden on task call.
+    
+    ``transport`` and ``base_url`` - used to form URL to send request to if no 
+    absolute URL provided on task call.    
     """  # noqa
 
     def open(

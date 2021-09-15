@@ -182,7 +182,7 @@ class ToFileProcessor:
 
         # check if need to delete old files
         if len(self.aliases_data[self.tf][host.name]) > self.max_files:
-            file_to_rm = self.aliases_data[self.tf][host.name].pop()
+            file_to_rm = self.aliases_data[self.tf][host.name].pop(-1)
             try:
                 os.remove(file_to_rm["filename"])
             except:

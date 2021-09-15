@@ -82,10 +82,15 @@ def scrapli_send_commands(task, commands=[], interval=0.01, **kwargs):
 
     # get per-host commands if any
     if "commands" in task.host.data.get("__task__", {}):
-        commands = task.host.data["__task__"]["commands"]
+        if commands:
+            for c in task.host.data["__task__"]["commands"]:
+                if not c in commands:
+                    commands.append(c)    
+        else:
+            commands = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
         commands = task.host.data["__task__"]["filename"]
-
+    
     # prep commands by splitting them
     if isinstance(commands, str):
         commands = commands.splitlines()

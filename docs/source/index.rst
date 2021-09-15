@@ -9,8 +9,9 @@ Welcome to nornir-salt's documentation!
    Installation
    Getting started
    Inventory Plugins
+   Connection Plugins
    Runner Plugins
    Task Plugins
-   Processors Plugins
+   Processors/Processors Plugins
    Functions
 
