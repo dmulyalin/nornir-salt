@@ -64,8 +64,7 @@ def netmiko_send_config(task, config=None, commit=True, **kwargs):
     :param kwargs: any additional ``**kwargs`` for ``netmiko_send_config`` function.
     :return result: Nornir result object with task execution results
 
-    Parameters supplied to ``netmiko_send_config`` function call that override
-    Netmiko default values::
+    Default parameters supplied to ``netmiko_send_config`` function call::
 
         cmd_verify: False
     """
@@ -79,7 +78,7 @@ def netmiko_send_config(task, config=None, commit=True, **kwargs):
 
     kwargs.setdefault("cmd_verify", False)
 
-    # get configuration
+    # get configuration from host data if any
     if "commands" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
@@ -89,13 +88,6 @@ def netmiko_send_config(task, config=None, commit=True, **kwargs):
     if isinstance(config, str):
         config = config.splitlines()
 
-    # get connection and send bogus command to clean it from
-    # HostsKeepalive or previous tasks' leftovers, this is
-    # required on some platforms for Netmiko to properly match
-    # propmt and commands being sent
-    conn = task.host.get_connection("netmiko", task.nornir.config)
-    conn.send_command("#__0\n")
-
     # push config to device
     task.run(
         task=nornir_netmiko_send_config,
@@ -104,26 +96,27 @@ def netmiko_send_config(task, config=None, commit=True, **kwargs):
         **kwargs
     )
 
+    # get connection object to work with
+    conn = task.host.get_connection("netmiko", task.nornir.config)
+    
     # check if need to commit
     if commit:
         commit = commit if isinstance(commit, dict) else {}
         try:
             conn.commit(**commit)
-            conn.exit_config_mode()
-            log.debug(
-                "salt-nornir {} config commited, exited config mode.".format(
-                    task.host.name
-                )
-            )
         except AttributeError:
             pass
         except:
             tb = traceback.format_exc()
-            log.error("netmiko_send_config: commit error\n{}".format(tb))
+            log.error("nornir-salt:netmiko_send_config commit error\n{}".format(tb))
             for task_result in task.results:
                 task_result.failed = True
                 task_result.exception = tb
 
+    # check if need to exit configuration mode
+    if conn.check_config_mode():
+        conn.exit_config_mode()   
+        
     # set skip_results to True, for ResultSerializer to ignore
     # results for grouped task itself, which are usually None
     return Result(host=task.host, skip_results=True)

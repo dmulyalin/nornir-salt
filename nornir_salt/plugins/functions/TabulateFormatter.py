@@ -1,6 +1,6 @@
 """
-TabulateFormatter function
-##########################
+TabulateFormatter
+#################
 
 Function to transform results in a text table format using Tabulate module.
 
@@ -10,7 +10,7 @@ ResultSerializer function to serialize results into a list of dictionaries.
 
 Dependencies:
 
-* Nornir 3.0 and beyond
+* Nornir 3.x.x
 * `Tabulate module <https://pypi.org/project/tabulate/>`_ for results table formatting
 
 Sample code to use TabulateFormatter::
@@ -58,25 +58,26 @@ except ImportError:
     log.error("Failed to import tabulate library, install it: pip install tabulate")
 
 
-def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[]):
+def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[], sortby=None, reverse=False):
     """
     Function to format results in a text table.
 
     :param result: list of dictionaries or ``nornir.core.task.AggregatedResult`` object
-    :param tabulate: (dict or str or bool) controls tabulate behaviour
+    :param tabulate: (dict or str or bool) controls tabulate behavior
     :param headers: (list or str) list of table headers, comma-separated string of headers or
         one of tabulate supported values, e.g. ``keys``
     :param headers_exclude: (list) list of table headers, comma-separated string of headers
         to exclude
-
+    :param sortby: (str) name of the key to sort table by, default is ``None`` - no sorting applied
+    :param reverse: (bool) reverses sort order if True, default is False
+    
     Supported values for ``tabulate`` attribute:
 
-    * ``brief`` - uses ``tablefmt`` is ``grid``, ``showindex`` is ``True`` 
-        and ``headers`` set to ``host, name, result, exception``
+    * ``brief`` - ``tablefmt`` is ``grid``, ``showindex`` is ``True``, ``headers`` are ``host, name, result, exception``
     * ``True`` - uses ``headers``, no other formatting
     * ``False`` - does nothing, returns original results
     * ``extend`` - if result is a list, extends it to form final table, appends it as is otherwise
-    * ``dictionary`` - dictionary value passed as ``**kwargs`` to ``tabulate.tabulate`` method
+    * ``dictionary`` - dictionary content passed as ``**kwargs`` to ``tabulate.tabulate`` method
     """
     if not HAS_TABULATE:
         log.error(
@@ -129,16 +130,20 @@ def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[])
     elif isinstance(tabulate, dict):
         tabulate.setdefault("headers", headers)
     elif tabulate == False:
-        return result        
+        return ResultSerializer(result, add_details=True, to_dict=False)        
     else:
         log.error(
-            "nornir-salt:TabulateFormatter unsupported tabulate argument type '{}', supported - 'brief', bool, dict".format(
-                type(tabulate)
+            "nornir-salt:TabulateFormatter unsupported tabulate argument type '{}', value '{}', supported - 'brief', bool, dict".format(
+                type(tabulate), str(tabulate)
             )
         )
-        return result
+        return ResultSerializer(result, add_details=True, to_dict=False)
 
-    # filter result table if requested to do so
+    # sort results
+    if sortby and isinstance(sortby, str):
+        result_to_tabulate = sorted(result_to_tabulate, reverse=reverse, key=lambda item: str(item.get(sortby, "")))
+        
+    # filter table headers if requested to do so
     if headers_exclude:
         result_to_tabulate = [
             {k: v for k, v in res.items() if k not in headers_exclude}

@@ -25,9 +25,11 @@ setuptools.setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Operating System :: POSIX :: Linux",
-        "Operating System :: MacOS",
     ],
     python_requires=">=3.6",
+    install_requires=[
+        "nornir>=3.0.0",
+    ],
     entry_points="""
     [nornir.plugins.inventory]
     DictInventory=nornir_salt:DictInventory

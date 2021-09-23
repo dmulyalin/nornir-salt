@@ -8,5 +8,3 @@ Reference [documentation](https://nornir-salt.readthedocs.io/en/latest/) for add
 # Contributing
 
 Issues, bug reports and feature requests are welcomed.
-
-[buy](https://paypal.me/dmulyalin) Author a coffee

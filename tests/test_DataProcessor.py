@@ -926,6 +926,35 @@ interface Loopback0
                                                   '  description Storage Management Space'}}               
 # test_match_with_before()
 
+def test_match_int_pattern():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "match", "pattern": 11}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+interface Port-Chanel11
+  description Storage Management
+interface Loopback0
+  description PID            
+            """,
+            "IOL2": """
+interface Port-Chanel11
+  description Storage Management Space
+interface Loopback0
+  description RID/PID         
+            """,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': 'interface Port-Chanel11'},
+                      'IOL2': {'show run | inc ntp': 'interface Port-Chanel11'}}
+                   
+# test_match_int_pattern()
+
 def test_lod_filter():
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "lod_filter", "ip": "1.1.*"}]

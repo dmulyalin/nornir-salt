@@ -746,7 +746,7 @@ def match(data, pattern, before=0, **kwargs):
     if not isinstance(data, str):
         return data
 
-    regex = re.compile(pattern)
+    regex = re.compile(str(pattern))
     searched_result = []
     lines_before = deque([], abs(before))
 
