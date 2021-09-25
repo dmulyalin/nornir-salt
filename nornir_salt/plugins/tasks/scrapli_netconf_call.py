@@ -178,13 +178,11 @@ def _call_server_capabilities(conn, *args, **kwargs):
     return conn.server_capabilities, False
 
 
-def scrapli_netconf_call(
-    task: Task, call: str, *args, **kwargs
-) -> Result:
+def scrapli_netconf_call(task: Task, call: str, *args, **kwargs) -> Result:
     """
     Discpatcher function to call one of the supported scrapli_netconf methods
     or one of helper functions.
-    
+
     :param call: (str) Scrapli Netconf connection object method to call
     :param arg: (list) any ``*args`` to use with call method
     :param kwargs: (dict) any ``**kwargs`` to use with call method

@@ -9,5 +9,5 @@ __all__ = (
     "FFun",
     "HostsKeepalive",
     "TabulateFormatter",
-    "DumpResults"
+    "DumpResults",
 )

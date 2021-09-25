@@ -19,12 +19,12 @@ CONNECTION_NAME = "ncclient"
 
 class NcclientPlugin:
     """
-    Full list of inventory extras see Ncclient Docs for ``manager.connect`` 
+    Full list of inventory extras see Ncclient Docs for ``manager.connect``
     method.
-        
-    Example on how to configure a device to use netconfig without using 
+
+    Example on how to configure a device to use netconfig without using
     an ssh agent and without verifying the keys::
-    
+
         host-1:
           hostname: 192.168.16.20
           username: admin
@@ -35,8 +35,8 @@ class NcclientPlugin:
               extras:
                 allow_agent: False
                 hostkey_verify: False
-                
-    Anything under inventory ``extras`` section passed on to Ncclient 
+
+    Anything under inventory ``extras`` section passed on to Ncclient
     ``manager.connect`` call.
     """  # noqa
 

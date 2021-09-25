@@ -58,7 +58,14 @@ except ImportError:
     log.error("Failed to import tabulate library, install it: pip install tabulate")
 
 
-def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[], sortby=None, reverse=False):
+def TabulateFormatter(
+    result,
+    tabulate=True,
+    headers="keys",
+    headers_exclude=[],
+    sortby=None,
+    reverse=False,
+):
     """
     Function to format results in a text table.
 
@@ -70,7 +77,7 @@ def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[],
         to exclude
     :param sortby: (str) name of the key to sort table by, default is ``None`` - no sorting applied
     :param reverse: (bool) reverses sort order if True, default is False
-    
+
     Supported values for ``tabulate`` attribute:
 
     * ``brief`` - ``tablefmt`` is ``grid``, ``showindex`` is ``True``, ``headers`` are ``host, name, result, exception``
@@ -103,7 +110,7 @@ def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[],
         headers = [i.strip() for i in headers.split(",")]
     if isinstance(headers_exclude, str) and "," in headers_exclude:
         headers_exclude = [i.strip() for i in headers_exclude.split(",")]
-        
+
     # form tabulate parameters and results
     if tabulate == "brief":
         tabulate = {
@@ -130,7 +137,7 @@ def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[],
     elif isinstance(tabulate, dict):
         tabulate.setdefault("headers", headers)
     elif tabulate == False:
-        return ResultSerializer(result, add_details=True, to_dict=False)        
+        return ResultSerializer(result, add_details=True, to_dict=False)
     else:
         log.error(
             "nornir-salt:TabulateFormatter unsupported tabulate argument type '{}', value '{}', supported - 'brief', bool, dict".format(
@@ -141,15 +148,19 @@ def TabulateFormatter(result, tabulate=True, headers="keys", headers_exclude=[],
 
     # sort results
     if sortby and isinstance(sortby, str):
-        result_to_tabulate = sorted(result_to_tabulate, reverse=reverse, key=lambda item: str(item.get(sortby, "")))
-        
+        result_to_tabulate = sorted(
+            result_to_tabulate,
+            reverse=reverse,
+            key=lambda item: str(item.get(sortby, "")),
+        )
+
     # filter table headers if requested to do so
     if headers_exclude:
         result_to_tabulate = [
             {k: v for k, v in res.items() if k not in headers_exclude}
             for res in result_to_tabulate
-        ]        
-        
+        ]
+
     # transform result_to_tabulate to list of lists
     if isinstance(tabulate["headers"], list):
         result_to_tabulate = [

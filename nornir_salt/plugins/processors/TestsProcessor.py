@@ -489,7 +489,7 @@ def CustomFunctionTest(
        be dangerous.
 
     Custom functions should accept one positional argument for results following these rules:
-   
+
     * if ``task`` is a string result is ``nornir.core.task.Result``
     * if ``task`` is a list of task names result is a list of ``nornir.core.task.Result`` objects
       of corresponding tasks
@@ -501,7 +501,7 @@ def CustomFunctionTest(
     Custom function can return a dictionary or a list of dictionaries to include in
     results. Each dictionary can have any keys, but it is recommended to have at least
     these keys:
-   
+
     * ``exception`` - error description if any
     * ``result`` - "PASS", "FAIL" or "ERROR" string
     * ``success`` - boolean True or False
@@ -836,7 +836,7 @@ class TestsProcessor:
             # do the tests
             for test in self.tests:
                 test = test.copy()
-    
+
                 # if test item is a list, transform it to dictionary
                 if isinstance(test, list):
                     test = {
@@ -847,13 +847,13 @@ class TestsProcessor:
                     }
                     if test["test"] in ["eval", "EvalTest"]:
                         test["expr"] = test.pop("pattern")
-    
+
                 # make sure we have test name defined
                 if not test.get("name"):
                     test["name"] = "{} {} {}..".format(
                         test["task"], test["test"], test.get("pattern", "")[:9]
                     )
-    
+
                 # get task results to use; use all results
                 if test.get("use_all_tasks") == True:
                     test["result"] = result
@@ -882,7 +882,7 @@ class TestsProcessor:
                                 )
                             )
                             continue
-    
+
                 # get test function and function kwargs
                 if test["test"] in test_functions_dispatcher:
                     test_func = test_functions_dispatcher[test["test"]]["fun"]
@@ -895,7 +895,7 @@ class TestsProcessor:
                             test["test"]
                         )
                     )
-    
+
                 # run the test
                 try:
                     # run test for data at given path
@@ -929,7 +929,7 @@ class TestsProcessor:
                     ret.update(test)
                     ret.update({"result": "ERROR", "success": False, "exception": msg})
                     res = Result(host=host, **ret)
-    
+
                 if isinstance(res, list):
                     result.extend(res)
                 else:
@@ -937,14 +937,13 @@ class TestsProcessor:
         except:
             result.append(
                 Result(
-                    host=host, 
+                    host=host,
                     exception=traceback.format_exc(),
                     result=traceback.format_exc(),
-                    success = False,
-                    name="nornir-salt:TestsProcessor task_instance_completed error"
+                    success=False,
+                    name="nornir-salt:TestsProcessor task_instance_completed error",
                 )
             )
-            
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
         pass
@@ -962,7 +961,7 @@ class TestsProcessor:
                 if len(results) >= self.len_tasks:
                     for i in range(0, self.len_tasks):
                         _ = results.pop(0)
-        
+
         # remove non failed tasks if requested to do so
         if self.failed_only:
             for hostname, results in result.items():

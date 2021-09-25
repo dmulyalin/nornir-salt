@@ -98,7 +98,7 @@ def netmiko_send_config(task, config=None, commit=True, **kwargs):
 
     # get connection object to work with
     conn = task.host.get_connection("netmiko", task.nornir.config)
-    
+
     # check if need to commit
     if commit:
         commit = commit if isinstance(commit, dict) else {}
@@ -115,8 +115,8 @@ def netmiko_send_config(task, config=None, commit=True, **kwargs):
 
     # check if need to exit configuration mode
     if conn.check_config_mode():
-        conn.exit_config_mode()   
-        
+        conn.exit_config_mode()
+
     # set skip_results to True, for ResultSerializer to ignore
     # results for grouped task itself, which are usually None
     return Result(host=task.host, skip_results=True)

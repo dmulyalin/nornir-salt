@@ -94,18 +94,18 @@ def netmiko_send_commands(
 
     # run interval sanity check
     interval = interval if isinstance(interval, (int, float)) else 0.01
-    
+
     # get per-host commands if any
     if "commands" in task.host.data.get("__task__", {}):
         if commands:
             for c in task.host.data["__task__"]["commands"]:
                 if not c in commands:
-                    commands.append(c)    
+                    commands.append(c)
         else:
             commands = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
         commands = task.host.data["__task__"]["filename"]
-    
+
     # run commands
     if use_ps:
         # normilize commands to a list

@@ -52,9 +52,9 @@ def HostsKeepalive(nr):
     """
     :param nr: Nornir object
     :returns: stats dictionary with statistics about ``HostsKeepalive`` execution
-   
+
     Return ``stats`` dictionary keys description:
-    
+
     - ``dead_connections_cleaned`` - contains overall number of connections cleaned
     """
     stats = {"dead_connections_cleaned": 0}

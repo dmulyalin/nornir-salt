@@ -274,7 +274,9 @@ def _filter_FB(ret, pattern):
         pattern = [i.strip() for i in pattern.split(",")]
     # run filtering
     if isinstance(pattern, list):
-        return ret.filter(filter_func=lambda h: any([fnmatchcase(h.name, p) for p in pattern]))        
+        return ret.filter(
+            filter_func=lambda h: any([fnmatchcase(h.name, p) for p in pattern])
+        )
     else:
         return ret.filter(filter_func=lambda h: fnmatchcase(h.name, pattern))
 
@@ -288,23 +290,28 @@ def _filter_FC(ret, pattern):
         pattern = [i.strip() for i in pattern.split(",")]
     # run filtering
     if isinstance(pattern, list):
-        return ret.filter(filter_func=lambda h: any([p in h.name for p in pattern]))        
+        return ret.filter(filter_func=lambda h: any([p in h.name for p in pattern]))
     else:
         return ret.filter(filter_func=lambda h: pattern in h.name)
-        
-        
+
+
 def _filter_FR(ret, pattern):
     """
     Function to filter hosts by name using regex pattern search
     """
     import re
+
     # run filtering
     if isinstance(pattern, list):
-        return ret.filter(filter_func=lambda h: any([re.search(p, h.name) for p in pattern]))        
+        return ret.filter(
+            filter_func=lambda h: any([re.search(p, h.name) for p in pattern])
+        )
     else:
-        return ret.filter(filter_func=lambda h: True if re.search(pattern, h.name) else False)
-        
-    
+        return ret.filter(
+            filter_func=lambda h: True if re.search(pattern, h.name) else False
+        )
+
+
 def _filter_FG(ret, group):
     """
     Function to filter hosts using Groups

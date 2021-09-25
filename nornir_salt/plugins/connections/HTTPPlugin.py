@@ -14,29 +14,30 @@ from nornir.core.configuration import Config
 
 CONNECTION_NAME = "http"
 
+
 class HTTPPlugin:
     """
-    This plugin connects to the device via HTTP using Python 
-    requests library. 
-    
+    This plugin connects to the device via HTTP using Python
+    requests library.
+
     Connection reference name is ``http``
-    
+
     Full list of inventory extras see `here <https://docs.python-requests.org/en/latest/api/>`_
-        
+
     Sample Nornir inventory::
-    
+
         hosts:
           ceos1:
             hostname: 10.0.1.4
             platform: arista_eos
             groups: [lab, connection_params]
-        
+
           ceos2:
             hostname: 10.0.1.5
             platform: arista_eos
             groups: [lab, connection_params]
-                  
-        groups: 
+
+        groups:
           lab:
             username: nornir
             password: nornir
@@ -51,14 +52,14 @@ class HTTPPlugin:
                   headers:
                     Content-Type: "application/yang-data+json"
                     Accept: "application/yang-data+json"
-    
-    Anything under inventory extras section passed on to 
-    ``requests.request(method, url, **kwargs)`` call in a form of ``**kwargs`` 
-    except for ``transport`` and ``base_url``. Inventory parameters can be 
+
+    Anything under inventory extras section passed on to
+    ``requests.request(method, url, **kwargs)`` call in a form of ``**kwargs``
+    except for ``transport`` and ``base_url``. Inventory parameters can be
     overridden on task call.
-    
-    ``transport`` and ``base_url`` - used to form URL to send request to if no 
-    absolute URL provided on task call.    
+
+    ``transport`` and ``base_url`` - used to form URL to send request to if no
+    absolute URL provided on task call.
     """  # noqa
 
     def open(

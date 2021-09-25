@@ -202,7 +202,11 @@ def worker(
                 work_q.put(work)
                 work_q.task_done()
                 continue
-        log.info("nornir_salt:RetryRunner {} - running task '{}'".format(host.name, task.name))
+        log.info(
+            "nornir_salt:RetryRunner {} - running task '{}'".format(
+                host.name, task.name
+            )
+        )
         time.sleep(random.randrange(0, task_splay) / 1000)
         work_result = task.start(host)
         if task.results.failed:
@@ -221,7 +225,9 @@ def worker(
                 for r in task.results:
                     r.failed = False
                     r.exception = None
-                    r.skip_results = True # for ResultSerializer to skip failed attempts
+                    r.skip_results = (
+                        True  # for ResultSerializer to skip failed attempts
+                    )
                 if reconnect_on_fail:
                     # close host connections to retry them
                     close_host_connection(host, params["connection_name"])
@@ -239,7 +245,11 @@ def worker(
             result[host.name] = work_result
             del work_result
         work_q.task_done()
-        log.info("nornir_salt:RetryRunner {} - task '{}' completed".format(host.name, task.name))
+        log.info(
+            "nornir_salt:RetryRunner {} - task '{}' completed".format(
+                host.name, task.name
+            )
+        )
 
 
 def connector(
@@ -289,7 +299,9 @@ def connector(
                         connection_name, configuration=task.nornir.config
                     )
                 log.info(
-                    "nornir_salt:RetryRunner {} - started connection: '{}'".format(host.name, connection_name)
+                    "nornir_salt:RetryRunner {} - started connection: '{}'".format(
+                        host.name, connection_name
+                    )
                 )
             except Exception as e:
                 # close host connections to retry them

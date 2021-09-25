@@ -334,8 +334,8 @@ def to_yaml(data, **kwargs):
     if HAS_YAML:
         return yaml.dump(data, **kwargs)
     else:
-        return to_pprint(data)        
-        
+        return to_pprint(data)
+
 
 # --------------------------------------------------------------------------------
 # loader functions: load json, yaml etc. text into python structured data
@@ -571,15 +571,15 @@ def xml_rm_ns(data, recover=True, ret_xml=True, **kwargs):
 def path_(data, path, **kwargs):
     """
     Reference name ``path_``
-    
+
     Function to retrieve content from nested structured data at given path.
-    
+
     :param path: (str, list) dot separated path to result or list of path items
     :param data: (dict) data to get results from
     :return: results at given path
-    
+
     Sample data::
-    
+
         {
             "VIP_cfg": {
                 "1.1.1.1": {
@@ -594,8 +594,8 @@ def path_(data, path, **kwargs):
                 }
             }
         }
-        
-    With ``path`` ``"VIP_cfg.'1.1.1.1'.services.443.https.0.real_port"`` 
+
+    With ``path`` ``"VIP_cfg.'1.1.1.1'.services.443.https.0.real_port"``
     will return ``443``
     """
     ret = data
@@ -615,15 +615,17 @@ def path_(data, path, **kwargs):
     elif isinstance(path, list):
         path_list = path
     else:
-        raise TypeError("nornir-salt:DataProcessor:path unsupported path type {}".format(type(path)))
-            
-    # descend down the data path 
+        raise TypeError(
+            "nornir-salt:DataProcessor:path unsupported path type {}".format(type(path))
+        )
+
+    # descend down the data path
     for item in path_list:
         if item in ret or isinstance(item, int):
             ret = ret[item]
         elif item.isdigit():
             ret = ret[int(item)]
-    
+
     return ret
 
 
@@ -637,34 +639,37 @@ def _check_glob(value, criteria):
     # returns True if glob pattern matches value
     return fnmatchcase(str(value), criteria)
 
+
 def _check_regex(value, criteria):
     # returns True if regex pattern matches value
     return True if re.search(criteria, value) else False
-    
+
+
 check_fun_dispatcher = {
     "glob": _check_glob,
     "re": _check_regex,
 }
-    
+
+
 def _form_check_list(checks_dictionary):
     """
     Helper function to form a list of filtering checks.
-    
-    :param checks_dictionary: (dict) dictionary where keys used to indicate 
-        check type and value is the criteria to check. Default check type is 
+
+    :param checks_dictionary: (dict) dictionary where keys used to indicate
+        check type and value is the criteria to check. Default check type is
         glob case sensitive pattern matching.
     :return: list of dictionaries
-    
+
     ``checks_dictionary`` keys can use filtering mini-query-language specifiers
     to indicate check type.
-    
+
     Returns list of dictionaries::
-    
+
         [
             {
                 "fun": _check_fun_reference,
                 "key": checks_dictionary_key_name,
-                "criteria": checks_dictionary_key_value,                
+                "criteria": checks_dictionary_key_value,
             }
         ]
     """
@@ -675,7 +680,10 @@ def _form_check_list(checks_dictionary):
             # account for cases when pattern contains other __
             key_name = "__".join(key_name.split("__")[:-1])
         else:
-            check_type, key_name = ("glob", key_name,)
+            check_type, key_name = (
+                "glob",
+                key_name,
+            )
         checks.append(
             {
                 "fun": check_fun_dispatcher[check_type],
@@ -684,7 +692,7 @@ def _form_check_list(checks_dictionary):
             }
         )
     return checks
-        
+
 
 def xpath(data, expr, rm_ns=False, recover=False, **kwargs):
     """
@@ -731,16 +739,16 @@ def key_filter(data, pattern=None, **kwargs):
 
     :param data: (dictionary) Python dictionary
     :param kwargs: (dict) any additional kwargs are key and value pairs, where key name
-        is arbitrary and used to indicate check type following `Filtering mini-query-language specification`_ 
-        and value is the criteria to check. Default check type is glob case sensitive 
+        is arbitrary and used to indicate check type following `Filtering mini-query-language specification`_
+        and value is the criteria to check. Default check type is glob case sensitive
         pattern matching.
     :param pattern: (str) pattern to use for filtering
     :return: filtered python dictionary
-    
+
     Default logic is key name must pass **any** of the criteria provided.
-    
+
     Sample usage::
-        
+
         key_filter(
             data=data_dictionary,
             pattern="1234*",
@@ -748,7 +756,7 @@ def key_filter(data, pattern=None, **kwargs):
             pattern2__glob="*abc*",
             pattern__re="abc.*",
         )
-        
+
     Filtered dictionary key name must satisfy at least one of the matching criteria.
     """
     if not isinstance(data, dict):
@@ -758,26 +766,21 @@ def key_filter(data, pattern=None, **kwargs):
             )
         )
         return data
-        
+
     if pattern:
         kwargs["pattern"] = pattern
-        
+
     checks = _form_check_list(kwargs)
     log.debug(
         "nornir_salt:DataProcessor:key_filter running filter checks {}".format(checks)
     )
-    
+
     return {
         k: data[k]
         for k in data.keys()
-        if any(
-            [
-                c["fun"](k, c["criteria"])
-                for c in checks
-            ]
-        )
+        if any([c["fun"](k, c["criteria"]) for c in checks])
     }
-        
+
 
 def lod_filter(data, pass_all=True, strict=True, **kwargs):
     """
@@ -794,11 +797,11 @@ def lod_filter(data, pass_all=True, strict=True, **kwargs):
 
     :param data: (list) list of dictionaries to search in
     :param kwargs: (dict) any additional kwargs are key and value pairs, where key is a name
-        of the dictionary key to search for and value is the criteria to check. Default check 
+        of the dictionary key to search for and value is the criteria to check. Default check
         type is glob case sensitive pattern matching.
-    :param pass_all: (bool) if True (default) logic is AND - dictionary must pass ALL 
+    :param pass_all: (bool) if True (default) logic is AND - dictionary must pass ALL
         checks, if False logic is ANY
-    :param strict: (bool) if True (default) invalidates list dictionary item 
+    :param strict: (bool) if True (default) invalidates list dictionary item
         if no criteria key found in dictionary
     :return: filtered list of dictionaries
     """
@@ -823,8 +826,9 @@ def lod_filter(data, pass_all=True, strict=True, **kwargs):
             for i in data
             if all(
                 [
-                    c["fun"](i[c["key"]], c["criteria"]) 
-                    if c["key"] in i else not strict
+                    c["fun"](i[c["key"]], c["criteria"])
+                    if c["key"] in i
+                    else not strict
                     for c in checks
                 ]
             )
@@ -835,8 +839,9 @@ def lod_filter(data, pass_all=True, strict=True, **kwargs):
             for i in data
             if any(
                 [
-                    c["fun"](i[c["key"]], c["criteria"]) 
-                    if c["key"] in i else not strict
+                    c["fun"](i[c["key"]], c["criteria"])
+                    if c["key"] in i
+                    else not strict
                     for c in checks
                 ]
             )
@@ -921,38 +926,38 @@ def xml_flake(data, pattern, **kwargs):
 def find(data, path=None, **kwargs):
     """
     Reference name ``find``
-        
+
     Function to dispatch data to one of the filtering functions.
 
     :param data: (list, dict, str) data to search in
-    :param path: (str) dot separated path or list of path items to results 
+    :param path: (str) dot separated path or list of path items to results
         within data to search in
     :return: filtered results
-    
+
     Dispatching process happens after evaluating ``path`` and retrieving
     results to process from overall data.
-    
+
     ``path`` only evaluated if provided data is a dictionary.
-    
+
     Dispatch rules:
-    
+
     * if result type is list uses ``lod_filter``
     * if result type is dictionary uses ``key_filter``
     * if result type is string uses ``match`` function
     """
     result = data
-    
+
     if path:
         result = path_(data, path)
-        
+
     if isinstance(result, list):
         return lod_filter(result, **kwargs)
     elif isinstance(result, dict):
         return key_filter(result, **kwargs)
     elif isinstance(result, str):
         return match(result, **kwargs)
-        
-        
+
+
 # --------------------------------------------------------------------------------
 # parsing functions: parse text data - return structured data
 # --------------------------------------------------------------------------------
@@ -975,12 +980,12 @@ def parse_ttp(data: str, template: str, ttp_kwargs={}, res_kwargs={}, **kwargs):
     if not HAS_TTP:
         log.warning("nornir_salt:DataProcessor:parse_ttp failed import TTP library")
         return data
-            
-    if isinstance(data, str):    
+
+    if isinstance(data, str):
         # do parsing
         parser = ttp(data, template, **ttp_kwargs)
         parser.parse(one=True)
-    
+
         return parser.result(**res_kwargs)
     else:
         log.warning(
@@ -991,7 +996,9 @@ def parse_ttp(data: str, template: str, ttp_kwargs={}, res_kwargs={}, **kwargs):
         return data
 
 
-def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_tasks=True, **kwargs):
+def run_ttp(
+    data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_tasks=True, **kwargs
+):
     """
     Reference name ``run_ttp``
 
@@ -1006,13 +1013,13 @@ def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_task
     :param res_kwargs: (dict) dictionary to use with ``result`` method
     :param remove_tasks: (bool) if set to True and data is MultiResult object will remove
         other task results
-    :param task: (obj) Nornir Task object, used to form parsing results when data is 
+    :param task: (obj) Nornir Task object, used to form parsing results when data is
         MultiResult object
     :return: parsed structure
-    
-    Provided Nornir MultiResult object processed by sorting task results across TTP 
+
+    Provided Nornir MultiResult object processed by sorting task results across TTP
     Template inputs to parse. After parsing, all other tasks' results removed from
-    MultiResult object and parsing results appended to it. If ``remove_tasks`` set to 
+    MultiResult object and parsing results appended to it. If ``remove_tasks`` set to
     False, other tasks results not removed.
     """
     if not HAS_TTP:
@@ -1022,7 +1029,7 @@ def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_task
     if isinstance(data, MultiResult):
         parser = ttp(template=template, **ttp_kwargs)
         ttp_inputs_load = parser.get_input_load()
-        
+
         # go over template's inputs and add output from devices
         for template_name, inputs in ttp_inputs_load.items():
             # if no inputs defined, add all to default input
@@ -1031,13 +1038,15 @@ def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_task
                 for i in data:
                     # check if need to skip this task
                     if hasattr(i, "skip_results") and i.skip_results == True:
-                        continue                         
+                        continue
                     if isinstance(i.result, str):
                         default_input_data.append(i.result)
                 if default_input_data:
                     parser.add_input(
-                        data="\n".join(default_input_data), input_name="Default_Input", template_name=template_name
-                    )    
+                        data="\n".join(default_input_data),
+                        input_name="Default_Input",
+                        template_name=template_name,
+                    )
             # sort results across inputs with commands
             else:
                 for input_name, input_params in inputs.items():
@@ -1046,29 +1055,27 @@ def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_task
                     for i in data:
                         # check if need to skip this task
                         if hasattr(i, "skip_results") and i.skip_results == True:
-                            continue                         
+                            continue
                         if i.name in commands and isinstance(i.result, str):
                             input_data.append(i.result)
                     if input_data:
                         parser.add_input(
-                            data="\n".join(input_data), input_name=input_name, template_name=template_name
-                        )   
-            
+                            data="\n".join(input_data),
+                            input_name=input_name,
+                            template_name=template_name,
+                        )
+
         # run parsing in single process
         parser.parse(one=True)
-        
+
         # remove other task results
         if remove_tasks:
             while data:
                 _ = data.pop()
-                
+
         # add parsing results
         data.append(
-            Result(
-                host=task.host,
-                result=parser.result(**res_kwargs),
-                name="run_ttp"
-            )
+            Result(host=task.host, result=parser.result(**res_kwargs), name="run_ttp")
         )
     else:
         log.warning(
@@ -1077,8 +1084,8 @@ def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_task
             )
         )
         return data
-    
-    
+
+
 # --------------------------------------------------------------------------------
 # misc
 # --------------------------------------------------------------------------------
@@ -1086,29 +1093,31 @@ def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_task
 
 def add_commands_from_ttp_template(task, template, **kwargs):
     """
-    Function to extract commands from TTP template and add them 
+    Function to extract commands from TTP template and add them
     to task params. Used in conjunction with ``run_ttp`` parsing function.
-    
+
     This function called at ``task_started`` point, allowing to update
-    task's ``params`` dictionary with ``commands`` to collect from devices 
+    task's ``params`` dictionary with ``commands`` to collect from devices
     prior to further executing the task.
-    
+
     Commands extracted from TTP Template inputs that may contain definitions
     of ``commands`` list.
-    
+
     Dependencies: requires TTP library - ``pip install ttp``.
-    
+
     :param task: (obj) Nornir task object
     :param template: (str) TTP Template string
     """
     if not HAS_TTP:
-        log.warning("nornir_salt:DataProcessor:extract_commands_from_ttp failed import TTP library")
+        log.warning(
+            "nornir_salt:DataProcessor:extract_commands_from_ttp failed import TTP library"
+        )
         return
-    
-    task.params.setdefault("commands", [])           
+
+    task.params.setdefault("commands", [])
     parser = ttp(template=template)
     ttp_inputs_load = parser.get_input_load()
-    
+
     # go over template's inputs and collect commands to get from devices
     for template_name, inputs in ttp_inputs_load.items():
         for input_name, input_params in inputs.items():
@@ -1116,7 +1125,7 @@ def add_commands_from_ttp_template(task, template, **kwargs):
                 if cmd not in task.params["commands"]:
                     task.params["commands"].append(cmd)
 
-            
+
 # --------------------------------------------------------------------------------
 # functions dispatcher dictionary
 # --------------------------------------------------------------------------------
@@ -1159,6 +1168,7 @@ task_started_dispatcher = {
     "run_ttp": add_commands_from_ttp_template,
 }
 
+
 class DataProcessor:
     """
     DataProcessor can process structured data obtained from devices. It is
@@ -1169,22 +1179,22 @@ class DataProcessor:
     * filtering structured or string data
     * flattening and un-flattening nested data
 
-    :param dp: (list) list of Data Processors function names to pass results through 
-    
+    :param dp: (list) list of Data Processors function names to pass results through
+
     ``dp`` argument can be of one of these types:
-    
+
     * comma separated string of function names
     * list of function name strings and/or dictionaries with function details
-        
+
     Data processor function dictionary items should have this structure::
-    
+
         {
             "fun": function name [str],
             "k1": "v1", ... "kN": "vN"
         }
-        
+
     Where:
-    
+
     * ``fun`` - Reference Name of DataProcessor function to run
     * ``kN`` - Any additional key-word arguments to use with function
     """
@@ -1198,12 +1208,20 @@ class DataProcessor:
                 elif isinstance(i, dict):
                     self.dp.append(i)
                 else:
-                    raise TypeError("nornir_salt:DataProcessor dp list items should be dictionary or string not '{}'".format(type(i)))
+                    raise TypeError(
+                        "nornir_salt:DataProcessor dp list items should be dictionary or string not '{}'".format(
+                            type(i)
+                        )
+                    )
         elif isinstance(dp, str):
-            self.dp = [{"fun": i.strip()} for i in dp.split(",")]    
+            self.dp = [{"fun": i.strip()} for i in dp.split(",")]
         else:
-            raise TypeError("nornir_salt:DataProcessor dp argument should be list or string not '{}'".format(type(dp)))    
-        
+            raise TypeError(
+                "nornir_salt:DataProcessor dp argument should be list or string not '{}'".format(
+                    type(dp)
+                )
+            )
+
     def task_started(self, task: Task) -> None:
         """ Pre-Process Task details before executing it """
         for dp_dict in self.dp:
@@ -1218,7 +1236,7 @@ class DataProcessor:
                         task, dp_dict, traceback.format_exc()
                     )
                 )
-                
+
     def task_instance_started(self, task: Task, host: Host) -> None:
         pass  # ignore
 
@@ -1230,7 +1248,7 @@ class DataProcessor:
         if result.failed:
             log.error("nornir_salt:DataProcessor do nothing, return, has failed tasks")
             return
-        
+
         # run DataProcessor function
         for dp_dict in self.dp:
             dp_dict_copy = dp_dict.copy()
@@ -1253,7 +1271,7 @@ class DataProcessor:
                             # check if need to skip this task
                             if hasattr(i, "skip_results") and i.skip_results == True:
                                 continue
-                            # pass task result through dp function                        
+                            # pass task result through dp function
                             i.result = task_instance_completed_dispatcher_per_task[fun](
                                 i.result, **dp_dict_copy
                             )

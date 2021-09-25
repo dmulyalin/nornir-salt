@@ -57,10 +57,10 @@ class DiffProcessor:
         if line matches any of the patterns, it is ignored by removing it; by default any
         line that contains only space characters ignored
     :param remove_patterns: (list) list of regular expression pattern to remove from lines
-    :param in_diff: (bool) default is False, if True uses ``Result`` object ``diff`` attribute 
+    :param in_diff: (bool) default is False, if True uses ``Result`` object ``diff`` attribute
         to store diff results, otherwise uses task's ``Result.result`` attribute to store diffs
     :param index: (str) ``ToFileProcessor`` index file name to read files info from
-    
+
     ``ignore_lines`` and ``remove_patterns`` arguments exists to clean difference results,
     for instance by ignoring timestamps, counters or other uninteresting data.
     """
@@ -73,7 +73,7 @@ class DiffProcessor:
         in_diff=False,
         ignore_lines=[r"^\s*[\n\r]+$"],
         remove_patterns=[],
-        index=None
+        index=None,
     ):
         self.diff = diff
         self.base_url = base_url
@@ -82,8 +82,10 @@ class DiffProcessor:
         self.remove_patterns = remove_patterns
         self.in_diff = in_diff
         self.index = index or "common"
-        
-        self.aliases_file = os.path.join(base_url, "tf_index_{}.json".format(self.index))
+
+        self.aliases_file = os.path.join(
+            base_url, "tf_index_{}.json".format(self.index)
+        )
         self.aliases_data = (
             {}
         )  # dictionary of {diff name: {hostname: [{filename: str, tasks: {task_name: file_span}}]}}
@@ -161,40 +163,42 @@ class DiffProcessor:
         if result.failed:
             log.error("nornir_salt:DiffProcessor do nothing, return, has failed tasks")
             return
-        
+
         try:
             # get previous results data
             index = min(self.last - 1, len(self.aliases_data[self.diff][host.name]) - 1)
             prev_res_alias_data = self.aliases_data[self.diff][host.name][index]
             prev_res_filename = prev_res_alias_data["filename"]
-    
+
             # open previous results file
             with open(prev_res_filename, mode="r", encoding="utf-8") as f:
                 prev_result = f.read()
-    
+
             # run diff for each task
             for i in result:
                 # check if need to skip this task results
-                if (
-                    hasattr(i, "skip_results")
-                    and i.skip_results is True
-                ):
+                if hasattr(i, "skip_results") and i.skip_results is True:
                     continue
-                    
+
                 # check if task results exists
                 if not i.name in prev_res_alias_data["tasks"]:
                     i.diff = "'{}' task results not in '{}''".format(
                         i.name, prev_res_filename
                     )
                     continue
-                    
+
                 # form new results
                 if isinstance(i.result, (str, int, float, bool)):
                     new_result = str(i.result) + "\n"
                 # convert structured data to json
                 else:
-                    new_result = json.dumps(i.result, sort_keys=True, indent=4, separators=(",", ": ")) + "\n"       
-                    
+                    new_result = (
+                        json.dumps(
+                            i.result, sort_keys=True, indent=4, separators=(",", ": ")
+                        )
+                        + "\n"
+                    )
+
                 # run diff using portion of prev_result file with given task results only
                 spans = prev_res_alias_data["tasks"][i.name]["span"]
                 difference = self._run_diff(

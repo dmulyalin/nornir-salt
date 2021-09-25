@@ -41,6 +41,7 @@ from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
 log = logging.getLogger(__name__)
 
+
 class ToFileProcessor:
     """
     ToFileProcessor can save task execution results to file on a per host basis.
@@ -60,11 +61,11 @@ class ToFileProcessor:
     * tf - value of ``tf`` attribute
     * timestamp - ``%d_%B_%Y_%H_%M_%S`` time formatted string, e.g. "12_June_2021_21_48_11"
     * rand - random integer in range from 10 to 1000
-    * hostname - ``name`` attribute of host 
+    * hostname - ``name`` attribute of host
 
     In addition, ``tf_index_{index}.json`` file created under ``base_url`` to track files created
     using dictionary structure::
-    
+
         {
             "config": {
                 "IOL1": [
@@ -79,11 +80,11 @@ class ToFileProcessor:
                 ]
             }
         }
-    
-    Where ``config`` is ``tf`` attribute value, ``"show run | inc ntp": [0, 48]`` - 
-    ``show run | inc ntp`` task results span indexes inside 
+
+    Where ``config`` is ``tf`` attribute value, ``"show run | inc ntp": [0, 48]`` -
+    ``show run | inc ntp`` task results span indexes inside
     ``./tofile_outputs/config__22_August_2021_14_08_33__IOL1.txt`` text file.
-    
+
     ``tf_index_{index}.json`` used by other plugins to retrieve previous results for the task,
     it could be considered as a simplified index database.
     """
@@ -94,10 +95,10 @@ class ToFileProcessor:
         self.max_files = max(1, max_files)
         self.index = index or "common"
 
-        self.aliases_file = os.path.join(base_url, "tf_index_{}.json".format(self.index))
-        self.aliases_data = (
-            {}
-        )  # dictionary to store tf_index_{index}.json content
+        self.aliases_file = os.path.join(
+            base_url, "tf_index_{}.json".format(self.index)
+        )
+        self.aliases_data = {}  # dictionary to store tf_index_{index}.json content
 
         self._load_aliases()
 
@@ -115,7 +116,11 @@ class ToFileProcessor:
     def _dump_aliases(self):
         # save aliases data
         with open(self.aliases_file, mode="w", encoding="utf-8") as f:
-            f.write(json.dumps(self.aliases_data, sort_keys=True, indent=4, separators=(",", ": ")))
+            f.write(
+                json.dumps(
+                    self.aliases_data, sort_keys=True, indent=4, separators=(",", ": ")
+                )
+            )
 
     def task_started(self, task: Task) -> None:
         pass  # ignore
@@ -129,10 +134,10 @@ class ToFileProcessor:
         """save to file on a per-host basis"""
 
         host_filename = "{tf}__{timestamp}__{rand}__{hostname}.txt".format(
-            timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"), 
+            timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"),
             rand=random.randint(0, 1000),
-            hostname=host.name, 
-            tf=self.tf
+            hostname=host.name,
+            tf=self.tf,
         )
         host_filename = os.path.join(self.base_url, host_filename)
 
@@ -144,11 +149,12 @@ class ToFileProcessor:
         os.makedirs(os.path.dirname(host_filename), exist_ok=True)
         with open(host_filename, mode="w", encoding="utf-8") as f:
             self.aliases_data[self.tf][host.name].insert(
-                0, {
-                        "filename": host_filename, 
-                        "tasks": {}, 
-                        "timestamp": time.strftime("%d %b %Y %H:%M:%S %Z")
-                }
+                0,
+                {
+                    "filename": host_filename,
+                    "tasks": {},
+                    "timestamp": time.strftime("%d %b %Y %H:%M:%S %Z"),
+                },
             )
             span_start = 0
 
@@ -168,13 +174,19 @@ class ToFileProcessor:
                 # save results to file
                 if isinstance(i.result, (str, int, float, bool)):
                     result_to_save = str(i.result)
-                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {"content_type": "str"}
+                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {
+                        "content_type": "str"
+                    }
                 # convert structured data to json
                 else:
-                    result_to_save = json.dumps(i.result, sort_keys=True, indent=4, separators=(",", ": "))
-                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {"content_type": "json"}
+                    result_to_save = json.dumps(
+                        i.result, sort_keys=True, indent=4, separators=(",", ": ")
+                    )
+                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {
+                        "content_type": "json"
+                    }
                 f.write(result_to_save + "\n")
-                
+
                 # add aliases data
                 span = (span_start, span_start + len(result_to_save) + 1)
                 self.aliases_data[self.tf][host.name][0]["tasks"][i.name]["span"] = span

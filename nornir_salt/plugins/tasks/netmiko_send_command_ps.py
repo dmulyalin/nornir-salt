@@ -147,9 +147,7 @@ def send_command_ps(
                 "send_command_ps {}s read_timeout expired".format(read_timeout)
             )
         if timeout != -1 and (time.time() - start_time) > timeout:
-            raise TimeoutError(
-                "send_command_ps {}s timeout expired".format(timeout)
-            )
+            raise TimeoutError("send_command_ps {}s timeout expired".format(timeout))
 
         time.sleep(inter_loop_sleep)
         no_data_elapsed += inter_loop_sleep
