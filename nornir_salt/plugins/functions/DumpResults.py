@@ -4,17 +4,35 @@ DumpResults
 
 Function to take data and save it to the file, adding details to 
 ``ToFileProcessor`` and ``files`` task text database index.
+
+``DumpResults`` does not perform any formatting on data supplied,
+if it is string, it is saved as is, if it is anything but string
+data converted to string using ``str(data)`` prior to saving it.
+
+Primary use case for ``DumpResults`` is mainly related to Salt Stack
+restriction on Event Bus maximum data transmission size, as a result in
+certain cases need to save full results to local file system instead.
     
 DumpResults sample usage
 ========================
 
-TBD
+Code to invoke ``DumpResults`` function ::
 
-DumpResults return
-==================
+    from nornir import InitNornir
+    from nornir_salt import TabulateFormatter
+    from nornir_netmiko import netmiko_send_command
+    from nornir_salt import DumpResults
 
-TBD
+    nr = InitNornir(config_file="config.yaml")
 
+    result = NornirObj.run(
+        task=netmiko_send_command,
+        command_string="show clock"
+    )
+
+    serialized_output = ResultSerializer(result)
+    DumpResults(serialized_output, filegroup="running_config", base_url="./tofile_outputs/")
+    
 DumpResults reference
 =====================
 
@@ -70,7 +88,7 @@ def DumpResults(results, filegroup, base_url="/var/nornir-salt/", max_files=50, 
     Function to save results to local file system and update ``ToFileProcessor`` 
     and ``files`` task text database index.
     
-    :param results: (any) data to save
+    :param results: (str, any) data to save
     :param filegroup: (str) ``tf`` file group name of files to save
     :param base_url: (str) OS path to folder where to save files, default "/var/nornir-salt/"  
     :param index: (str) index name to read files index data from

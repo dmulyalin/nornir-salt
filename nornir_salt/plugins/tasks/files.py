@@ -9,14 +9,51 @@ Files Plugin Sample usage
 
 Code to invoke ``files`` task plugins::
 
-    TBD
+    from nornir import InitNornir
+
+    from nornir_salt.plugins.processors.ToFileProcessor import ToFileProcessor
+    from nornir_salt.plugins.tasks import file_read, file_remove, file_list, file_diff, files
+    from nornir_netmiko import netmiko_send_command
+
+    nr = InitNornir(config_file="config.yaml")
+    
+    # save results to files
+    nr_with_tf = nr.with_processors(
+        [ToFileProcessor(tf="config_for_read", base_url="./tofile_outputs/")]
+    )
+    nr_with_tf.run(
+        task=netmiko_send_command,
+        command_string="show run"
+    )
+
+    # retrieve saved files content on demand
+    res = nr.run(
+        task=file_read,
+        filegroup="config_for_read",
+        base_url="./tofile_outputs/",
+    )
 
 Files Plugin API reference
 ==========================
 
+file_read
++++++++++
 .. autofunction:: nornir_salt.plugins.tasks.files.file_read
+
+file_list
++++++++++
 .. autofunction:: nornir_salt.plugins.tasks.files.file_list
+
+file_remove
++++++++++++
 .. autofunction:: nornir_salt.plugins.tasks.files.file_remove
+
+file_diff
++++++++++
+.. autofunction:: nornir_salt.plugins.tasks.files.file_diff
+
+files dispatcher function
++++++++++++++++++++++++++
 .. autofunction:: nornir_salt.plugins.tasks.files.files
 """
 import os
@@ -276,16 +313,16 @@ def file_diff(
 ):
     """
     Function to read text files content saved by ``ToFileProcessor`` and
-    return preform diff.
+    return difference.
 
     :param filegroup: (str or list) ``tf`` file group name of files to use for diff, if list,
-        runs diff for first filegroup only
+        runs difference for each filegroup
     :param base_url: (str) OS path to folder with saved files, default "/var/nornir-salt/"  
     :param last: (int or list or str) files to diff, default is - [1, 2] - last 1 and last 2
     :param task_name: (str) name of task to read previous results for, diffs all results
         if ``task_name`` is empty.
     :param index: (str) ``ToFileProcessor`` index filename to read files information from
-    :return: Result object with files diffrence, if files are identical reslt is True
+    :return: Result object with files difference, if files are identical reslt is True
     """        
     # load index data
     index_data = _load_index_data(base_url, index)
@@ -400,10 +437,10 @@ def files(task, call, *args, **kwargs):
     
     Call function nicknames:
     
-    * ls - calls file_list
-    * rm - calls file_remove
-    * read - calls file_read
-    * diff - calls file_diff
+    * ``ls`` - calls `file_list`_
+    * ``rm`` - calls `file_remove`_
+    * ``read`` - calls `file_read`_
+    * ``diff`` - calls `file_diff`_
     """
     dispatcher = {
         "ls": file_list,

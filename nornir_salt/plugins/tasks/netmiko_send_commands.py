@@ -18,8 +18,7 @@ Code to invoke ``netmiko_send_commands`` task::
 
     output = nr.run(
         task=netmiko_send_commands,
-        commands=["show run", "show clock"],
-        netmiko_kwargs={}
+        commands=["show run", "show clock"]
     )
 
 netmiko_send_commands returns

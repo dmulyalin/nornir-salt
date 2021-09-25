@@ -11,15 +11,15 @@ open, preventing it from timeout due to inactivity.
 
 ``HostsKeepalive`` function supports these connection types:
 
-- netmiko - writes ``chr(0)`` to Paramiko channel to check connection
-- paramiko channel - uses connection ``active`` attribute to check connection
+- netmiko - uses ``is_alive()`` method to check connection
+- paramiko channel - uses connection ``conn_obj.active`` attribute to check connection status
 - napalm - uses ``is_alive()`` method to check connection
 - scrapli - uses ``isalive()`` method to check connection
 - ncclient - uses ``connected`` attribute of connection manager to check connection status
 - http - HTTP connections non-persistent hence ``HostsKeepalive`` does nothing
 
-For other connection types ``HostsKeepalive`` logs warning message and keeps 
-connection intact.
+For other connection types ``HostsKeepalive`` logs warning message about connection 
+type being unknown and keeps connection intact.
 
 .. note:: HostsKeepalive only checks previously established connections, it
   does not creates new connections to hosts or tries to reopen dead connections.
@@ -35,15 +35,6 @@ Sample code to invoke ``HostsKeepalive`` function::
     nr = InitNornir(config_file="config.yaml")
 
     stats = HostsKeepalive(nr)
-
-HostsKeepalive returns
-======================
-
-Returns ``stats`` dictionary with statistics about ``HostsKeepalive`` execution
-
-``stats`` dictionary keys description:
-
-- ``dead_connections_cleaned`` - contains overall number of connections cleaned
 
 HostsKeepalive reference
 ========================
@@ -61,6 +52,10 @@ def HostsKeepalive(nr):
     """
     :param nr: Nornir object
     :returns: stats dictionary with statistics about ``HostsKeepalive`` execution
+   
+    Return ``stats`` dictionary keys description:
+    
+    - ``dead_connections_cleaned`` - contains overall number of connections cleaned
     """
     stats = {"dead_connections_cleaned": 0}
 

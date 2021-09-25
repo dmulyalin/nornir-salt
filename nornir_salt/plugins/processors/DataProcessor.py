@@ -18,10 +18,7 @@ Code to demonstrate how to use ``DataProcessor`` plugin::
     nr_with_processor = nr.with_processors([
         DataProcessor(
             [
-                "flatten",
-                "filter": "*isis*",
-                "unflatten",
-                "to_json"
+                {"fun": "match", "pattern": "interface.*"}
             ]
         )
     ])
@@ -34,35 +31,96 @@ Code to demonstrate how to use ``DataProcessor`` plugin::
 Filtering mini-query-language specification
 ===========================================
 
-``lod_filter`` -  key name may be appended with check type specifier suffix
-to instruct what type of check to execute with criteria against key value. For example 
-``key_name__glob`` would use glob pattern matching.
+``lod_filter``, ``key_filter`` and ``find`` key name may be appended with check type 
+specifier suffix to instruct what type of check to execute with criteria against key 
+value. For example ``key_name__glob`` would use glob pattern matching.
 
-+------------+-----------------------------------------------------------+
-| Check Type |  Description                                              |
-| Specifier  |                                                           |
-+------------+-----------------------------------------------------------+
-| ``__glob`` | glob case sensitive pattern matching                      |
-+------------+-----------------------------------------------------------+
-| ``__re``   | Regular Expression pattern matching                       |
-+------------+-----------------------------------------------------------+
++------------+-----------------------------------------------------------+------------------------------+
+| Check Type |  Description                                              | Functions                    |
++------------+-----------------------------------------------------------+------------------------------+
+| ``__glob`` | Glob case sensitive pattern matching                      | find, lod_filter, key_filter |
++------------+-----------------------------------------------------------+------------------------------+
+| ``__re``   | Regular Expression pattern matching                       | find, lod_filter, key_filter |
++------------+-----------------------------------------------------------+------------------------------+
 
-DataProcessor reference
-=======================
+DataProcessor Class reference
+=============================
 
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.DataProcessor
 
 DataProcessor Functions reference
 =================================
 
+DataProcessor Functions help to process results after task completed.
+
+.. list-table:: DataProcessor Functions
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Reference Name
+     - Description
+   * - `find`_  
+     - Function to dispatch data to one of the filtering functions.
+   * - `flake`_      
+     - Flattens python dictionary and filters its keys using ``key_filter``
+   * - `flatten`_    
+     - Turn a nested structure into a flattened dictionary
+   * - `key_filter`_ 
+     - Filter data dictionary top keys using provided patterns.
+   * - `load_json`_     
+     - Load JSON string into python dictionary structure
+   * - `load_xml`_      
+     - Load XML string into python dictionary structure
+   * - `lod_filter`_   
+     - List of Dictionaries (LOD) filter function
+   * - `match`_         
+     - Search for regex pattern in devices output
+   * - `parse_ttp`_   
+     - Parses text output from device into structured data
+   * - `path`_   
+     - Retrieves content from nested structured data at given path
+   * - `run_ttp`_     
+     - Parse text output from device sorting results across TTP inputs
+   * - `to_json`_     
+     - Transform Python structure to JSON formatted string
+   * - `to_pprint`_   
+     - Transform Python structure to pprint formatted string
+   * - `to_str`_      
+     - Transform Python structure to string without doing any formatting
+   * - `to_yaml`_ 
+     - Transform Python structure to YAML formatted string
+   * - `unflatten`_  
+     - Turn flat dictionary produced by `flatten`_ function to a nested structure
+   * - `xml_flake`_   
+     - Transform XML in a flattened dictionary and filter keys using `key_filter`_
+   * - `xml_flatten`_   
+     - Transform XML in a flattened python dictionary
+   * - `xml_rm_ns`_     
+     - Removes all namespace information from an XML Element tree
+   * - `xml_to_json`_   
+     - Transform XML string to JSON string
+   * - `xpath`_         
+     - Perform xpath search/filtering of XML string using LXML library
+     
 Formatter functions
 -------------------
 
 Format structured data to json, yaml etc. text string
 
+to_str
+++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.to_str
+
+to_json
++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.to_json
+
+to_pprint
++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.to_pprint
+
+to_yaml
++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.to_yaml
 
 Loader functions
@@ -70,7 +128,12 @@ Loader functions
 
 Load json, yaml etc. text into python structured data
 
+load_xml
+++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.load_xml
+
+load_json
++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.load_json
 
 Transform functions
@@ -78,11 +141,28 @@ Transform functions
 
 Take structured data and return transformed structured data
 
+flatten
++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.flatten
+
+unflatten
++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.unflatten
+
+xml_to_json
++++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_to_json
+
+xml_flatten
++++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_flatten
+
+xml_rm_ns
++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_rm_ns
+
+path
+++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.path_
 
 Filter functions
@@ -90,23 +170,50 @@ Filter functions
 
 Filter structured or text data
 
+xpath
++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xpath
+
+key_filter
+++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.key_filter
+
+flake
++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.flake
+
+xml_flake
++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.xml_flake
+
+match
++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.match
+
+lod_filter
+++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.lod_filter
+
+find
+++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.find
 
 Parse functions
 ---------------
 
+parse_ttp
++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.parse_ttp
+
+run_ttp
++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.run_ttp
 
 Misc functions
 --------------
 
+add_commands_from_ttp_template
+++++++++++++++++++++++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.add_commands_from_ttp_template
 """
 import logging
@@ -465,7 +572,7 @@ def path_(data, path, **kwargs):
     """
     Reference name ``path_``
     
-    Function to retrieve data at given path.
+    Function to retrieve content from nested structured data at given path.
     
     :param path: (str, list) dot separated path to result or list of path items
     :param data: (dict) data to get results from
@@ -620,23 +727,29 @@ def key_filter(data, pattern=None, **kwargs):
     """
     Reference Name ``key_filter``
 
-    Function to filter data dictionary top keys using provided glob
-    patterns.
+    Function to filter data dictionary top keys using provided patterns.
 
     :param data: (dictionary) Python dictionary
-    :param kwargs: (dict) any additional kwargs are key and value pairs, where key 
-        used to indicate check type and value is the criteria to check. Default check 
-        type is glob case sensitive pattern matching.
+    :param kwargs: (dict) any additional kwargs are key and value pairs, where key name
+        is arbitrary and used to indicate check type following `Filtering mini-query-language specification`_ 
+        and value is the criteria to check. Default check type is glob case sensitive 
+        pattern matching.
+    :param pattern: (str) pattern to use for filtering
     :return: filtered python dictionary
+    
+    Default logic is key name must pass **any** of the criteria provided.
     
     Sample usage::
         
         key_filter(
             data=data_dictionary,
             pattern="1234*",
-            key__glob="abc*",
-            key__re="abc.*"
+            pattern__glob="abc*",
+            pattern2__glob="*abc*",
+            pattern__re="abc.*",
         )
+        
+    Filtered dictionary key name must satisfy at least one of the matching criteria.
     """
     if not isinstance(data, dict):
         log.warning(
@@ -884,7 +997,8 @@ def run_ttp(data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_task
 
     Dependencies: requires TTP library - ``pip install ttp``
 
-    Function to parse text output from device and return structured data
+    Function to parse text output from device sorting results across TTP inputs
+    based on commands values.
 
     :param data: (str) Nornir MultiResult object
     :param template: (str) TTP template string or reference to ``ttp://`` templates
@@ -1071,7 +1185,7 @@ class DataProcessor:
         
     Where:
     
-    * ``fun`` - name of Data processor function to run
+    * ``fun`` - Reference Name of DataProcessor function to run
     * ``kN`` - Any additional key-word arguments to use with function
     """
 

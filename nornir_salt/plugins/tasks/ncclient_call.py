@@ -2,8 +2,9 @@
 ncclient_call
 #############
 
-Ncclient is a popular library to interact with devices using NETCONF, this
-plugin is a wrapper around ncclient connection manager object.
+`Ncclient <https://github.com/ncclient>`_ is a popular library to interact with
+devices using NETCONF, this plugin is a wrapper around ncclient connection 
+manager object.
 
 NETCONF protocol has a specific set of RPC calls available for use, rather
 than coding separate task for each of them, ``ncclient_call`` made to execute

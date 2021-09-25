@@ -54,7 +54,7 @@ If list of patterns provided, host matching at least one pattern will pass this 
 FC - Filter Contains Any
 ------------------------
 
-Filter hosts by checking if their name contains any of the string patterns.
+Filter hosts by checking if their name contains any of the string patterns::
 
     # Match core-switch-1 but not switch-1:
     filtered_hosts = FFun(NornirObj, FC="core-switch")
@@ -70,7 +70,7 @@ If list of patterns provided, host matching at least one pattern will pass this 
 FR - Filter Regex
 -----------------
 
-Filter hosts by checking if their name contains any of regular expression patterns.
+Filter hosts by checking if their name contains any of regular expression patterns::
 
     # Match core-switch-1 but not switch-1:
     filtered_hosts = FFun(NornirObj, FR=".+core-switch.+")
