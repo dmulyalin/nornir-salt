@@ -65,7 +65,6 @@ ncclient_call - locked
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_locked
 """
 import traceback
-import lxml.etree as etree
 import logging
 
 from nornir.core.task import Result, Task
@@ -73,6 +72,13 @@ from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
 
 log = logging.getLogger(__name__)
 
+try:
+    import lxml.etree as etree
+    
+    HAS_LXML = True
+except ImportError:
+    HAS_LXML = False
+    
 try:
     from ncclient.manager import OPERATIONS
     from ncclient.operations.errors import MissingCapabilityError
