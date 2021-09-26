@@ -33,13 +33,12 @@ DiffProcessor reference
 import logging
 import os
 import json
-import pprint
 import traceback
 import difflib
 import re
 
 from nornir.core.inventory import Host
-from nornir.core.task import AggregatedResult, MultiResult, Result, Task
+from nornir.core.task import AggregatedResult, MultiResult, Task
 
 
 log = logging.getLogger(__name__)
@@ -181,7 +180,7 @@ class DiffProcessor:
                     continue
 
                 # check if task results exists
-                if not i.name in prev_res_alias_data["tasks"]:
+                if i.name not in prev_res_alias_data["tasks"]:
                     i.diff = "'{}' task results not in '{}''".format(
                         i.name, prev_res_filename
                     )
@@ -202,7 +201,7 @@ class DiffProcessor:
                 # run diff using portion of prev_result file with given task results only
                 spans = prev_res_alias_data["tasks"][i.name]["span"]
                 difference = self._run_diff(
-                    prev_result=prev_result[spans[0] : spans[1]],
+                    prev_result=prev_result[spans[0]: spans[1]],
                     new_result=new_result,
                     fromfile=prev_res_filename,
                     tofile="current",

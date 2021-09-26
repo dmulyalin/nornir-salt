@@ -33,8 +33,6 @@ http_call reference
 """
 import logging
 import json
-import pprint
-import traceback
 import requests
 from nornir.core.task import Result, Task
 from requests.packages.urllib3.exceptions import InsecureRequestWarning

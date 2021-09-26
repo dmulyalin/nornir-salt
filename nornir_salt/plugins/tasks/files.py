@@ -58,7 +58,6 @@ files dispatcher function
 """
 import os
 import json
-import traceback
 import difflib
 import logging
 
@@ -156,7 +155,7 @@ def file_read(
                 )
             )
             continue
-        if not task.host.name in index_data[group]:
+        if task.host.name not in index_data[group]:
             task.results.append(
                 Result(
                     host=task.host,
@@ -267,7 +266,7 @@ def file_remove(
     index_data = _load_index_data(base_url, index)
 
     # check if need to remove files for all filegroups
-    if filegroup == True:
+    if filegroup is True:
         filegroups = list(index_data.keys())
     else:
         filegroups = filegroup if isinstance(filegroup, list) else [filegroup]

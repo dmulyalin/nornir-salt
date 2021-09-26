@@ -59,9 +59,9 @@ def nr_test(
         return Result(
             host=task.host, result=ret_data_per_host.get(task.host.name, None)
         )
-    elif excpt == True:
+    elif excpt is True:
         raise RuntimeError(excpt_msg)
-    elif excpt != None:
+    elif excpt is not None:
         raise excpt(excpt_msg)
     elif ret_data != "__undefined_value__":
         return Result(host=task.host, result=ret_data)

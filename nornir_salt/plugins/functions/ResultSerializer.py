@@ -169,10 +169,10 @@ Skipping results
 ================
 
 ResultSerializer by default skips all tasks with name starting with
-underscore ``_``, in additiona results skipped if ``Result`` object
-contains ``skip_results`` attribute and set to ``True``.
+underscore ``_``, in addition results skipped if ``Result`` object
+contains ``skip_results`` attribute and it set to ``True``.
 
-Above skip logic ignored if ``Result`` object contains exception.
+Above skip logic ignored if ``Result`` object exception is not empty.
 
 ResultSerializer reference
 ==========================
@@ -213,7 +213,7 @@ def ResultSerializer(
             for index, i in enumerate(results):
                 exception = (
                     str(i.exception)
-                    if i.exception != None
+                    if i.exception is not None
                     else i.host.get("exception", None)
                 )
                 # skip tasks such as _task_foo_bar unless exception
@@ -233,7 +233,7 @@ def ResultSerializer(
                     ret[hostname][i.name] = {
                         k: v
                         for k, v in vars(i).items()
-                        if not k in skip and type(v) in supported_types
+                        if k not in skip and type(v) in supported_types
                     }
                     ret[hostname][i.name]["failed"] = True if exception else i.failed
                     ret[hostname][i.name]["exception"] = exception
@@ -249,7 +249,7 @@ def ResultSerializer(
             for i in results:
                 exception = (
                     str(i.exception)
-                    if i.exception != None
+                    if i.exception is not None
                     else i.host.get("exception", None)
                 )
                 # skip group tasks such as _task_foo_bar unless exception
@@ -268,7 +268,7 @@ def ResultSerializer(
                         {
                             k: v
                             for k, v in vars(i).items()
-                            if not k in skip and type(v) in supported_types
+                            if k not in skip and type(v) in supported_types
                         }
                     )
                     ret[-1]["failed"] = True if exception else i.failed

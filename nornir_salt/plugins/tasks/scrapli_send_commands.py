@@ -51,7 +51,7 @@ except ImportError:
 CONNECTION_NAME = "scrapli"
 
 
-def scrapli_send_commands(task, commands=[], interval=0.01, **kwargs):
+def scrapli_send_commands(task: Task, commands=[], interval=0.01, **kwargs):
     """
     Nornir Task function to send show commands to devices using
     ``nornir_scrapli.tasks.send_command`` plugin
@@ -84,7 +84,7 @@ def scrapli_send_commands(task, commands=[], interval=0.01, **kwargs):
     if "commands" in task.host.data.get("__task__", {}):
         if commands:
             for c in task.host.data["__task__"]["commands"]:
-                if not c in commands:
+                if c not in commands:
                     commands.append(c)
         else:
             commands = task.host.data["__task__"]["commands"]

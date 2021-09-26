@@ -35,7 +35,7 @@ Code to invoke ``netmiko_send_command_ps`` task::
     from nornir_salt import netmiko_send_command_ps
 
     nr = InitNornir(config_file="config.yaml")
-	
+    
     commands = '''
     show ip int brief
     conf t
@@ -212,7 +212,7 @@ def netmiko_send_command_ps(
     if enable:
         net_connect.enable()
 
-    if not "send_command_ps" in dir(net_connect):
+    if "send_command_ps" not in dir(net_connect):
         setattr(net_connect, "send_command_ps", send_command_ps)
 
     result = net_connect.send_command_ps(net_connect, command_string, **kwargs)

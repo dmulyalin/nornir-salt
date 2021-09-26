@@ -64,8 +64,6 @@ scrapli_netconf_call - locked
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_locked
 """
 import logging
-import json
-import pprint
 import traceback
 from nornir.core.task import Result, Task
 

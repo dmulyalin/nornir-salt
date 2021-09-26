@@ -379,7 +379,7 @@ def _filter_FN(ret, nr, FN):
     """
     Function to negate hosts' match results
     """
-    if FN != True:
+    if FN is not True:
         return ret
     all_hosts = set(nr.inventory.hosts.keys())
     matched_hosts = set(ret.inventory.hosts.keys())

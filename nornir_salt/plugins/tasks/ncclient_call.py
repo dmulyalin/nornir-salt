@@ -67,8 +67,6 @@ ncclient_call - locked
 import traceback
 import lxml.etree as etree
 import logging
-import json
-import pprint
 
 from nornir.core.task import Result, Task
 from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME

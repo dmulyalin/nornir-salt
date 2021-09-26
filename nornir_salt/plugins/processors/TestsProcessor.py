@@ -223,7 +223,6 @@ import traceback
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
-from nornir_salt.plugins.functions import ResultSerializer
 
 log = logging.getLogger(__name__)
 
@@ -339,7 +338,7 @@ def EvalTest(host, result, expr, revert=False, err_msg=None, globs={}, **kwargs)
             check_result = eval(
                 expr, {"result": result.result, "host": host, **globs}, {}
             )
-        if check_result == False:
+        if check_result is False:
             ret.update({"result": "FAIL", "success": False})
             ret["exception"] = err_msg if err_msg else "Expression evaluated to False"
     except AssertionError as e:
@@ -351,10 +350,10 @@ def EvalTest(host, result, expr, revert=False, err_msg=None, globs={}, **kwargs)
 
     # revert results
     if revert:
-        if ret["success"] == False:
+        if ret["success"] is False:
             ret.update({"result": "PASS", "success": True})
             ret["exception"] = None
-        elif ret["success"] == True:
+        elif ret["success"] is True:
             ret.update({"result": "FAIL", "success": False})
             ret["exception"] = err_msg if err_msg else "Pattern and output equal"
     return Result(host=host, **ret)
@@ -592,11 +591,11 @@ def CustomFunctionTest(
     if (
         test_function_result == []
         or test_function_result == {}
-        or test_function_result == None
-        or test_function_result == True
+        or test_function_result is None
+        or test_function_result is True
     ):
         return Result(host=host, **ret)
-    elif test_function_result == False:
+    elif test_function_result is False:
         ret.update({"result": "FAIL", "success": False})
         return Result(host=host, **ret)
     elif isinstance(test_function_result, list):
@@ -645,10 +644,10 @@ def EqualTest(host, result, pattern, revert=False, err_msg=None, **kwargs):
         ret["exception"] = err_msg if err_msg else "Pattern and output not equal"
     # revert results
     if revert:
-        if ret["success"] == False:
+        if ret["success"] is False:
             ret.update({"result": "PASS", "success": True})
             ret["exception"] = None
-        elif ret["success"] == True:
+        elif ret["success"] is True:
             ret.update({"result": "FAIL", "success": False})
             ret["exception"] = err_msg if err_msg else "Pattern and output equal"
     return Result(host=host, **ret)
@@ -755,10 +754,10 @@ def ContainsTest(
         ret["exception"] = err_msg if err_msg else "Pattern not in output"
     # revert results if requested to do so
     if revert:
-        if ret["success"] == False:
+        if ret["success"] is False:
             ret.update({"result": "PASS", "success": True})
             ret["exception"] = None
-        elif ret["success"] == True:
+        elif ret["success"] is True:
             ret.update({"result": "FAIL", "success": False})
             if use_re:
                 ret["exception"] = err_msg if err_msg else "Regex pattern in output"
@@ -855,7 +854,7 @@ class TestsProcessor:
                     )
 
                 # get task results to use; use all results
-                if test.get("use_all_tasks") == True:
+                if test.get("use_all_tasks") is True:
                     test["result"] = result
                 # use subset of task results
                 elif isinstance(test["task"], list):
@@ -911,7 +910,7 @@ class TestsProcessor:
                         ]
                         # leave only failed results
                         if not report_all:
-                            res = [i for i in res if i.success == False]
+                            res = [i for i in res if i.success is False]
                             # add single successful test if no tests failed
                             if not res:
                                 ret = test_result_template.copy()
@@ -967,7 +966,7 @@ class TestsProcessor:
             for hostname, results in result.items():
                 good_tests = []
                 for index, i in enumerate(results):
-                    if hasattr(i, "success") and i.success == True:
+                    if hasattr(i, "success") and i.success is True:
                         good_tests.append(index)
                 # pop starting from last index to preserve lower indexes
                 for i in reversed(good_tests):

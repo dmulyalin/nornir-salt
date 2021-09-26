@@ -45,7 +45,7 @@ import random
 import os
 import pprint
 import time
-from nornir.core.task import AggregatedResult
+import traceback
 
 log = logging.getLogger(__name__)
 

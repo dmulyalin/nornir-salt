@@ -43,7 +43,6 @@ Reference
 .. autofunction:: nornir_salt.plugins.functions.TabulateFormatter.TabulateFormatter
 """
 import logging
-import traceback
 from nornir.core.task import AggregatedResult
 from .ResultSerializer import ResultSerializer
 
@@ -118,7 +117,7 @@ def TabulateFormatter(
             "showindex": True,
             "headers": ["host", "name", "result", "exception"],
         }
-    elif tabulate == True:
+    elif tabulate is True:
         tabulate = {"headers": headers}
     elif tabulate == "extend":
         table_ = []
@@ -136,7 +135,7 @@ def TabulateFormatter(
         result_to_tabulate = table_
     elif isinstance(tabulate, dict):
         tabulate.setdefault("headers", headers)
-    elif tabulate == False:
+    elif tabulate is False:
         return ResultSerializer(result, add_details=True, to_dict=False)
     else:
         log.error(

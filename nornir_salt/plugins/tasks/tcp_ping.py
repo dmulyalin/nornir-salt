@@ -19,7 +19,7 @@ Sample code to run ``tcp_ping`` task::
     
     result = NornirObj.run(
         task=tcp_ping,
-		ports=[22]
+        ports=[22]
     )
 
     result_dictionary = ResultSerializer(result)

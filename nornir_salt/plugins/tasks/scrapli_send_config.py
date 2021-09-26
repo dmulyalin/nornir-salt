@@ -51,7 +51,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def scrapli_send_config(task, config=None, **kwargs):
+def scrapli_send_config(task: Task, config=None, **kwargs):
     """
     Nornir Task function to send confgiuration to devices using
     ``nornir_scrapli.tasks.send_config`` plugin

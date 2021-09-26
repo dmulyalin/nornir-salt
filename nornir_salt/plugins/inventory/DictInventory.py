@@ -57,9 +57,7 @@ from typing import Any, Dict, Type
 from nornir.core.inventory import (
     Inventory,
     Group,
-    Groups,
     Host,
-    Hosts,
     Defaults,
     ConnectionOptions,
     HostOrGroup,
@@ -146,5 +144,5 @@ class DictInventory:
         for h in nr_hosts.values():
             h.groups = ParentGroups([nr_groups[g] for g in h.groups])
         for g in nr_groups.values():
-            g.groups = ParentGroups([groups[g] for g in g.groups])
+            g.groups = ParentGroups([nr_groups[g] for g in g.groups])
         return Inventory(hosts=nr_hosts, groups=nr_groups, defaults=nr_defaults)

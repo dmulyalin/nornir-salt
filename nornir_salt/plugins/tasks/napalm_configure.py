@@ -51,7 +51,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def napalm_configure(task, config=None, **kwargs):
+def napalm_configure(task: Task, config=None, **kwargs):
     """
     Nornir Task function to send confgiuration to devices using
     ``nornir_napalm.plugins.tasks.napalm_configure`` plugin.

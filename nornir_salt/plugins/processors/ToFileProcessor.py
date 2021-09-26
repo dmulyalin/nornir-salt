@@ -37,7 +37,7 @@ import traceback
 import random
 
 from nornir.core.inventory import Host
-from nornir.core.task import AggregatedResult, MultiResult, Result, Task
+from nornir.core.task import AggregatedResult, MultiResult, Task
 
 log = logging.getLogger(__name__)
 
@@ -162,7 +162,7 @@ class ToFileProcessor:
                 # check if need to skip this task results
                 exception = (
                     str(i.exception)
-                    if i.exception != None
+                    if i.exception is not None
                     else i.host.get("exception", None)
                 )
                 if (

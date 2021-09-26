@@ -157,7 +157,7 @@ To connect to devices behind jumphost, need to define jumphost parameters in hos
 
 .. note:: Only Netmiko `connection_name="netmiko"` and Ncclient `connection_name="ncclient"`
     tasks, support connecting to hosts behind Jumphosts using above inventory data.
-	
+    
 RetryRunner Reference
 =====================
 

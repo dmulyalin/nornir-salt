@@ -31,8 +31,8 @@ Code to demonstrate how to use ``DataProcessor`` plugin::
 Filtering mini-query-language specification
 ===========================================
 
-``lod_filter``, ``key_filter`` and ``find`` key name may be appended with check type 
-specifier suffix to instruct what type of check to execute with criteria against key 
+``lod_filter``, ``key_filter`` and ``find`` key name may be appended with check type
+specifier suffix to instruct what type of check to execute with criteria against key
 value. For example ``key_name__glob`` would use glob pattern matching.
 
 +------------+-----------------------------------------------------------+------------------------------+
@@ -59,49 +59,49 @@ DataProcessor Functions help to process results after task completed.
 
    * - Reference Name
      - Description
-   * - `find`_  
+   * - `find`_
      - Function to dispatch data to one of the filtering functions.
-   * - `flake`_      
+   * - `flake`_
      - Flattens python dictionary and filters its keys using ``key_filter``
-   * - `flatten`_    
+   * - `flatten`_
      - Turn a nested structure into a flattened dictionary
-   * - `key_filter`_ 
+   * - `key_filter`_
      - Filter data dictionary top keys using provided patterns.
-   * - `load_json`_     
+   * - `load_json`_
      - Load JSON string into python dictionary structure
-   * - `load_xml`_      
+   * - `load_xml`_
      - Load XML string into python dictionary structure
-   * - `lod_filter`_   
+   * - `lod_filter`_
      - List of Dictionaries (LOD) filter function
-   * - `match`_         
+   * - `match`_
      - Search for regex pattern in devices output
-   * - `parse_ttp`_   
+   * - `parse_ttp`_
      - Parses text output from device into structured data
-   * - `path`_   
+   * - `path`_
      - Retrieves content from nested structured data at given path
-   * - `run_ttp`_     
+   * - `run_ttp`_
      - Parse text output from device sorting results across TTP inputs
-   * - `to_json`_     
+   * - `to_json`_
      - Transform Python structure to JSON formatted string
-   * - `to_pprint`_   
+   * - `to_pprint`_
      - Transform Python structure to pprint formatted string
-   * - `to_str`_      
+   * - `to_str`_
      - Transform Python structure to string without doing any formatting
-   * - `to_yaml`_ 
+   * - `to_yaml`_
      - Transform Python structure to YAML formatted string
-   * - `unflatten`_  
+   * - `unflatten`_
      - Turn flat dictionary produced by `flatten`_ function to a nested structure
-   * - `xml_flake`_   
+   * - `xml_flake`_
      - Transform XML in a flattened dictionary and filter keys using `key_filter`_
-   * - `xml_flatten`_   
+   * - `xml_flatten`_
      - Transform XML in a flattened python dictionary
-   * - `xml_rm_ns`_     
+   * - `xml_rm_ns`_
      - Removes all namespace information from an XML Element tree
-   * - `xml_to_json`_   
+   * - `xml_to_json`_
      - Transform XML string to JSON string
-   * - `xpath`_         
+   * - `xpath`_
      - Perform xpath search/filtering of XML string using LXML library
-     
+
 Formatter functions
 -------------------
 
@@ -217,7 +217,6 @@ add_commands_from_ttp_template
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.add_commands_from_ttp_template
 """
 import logging
-import os
 import json
 import pprint
 import traceback
@@ -813,7 +812,6 @@ def lod_filter(data, pass_all=True, strict=True, **kwargs):
         )
         return data
 
-    ret = []
     checks = _form_check_list(kwargs)
     log.debug(
         "nornir_salt:DataProcessor:lod_filter running filter checks {}".format(checks)
@@ -899,7 +897,7 @@ def flake(data, **kwargs):
     :param kwargs: (dict) kwargs to use with ``key_filter`` function
     :return: flattened and filtered python dictionary
     """
-    return key_filter(flatten(data), pattern=pattern, **kwargs)
+    return key_filter(flatten(data), **kwargs)
 
 
 def xml_flake(data, pattern, **kwargs):
@@ -1037,7 +1035,7 @@ def run_ttp(
                 default_input_data = []
                 for i in data:
                     # check if need to skip this task
-                    if hasattr(i, "skip_results") and i.skip_results == True:
+                    if hasattr(i, "skip_results") and i.skip_results is True:
                         continue
                     if isinstance(i.result, str):
                         default_input_data.append(i.result)
@@ -1054,7 +1052,7 @@ def run_ttp(
                     input_data = []
                     for i in data:
                         # check if need to skip this task
-                        if hasattr(i, "skip_results") and i.skip_results == True:
+                        if hasattr(i, "skip_results") and i.skip_results is True:
                             continue
                         if i.name in commands and isinstance(i.result, str):
                             input_data.append(i.result)
@@ -1269,7 +1267,7 @@ class DataProcessor:
                     for i in result:
                         try:
                             # check if need to skip this task
-                            if hasattr(i, "skip_results") and i.skip_results == True:
+                            if hasattr(i, "skip_results") and i.skip_results is True:
                                 continue
                             # pass task result through dp function
                             i.result = task_instance_completed_dispatcher_per_task[fun](

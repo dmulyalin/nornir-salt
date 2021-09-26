@@ -52,7 +52,7 @@ CONNECTION_NAME = "netmiko"
 
 
 def netmiko_send_commands(
-    task,
+    task: Task,
     commands=[],
     interval=0.01,
     use_ps: bool = False,
@@ -99,7 +99,7 @@ def netmiko_send_commands(
     if "commands" in task.host.data.get("__task__", {}):
         if commands:
             for c in task.host.data["__task__"]["commands"]:
-                if not c in commands:
+                if c not in commands:
                     commands.append(c)
         else:
             commands = task.host.data["__task__"]["commands"]

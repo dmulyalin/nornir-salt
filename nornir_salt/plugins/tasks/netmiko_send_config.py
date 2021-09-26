@@ -37,7 +37,6 @@ netmiko_send_config reference
 """
 import logging
 import traceback
-import time
 from nornir.core.task import Result, Task
 
 try:
@@ -50,7 +49,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def netmiko_send_config(task, config=None, commit=True, **kwargs):
+def netmiko_send_config(task: Task, config=None, commit=True, **kwargs):
     """
     Salt-nornir Task function to send configuration to devices using
     ``nornir_netmiko.tasks.netmiko_send_config`` plugin.
