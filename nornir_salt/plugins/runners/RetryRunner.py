@@ -168,11 +168,16 @@ import queue
 import logging
 import time
 import random
-import paramiko
 from typing import List
 from nornir.core.task import AggregatedResult, Task
 from nornir.core.inventory import Host
 
+try:
+    import paramiko
+    
+    HAS_PARAMIKO = True
+except ImportError:
+    HAS_PARAMIKO = False
 
 log = logging.getLogger(__name__)
 LOCK = threading.Lock()

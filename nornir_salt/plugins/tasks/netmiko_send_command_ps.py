@@ -73,12 +73,17 @@ netmiko_send_command_ps reference
 
 import time
 import logging
-
 from typing import Any
 from nornir.core.task import Result, Task
-from nornir_netmiko.connections import CONNECTION_NAME
 from difflib import get_close_matches
 
+try:
+    from nornir_netmiko.connections import CONNECTION_NAME
+    
+    HAS_NETMIKO = True
+except ImportError:
+    HAS_NETMIKO = False
+    
 log = logging.getLogger(__name__)
 
 

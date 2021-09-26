@@ -11,8 +11,14 @@ NcclientPlugin reference
 """
 from typing import Any, Dict, Optional
 from pathlib import Path
-from ncclient import manager
 from nornir.core.configuration import Config
+
+try:
+    from ncclient import manager
+    
+    HAS_NCCLIENT = True
+except ImportError:
+    HAS_NCCLIENT = False
 
 CONNECTION_NAME = "ncclient"
 
