@@ -1,6 +1,6 @@
 import setuptools
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 __author__ = "Denis Mulyalin"
 
 with open("README.md", "r") as f:
@@ -28,7 +28,7 @@ setuptools.setup(
     ],
     python_requires=">=3.6",
     install_requires=[
-        "nornir>=3.*.*",
+        "nornir==3.*",
     ],
     entry_points="""
     [nornir.plugins.inventory]

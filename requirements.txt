@@ -1,1 +1,1 @@
-nornir>=3.*.*
+nornir==3.*
