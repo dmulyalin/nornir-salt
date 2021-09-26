@@ -93,20 +93,22 @@ try:
 
 except ImportError:
     # for ncclient<0.6.10 need to reconstruct GenericRPC class
-    from ncclient.operations import RPC
-
-    class GenericRPC(RPC):
-        def request(self, data, *args, **kwargs):
-            """
-            :param data: (str) rpc xml string
-
-            Testing:
-
-            * Arista cEOS - not working, transport session closed error
-            * Cisco IOS XR - working
-            """
-            ele = etree.fromstring(data.encode("UTF-8"))
-            return self._request(ele)
+    if HAS_NCCLIENT:
+        
+        from ncclient.operations import RPC
+    
+        class GenericRPC(RPC):
+            def request(self, data, *args, **kwargs):
+                """
+                :param data: (str) rpc xml string
+    
+                Testing:
+    
+                * Arista cEOS - not working, transport session closed error
+                * Cisco IOS XR - working
+                """
+                ele = etree.fromstring(data.encode("UTF-8"))
+                return self._request(ele)
 
 
 def _call_locked(manager, *args, **kwargs):
