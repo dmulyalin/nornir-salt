@@ -76,7 +76,7 @@ def netmiko_send_commands(
 
     :param kwargs: (dict) any additional arguments to pass to ``netmiko_send_command``
         ``nornir-netmiko`` task
-    :param commands: (list) commands to send to device
+    :param commands: (list or str) list or multiline string of commands to send to device
     :param interval: (int) interval between sending commands, default 0.01s
     :param use_ps: (bool) set to True to switch to experimental send_command_ps method
     :param split_lines: (bool) if True (default) - split multiline string to commands,
@@ -106,13 +106,17 @@ def netmiko_send_commands(
     elif "filename" in task.host.data.get("__task__", {}):
         commands = task.host.data["__task__"]["filename"]
 
+    # normilize commands to a list
+    if isinstance(commands, str) and split_lines:
+        commands = commands.splitlines()
+    elif isinstance(commands, str) and not split_lines:
+        commands = [commands]
+        
+    # remove empty lines/commands that can left after rendering
+    commands = [c for c in commands if c.strip()]
+    
     # run commands
     if use_ps:
-        # normilize commands to a list
-        if isinstance(commands, str) and split_lines:
-            commands = commands.splitlines()
-        elif isinstance(commands, str) and not split_lines:
-            commands = [commands]
         # send commands
         for command in commands:
             task.run(
@@ -123,9 +127,6 @@ def netmiko_send_commands(
             )
             time.sleep(interval)
     else:
-        # normalize commands to a list
-        if isinstance(commands, str):
-            commands = commands.splitlines()
         # send commands
         for command in commands:
             task.run(

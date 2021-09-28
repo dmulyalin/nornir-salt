@@ -64,7 +64,7 @@ def scrapli_send_commands(task: Task, commands=[], interval=0.01, **kwargs):
 
         ["ping 1.1.1.1 source 1.1.1.2", "show clock"]
 
-    :param commands: (list) commands list to send to device(s)
+    :param commands: (list or str) list or multiline string of commands to send to device
     :param interval: (int) interval between sending commands, default 0.01s
     :param kwargs: (dict) any additional arguments to pass to scrapli send_command
     :return result: Nornir result object with task execution results
@@ -91,10 +91,13 @@ def scrapli_send_commands(task: Task, commands=[], interval=0.01, **kwargs):
     elif "filename" in task.host.data.get("__task__", {}):
         commands = task.host.data["__task__"]["filename"]
 
-    # prep commands by splitting them
+    # normilize commands to a list
     if isinstance(commands, str):
         commands = commands.splitlines()
 
+    # remove empty lines/commands that can left after rendering
+    commands = [c for c in commands if c.strip()]
+    
     # send commands to device
     for command in commands:
         task.run(task=send_command, command=command, name=command, **kwargs)
