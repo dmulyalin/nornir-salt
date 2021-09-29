@@ -41,29 +41,29 @@ def conn_list(task, *args, **kwargs):
     return Result(host=task.host, result=ret)
 
 
-def conn_close(task, name="all", *args, **kwargs):
+def conn_close(task, conn_name="all", *args, **kwargs):
     """
     Task to close host's connections.
 
-    :param name: (str) name of connection to close, default is "all"
+    :param conn_name: (str) name of connection to close, default is "all"
     :return: (list) list of connections closed
     """
     ret = []
 
     # iterate over connections and close them
-    for conn_name in list(task.host.connections.keys()):
-        if name != "all" and conn_name != name:
+    for conn in list(task.host.connections.keys()):
+        if conn_name != "all" and conn != conn_name:
             continue
         ret.append(
             {
-                "connection_name": conn_name,
+                "connection_name": conn,
             }
         )
         try:
-            task.host.close_connection(conn_name)
+            task.host.close_connection(conn)
         except:
             ret[-1]["status"] = traceback.format_exc()
-        _ = task.host.connections.pop(conn_name, None)
+        _ = task.host.connections.pop(conn, None)
         ret[-1].setdefault("status", "closed")
 
     return Result(host=task.host, result=ret)

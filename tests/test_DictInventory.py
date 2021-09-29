@@ -103,4 +103,4 @@ def test_DictInvetnory_nested_groups():
     assert nr.inventory.hosts["IOL2"].get("asn") == 65100
     assert nr.inventory.hosts["IOL2"].get("domain") is None
 
-# test_DictInvetnory_nested_groups()
+#test_DictInvetnory_nested_groups()
