@@ -1773,3 +1773,165 @@ logging host {{ log_server }}
                                     'ntp': [{'ntp_server': '7.7.7.7'}]}]]}]
                                    
 # test_parse_ttp_run_default_input_only()
+
+def test_jmespath_struct_data():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "jmespath", "expr": "locations[?state == 'WA'].name | sort(@) | {WashingtonCities: join(', ', @)}"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {
+                "locations": [
+                  {"name": "Seattle", "state": "WA"},
+                  {"name": "New York", "state": "NY"},
+                  {"name": "Bellevue", "state": "WA"},
+                  {"name": "Olympia", "state": "WA"}
+                ]
+              },
+            "IOL2": {
+                "locations": [
+                  {"name": "Seattle", "state": "WA"},
+                  {"name": "New York", "state": "NY"},
+                  {"name": "Bellevue", "state": "WA"},
+                  {"name": "Olympia", "state": "WA"}
+                ]
+              },
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=150)
+    assert result == {'IOL1': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}},
+                      'IOL2': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}}}
+                      
+# test_jmespath_struct_data()
+
+
+def test_jmespath_json_data():
+    import json
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "jmespath", "expr": "locations[?state == 'WA'].name | sort(@) | {WashingtonCities: join(', ', @)}"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": json.dumps({
+                "locations": [
+                  {"name": "Seattle", "state": "WA"},
+                  {"name": "New York", "state": "NY"},
+                  {"name": "Bellevue", "state": "WA"},
+                  {"name": "Olympia", "state": "WA"}
+                ]
+              }),
+            "IOL2": json.dumps({
+                "locations": [
+                  {"name": "Seattle", "state": "WA"},
+                  {"name": "New York", "state": "NY"},
+                  {"name": "Bellevue", "state": "WA"},
+                  {"name": "Olympia", "state": "WA"}
+                ]
+              }),
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=150)
+    assert result == {'IOL1': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}},
+                      'IOL2': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}}}
+                      
+# test_jmespath_json_data()
+
+
+def test_find_use_jmespath():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "find", "path": "locations[?state == 'WA'].name | sort(@) | {WashingtonCities: join(', ', @)}", "use_jmespath": True}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": {
+                "locations": [
+                  {"name": "Seattle", "state": "WA"},
+                  {"name": "New York", "state": "NY"},
+                  {"name": "Bellevue", "state": "WA"},
+                  {"name": "Olympia", "state": "WA"}
+                ]
+              },
+            "IOL2": {
+                "locations": [
+                  {"name": "Seattle", "state": "WA"},
+                  {"name": "New York", "state": "NY"},
+                  {"name": "Bellevue", "state": "WA"},
+                  {"name": "Olympia", "state": "WA"}
+                ]
+              },
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=150)
+    assert result == {'IOL1': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}},
+                      'IOL2': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}}}
+                      
+# test_find_use_jmespath()
+
+
+def test_find_use_xpath_with_namespaces():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "find", "path": "//a:config", "namespaces": {"a": "http://openconfig.net/yang/system"}, "use_xpath": True}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": xml_ntp_data,
+            "IOL2": xml_ntp_data,
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=150)
+    assert result == {'IOL1': {'show run | inc ntp': '<config xmlns="http://openconfig.net/yang/system">\n'
+                                                     '          <enable-ntp-auth>false</enable-ntp-auth>\n'
+                                                     '          <enabled>true</enabled>\n'
+                                                     '        </config>\n'
+                                                     '        \n'
+                                                     '\n'
+                                                     '<config xmlns="http://openconfig.net/yang/system">\n'
+                                                     '              <address>1.1.1.10</address>\n'
+                                                     '              <iburst>false</iburst>\n'
+                                                     '              <prefer>false</prefer>\n'
+                                                     '              <version>4</version>\n'
+                                                     '            </config>\n'
+                                                     '          \n'
+                                                     '\n'
+                                                     '<config xmlns="http://openconfig.net/yang/system">\n'
+                                                     '              <address>1.1.1.11</address>\n'
+                                                     '              <iburst>false</iburst>\n'
+                                                     '              <prefer>false</prefer>\n'
+                                                     '              <version>4</version>\n'
+                                                     '            </config>\n'
+                                                     '          \n'},
+                      'IOL2': {'show run | inc ntp': '<config xmlns="http://openconfig.net/yang/system">\n'
+                                                     '          <enable-ntp-auth>false</enable-ntp-auth>\n'
+                                                     '          <enabled>true</enabled>\n'
+                                                     '        </config>\n'
+                                                     '        \n'
+                                                     '\n'
+                                                     '<config xmlns="http://openconfig.net/yang/system">\n'
+                                                     '              <address>1.1.1.10</address>\n'
+                                                     '              <iburst>false</iburst>\n'
+                                                     '              <prefer>false</prefer>\n'
+                                                     '              <version>4</version>\n'
+                                                     '            </config>\n'
+                                                     '          \n'
+                                                     '\n'
+                                                     '<config xmlns="http://openconfig.net/yang/system">\n'
+                                                     '              <address>1.1.1.11</address>\n'
+                                                     '              <iburst>false</iburst>\n'
+                                                     '              <prefer>false</prefer>\n'
+                                                     '              <version>4</version>\n'
+                                                     '            </config>\n'
+                                                     '          \n'}}
+                      
+# test_find_use_xpath_with_namespaces()

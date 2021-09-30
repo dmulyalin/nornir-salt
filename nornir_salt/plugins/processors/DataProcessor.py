@@ -65,6 +65,8 @@ DataProcessor Functions help to process results after task completed.
      - Flattens python dictionary and filters its keys using ``key_filter``
    * - `flatten`_
      - Turn a nested structure into a flattened dictionary
+   * - `jmespath`_
+     - Query JSON string or structured data using JMESPath library
    * - `key_filter`_
      - Filter data dictionary top keys using provided patterns.
    * - `load_json`_
@@ -168,7 +170,7 @@ path
 Filter functions
 ----------------
 
-Filter structured or text data
+Filter or search structured or text data
 
 xpath
 +++++
@@ -194,12 +196,18 @@ lod_filter
 ++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.lod_filter
 
+jmespath
+++++++++++
+.. autofunction:: nornir_salt.plugins.processors.DataProcessor.jmespath
+
 find
 ++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.find
 
 Parse functions
 ---------------
+
+Produce structured data out of text by parsing it.
 
 parse_ttp
 +++++++++
@@ -211,6 +219,8 @@ run_ttp
 
 Misc functions
 --------------
+
+Various functions with miscellaneous or utility purpose.
 
 add_commands_from_ttp_template
 ++++++++++++++++++++++++++++++
@@ -264,12 +274,22 @@ try:
 
     HAS_TTP = True
 except ImportError:
-    log.error(
+    log.warning(
         "nornir_salt:DataProcessor failed import TTP library, install: pip install ttp"
     )
     HAS_TTP = False
 
-
+try:
+    import jmespath as jmespath_lib
+    
+    HAS_JMESPATH = True
+except ImportError:
+    log.warning(
+        "nornir_salt:DataProcessor failed import jmespath library, install: pip install jmespath"
+    )
+    HAS_JMESPATH = False
+    
+    
 # --------------------------------------------------------------------------------
 # formatters functions: transform structured data to json, yaml etc. text
 # --------------------------------------------------------------------------------
@@ -703,8 +723,10 @@ def xpath(data, expr, rm_ns=False, recover=False, **kwargs):
 
     :param data: (str) XML formatted string
     :param expr: (str) xpath expression to use
-    :param rm_ns: (bool) if True removes namespace from XML string using
-        ``xml_rm_ns`` function, default is False
+    :param rm_ns: (bool) default is False, if True removes namespace from XML string using
+        ``xml_rm_ns`` function
+    :param recover: (bool) default is False, if True uses ``etree.XMLParser(recover=True)``
+        while loading XML from string
     :param kwarg: (dict) ``**kwargs`` to use for LXML etree.xpath method
     :return: XML filtered string
     """
@@ -921,33 +943,74 @@ def xml_flake(data, pattern, **kwargs):
     return key_filter(xml_flatten(data), pattern=pattern, **kwargs)
 
 
-def find(data, path=None, **kwargs):
+def jmespath(data, expr, **kwargs):
+    """
+    Reference name ``jmespath``
+    
+    JMESPath is a query language for JSON
+    
+    Function that uses `JMESPath library <https://jmespath.org/>`_  to filter and 
+    search structured data.
+    
+    Requires `JMESPath package <https://pypi.org/project/jmespath/>`_ installed on the 
+    minion.
+    
+    :param data: (struct or str) list or dictionary structure or JSON formatted string
+    :param expr: (str) jmespath query expression
+    :return: (struct) query results
+    """
+    if not HAS_JMESPATH:
+        log.error(
+            "nornir_salt:DataProcessor:jmespath failed import jmespath library"
+        )
+        return data
+    
+    if isinstance(data, str):
+        return jmespath_lib.search(expr, json.loads(data, **kwargs))
+    else:
+        return jmespath_lib.search(expr, data)
+
+
+def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
     """
     Reference name ``find``
 
-    Function to dispatch data to one of the filtering functions.
+    Function to dispatch data to one of the filtering functions based on data type.
 
     :param data: (list, dict, str) data to search in
+    :param use_jmespath: (bool) default is False, if True uses jmespath library
+    :param use_xpath: (bool) default is False, if True use lxml library xpath
     :param path: (str) dot separated path or list of path items to results
-        within data to search in
-    :return: filtered results
+        within data to search in; if ``use_jmespath`` is True, path must be 
+        jmespath query expression; if ``use_xpath`` is True, path must be
+        lxml library xpath expression;
+    :return: search results
 
-    Dispatching process happens after evaluating ``path`` and retrieving
-    results to process from overall data.
+    Searching dispatch rules:
 
-    ``path`` only evaluated if provided data is a dictionary.
-
-    Dispatch rules:
-
-    * if result type is list uses ``lod_filter``
-    * if result type is dictionary uses ``key_filter``
-    * if result type is string uses ``match`` function
+    * if ``use_jmespath`` is True uses ``jmespath`` function with ``path`` provided
+    * if ``use_xpath`` is True uses ``xpath`` function with ``path`` provided
+    
+    Next, if supplied data is a list or dictionary and ``path`` provided calls 
+    ``path_`` function to narrow down results before dispatching them further:
+    
+    * if result type is a list uses ``lod_filter``
+    * if result type is a dictionary uses ``key_filter``
+    * if result type is a string uses ``match`` function
     """
     result = data
 
+    # use need to use external lib
+    if use_jmespath and path:
+        return jmespath(data, path, **kwargs)
+    elif use_xpath and path:
+        return xpath(data, path, **kwargs)
+        
+    # check if need to narrow down result to given path
     if path:
         result = path_(data, path)
 
+    # use one of DataProcessor filters depending on data type
     if isinstance(result, list):
         return lod_filter(result, **kwargs)
     elif isinstance(result, dict):
@@ -1147,6 +1210,7 @@ task_instance_completed_dispatcher_per_task = {
     "match": match,  # similar to include
     "xml_flake": xml_flake,  # XML flatten key filter
     "lod_filter": lod_filter,  # list of dictionaries filter
+    "jmespath": jmespath, # filter structured data using jmespath lib
     "find": find,
     # transformers
     "xml_to_json": xml_to_json,
