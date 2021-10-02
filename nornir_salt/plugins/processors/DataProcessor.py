@@ -2,7 +2,7 @@
 DataProcessor Plugin
 ####################
 
-Processor plugin to process structured results data obtained from devices
+Processor plugin to process task results.
 
 DataProcessor Sample Usage
 ==========================
@@ -62,7 +62,7 @@ DataProcessor Functions help to process results after task completed.
    * - `find`_
      - Function to dispatch data to one of the filtering functions.
    * - `flake`_
-     - Flattens python dictionary and filters its keys using ``key_filter``
+     - Flattens python dictionary and filters its keys using `key_filter`_
    * - `flatten`_
      - Turn a nested structure into a flattened dictionary
    * - `jmespath`_
@@ -966,7 +966,7 @@ def jmespath(data, expr, **kwargs):
         return data
     
     if isinstance(data, str):
-        return jmespath_lib.search(expr, json.loads(data, **kwargs))
+        return jmespath_lib.search(expr, json.loads(data))
     else:
         return jmespath_lib.search(expr, data)
 
@@ -1233,13 +1233,13 @@ task_started_dispatcher = {
 
 class DataProcessor:
     """
-    DataProcessor can process structured data obtained from devices. It is
-    capable of:
+    DataProcessor can process data obtained from devices. It is capable of:
 
     * loading data to Python structure from json, yaml, xml, csv or python format
     * serializing structured data to text in json, yaml, xml, csv or python format
-    * filtering structured or string data
+    * filtering structured or text data
     * flattening and un-flattening nested data
+    * parsing textual data into structured format
 
     :param dp: (list) list of Data Processors function names to pass results through
 
