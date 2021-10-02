@@ -2,16 +2,15 @@
 scrapli_netconf_call
 ####################
 
-Scrapli Netconf is a library to interact with devices using NETCONF, this
+Dependencies: `Scrapli Netconf <https://pypi.org/project/scrapli-netconf/>`_ need to be installed
+
+Scrapli Netconf is a library to interact with devices using NETCONF. ``scrapli_netconf_call`` task 
 plugin is a wrapper around Scrapli Netconf connection object.
 
 NETCONF protocol has a specific set of RPC calls available for use, rather
 than coding separate task for each of them, ``scrapli_netconf_call`` made to execute
 any arbitrary method supported by Scrapli Netconf connection object plus a set 
 of additional helper methods for extended functionality.
-
-scrapli_netconf_call sample usage
-=================================
 
 Sample code to run ``scrapli_netconf_call`` task::
 
@@ -26,40 +25,34 @@ Sample code to run ``scrapli_netconf_call`` task::
         source="running"
     )
 
-scrapli_netconf_call returns
-============================
-
-Returns XML text string by default, but can return XML data transformed
-in JSON, YAML or Python format.
-
-scrapli_netconf_call reference
-==============================
+API Reference
+=============
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call.scrapli_netconf_call
 
-scrapli_netconf_call additional methods reference
-=================================================
+Additional Call Methods Reference
+=================================
 
-scrapli_netconf_call - dir
---------------------------
+dir
+---
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_dir
 
-scrapli_netconf_call - help
----------------------------
+help
+----
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_help
 
-scrapli_netconf_call - server_capabilities
-------------------------------------------
+server_capabilities
+-------------------
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_server_capabilities
 
-scrapli_netconf_call - connected
---------------------------------
+connected
+---------
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_connected
 
-scrapli_netconf_call - locked
------------------------------
+locked
+------
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_locked
 """
@@ -106,10 +99,6 @@ def _call_connected(conn, *args, **kwargs):
 
 def _call_locked(conn, *args, **kwargs):
     """
-    Module: nornir_salt
-    Task plugin: scrapli_netconf_call
-    Plugin function: locked
-
     Helper function to run this edit-config flow:
 
     1. Lock target configuration/datastore
@@ -172,19 +161,19 @@ def _call_locked(conn, *args, **kwargs):
 
 
 def _call_server_capabilities(conn, *args, **kwargs):
-    """Helper function to return server capabilities"""
+    """Helper function to return NETCONF server capabilities"""
     return conn.server_capabilities, False
 
 
 def scrapli_netconf_call(task: Task, call: str, *args, **kwargs) -> Result:
     """
-    Discpatcher function to call one of the supported scrapli_netconf methods
+    Dispatcher function to call one of the supported scrapli_netconf methods
     or one of helper functions.
 
     :param call: (str) Scrapli Netconf connection object method to call
     :param arg: (list) any ``*args`` to use with call method
     :param kwargs: (dict) any ``**kwargs`` to use with call method
-    :return: result of scrapli-netconf method call - XML string or other
+    :return: result of scrapli-netconf connection method call
     """
     # initiate local parameteres
     result = None
