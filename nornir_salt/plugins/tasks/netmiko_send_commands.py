@@ -111,10 +111,10 @@ def netmiko_send_commands(
         commands = commands.splitlines()
     elif isinstance(commands, str) and not split_lines:
         commands = [commands]
-        
+
     # remove empty lines/commands that can left after rendering
     commands = [c for c in commands if c.strip()]
-    
+
     # run commands
     if use_ps:
         # send commands

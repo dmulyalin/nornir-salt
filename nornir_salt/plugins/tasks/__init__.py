@@ -12,6 +12,7 @@ from .scrapli_send_config import scrapli_send_config
 from .http_call import http_call
 from .files import files, file_read, file_list, file_remove, file_diff
 from .connections import connections, conn_close, conn_list
+from .pygnmi_call import pygnmi_call
 
 __all__ = (
     "tcp_ping",
@@ -34,4 +35,5 @@ __all__ = (
     "connections",
     "conn_close",
     "conn_list",
+    "pygnmi_call",
 )

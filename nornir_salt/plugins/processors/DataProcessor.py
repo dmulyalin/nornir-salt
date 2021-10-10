@@ -33,15 +33,31 @@ Filtering mini-query-language specification
 
 ``lod_filter``, ``key_filter`` and ``find`` key name may be appended with check type
 specifier suffix to instruct what type of check to execute with criteria against key
-value. For example ``key_name__glob`` would use glob pattern matching.
+value in a format ``key_name__<check_type>``. For example ``key_name__glob`` would 
+use glob pattern matching.
 
-+------------+-----------------------------------------------------------+------------------------------+
-| Check Type |  Description                                              | Functions                    |
-+------------+-----------------------------------------------------------+------------------------------+
-| ``__glob`` | Glob case sensitive pattern matching                      | find, lod_filter, key_filter |
-+------------+-----------------------------------------------------------+------------------------------+
-| ``__re``   | Regular Expression pattern matching                       | find, lod_filter, key_filter |
-+------------+-----------------------------------------------------------+------------------------------+
++--------------+---------------------------------------+-----------------+------------------------------+
+| Check Type   | Description                           | Criteria Type   | Functions Support            |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``glob``     | Glob case sensitive pattern matching  | string          | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``re``       | Regular Expression pattern matching   | string          | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``eq``       | Equals                                | integer, string | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``ge``       | Greater than or equal to              | integer         | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``gt``       | Greater than                          | integer         | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``le``       | Less than or equal to                 | integer         | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``lt``       | Less than                             | integer         | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``in``       | Check if value in a list or in comma  | list, string    | find, lod_filter, key_filter |
+|              | separated string                      |                 |                              |
++--------------+---------------------------------------+-----------------+------------------------------+
+| ``contains`` | Value contains string                 | string          | find, lod_filter, key_filter |
++--------------+---------------------------------------+-----------------+------------------------------+
 
 DataProcessor Class reference
 =============================
@@ -281,15 +297,15 @@ except ImportError:
 
 try:
     import jmespath as jmespath_lib
-    
+
     HAS_JMESPATH = True
 except ImportError:
     log.warning(
         "nornir_salt:DataProcessor failed import jmespath library, install: pip install jmespath"
     )
     HAS_JMESPATH = False
-    
-    
+
+
 # --------------------------------------------------------------------------------
 # formatters functions: transform structured data to json, yaml etc. text
 # --------------------------------------------------------------------------------
@@ -656,17 +672,90 @@ def path_(data, path, **kwargs):
 # check functions
 def _check_glob(value, criteria):
     # returns True if glob pattern matches value
-    return fnmatchcase(str(value), criteria)
+    return fnmatchcase(str(value), str(criteria))
 
 
 def _check_regex(value, criteria):
     # returns True if regex pattern matches value
-    return True if re.search(criteria, value) else False
+    return True if re.search(str(criteria), str(value)) else False
+
+
+def _check_equal(value, criteria):
+    # checks for equality string or integer
+    try:
+        return int(value) == int(criteria)
+    except ValueError:
+        return value == criteria
+
+
+def _check_greater_or_equal(value, criteria):
+    # compare integers
+    try:
+        int(value)
+        int(criteria)
+        return int(value) >= int(criteria)
+    except TypeError:
+        return False
+
+
+def _check_greater_than(value, criteria):
+    # compare integers
+    try:
+        int(value)
+        int(criteria)
+        return int(value) > int(criteria)
+    except TypeError:
+        return False
+
+
+def _check_less_or_equal(value, criteria):
+    # compare integers
+    try:
+        int(value)
+        int(criteria)
+        return int(value) <= int(criteria)
+    except TypeError:
+        return False
+
+
+def _check_less_than(value, criteria):
+    # compare integers
+    try:
+        int(value)
+        int(criteria)
+        return int(value) < int(criteria)
+    except TypeError:
+        return False
+
+
+def _check_in(value, criteria):
+    # check if value is in criteria list
+    try:
+        if isinstance(criteria, list):
+            return value in criteria
+        elif isinstance(criteria, str):
+            return value in [i.strip() for i in criteria.split(",")]
+        else:
+            return str(value) in [str(criteria)]
+    except TypeError:
+        return False
+
+
+def _check_contains(value, criteria):
+    # check if criteria is in value string
+    return str(criteria) in str(value)
 
 
 check_fun_dispatcher = {
     "glob": _check_glob,
     "re": _check_regex,
+    "eq": _check_equal,
+    "ge": _check_greater_or_equal,
+    "gt": _check_greater_than,
+    "le": _check_less_or_equal,
+    "lt": _check_less_than,
+    "in": _check_in,
+    "contains": _check_contains,
 }
 
 
@@ -694,22 +783,22 @@ def _form_check_list(checks_dictionary):
     """
     checks = []
     for key_name, criteria in checks_dictionary.items():
-        if key_name.split("__")[-1] in check_fun_dispatcher:
-            check_type = key_name.split("__")[-1]
-            # account for cases when pattern contains other __
-            key_name = "__".join(key_name.split("__")[:-1])
+        if "__" in key_name:
+            key_name, *check_type = key_name.split("__")
+            check_type = "__".join(check_type)
         else:
-            check_type, key_name = (
-                "glob",
-                key_name,
+            check_type = "glob"
+        if check_type in check_fun_dispatcher:
+            checks.append(
+                {
+                    "fun": check_fun_dispatcher[check_type],
+                    "key": key_name,
+                    "criteria": criteria,
+                }
             )
-        checks.append(
-            {
-                "fun": check_fun_dispatcher[check_type],
-                "key": key_name,
-                "criteria": criteria,
-            }
-        )
+        else:
+            log.error("nornir-salt:DataProcessor unknown check '{}'".format(check_type))
+            return []
     return checks
 
 
@@ -795,6 +884,9 @@ def key_filter(data, pattern=None, **kwargs):
     log.debug(
         "nornir_salt:DataProcessor:key_filter running filter checks {}".format(checks)
     )
+    # return empty results if no checks
+    if not checks:
+        return {}
 
     return {
         k: data[k]
@@ -838,6 +930,9 @@ def lod_filter(data, pass_all=True, strict=True, **kwargs):
     log.debug(
         "nornir_salt:DataProcessor:lod_filter running filter checks {}".format(checks)
     )
+    # return empty results if no checks
+    if not checks:
+        return []
 
     # run filtering
     if pass_all:
@@ -946,25 +1041,23 @@ def xml_flake(data, pattern, **kwargs):
 def jmespath(data, expr, **kwargs):
     """
     Reference name ``jmespath``
-    
+
     JMESPath is a query language for JSON
-    
-    Function that uses `JMESPath library <https://jmespath.org/>`_  to filter and 
+
+    Function that uses `JMESPath library <https://jmespath.org/>`_  to filter and
     search structured data.
-    
-    Requires `JMESPath package <https://pypi.org/project/jmespath/>`_ installed on the 
+
+    Requires `JMESPath package <https://pypi.org/project/jmespath/>`_ installed on the
     minion.
-    
+
     :param data: (struct or str) list or dictionary structure or JSON formatted string
     :param expr: (str) jmespath query expression
     :return: (struct) query results
     """
     if not HAS_JMESPATH:
-        log.error(
-            "nornir_salt:DataProcessor:jmespath failed import jmespath library"
-        )
+        log.error("nornir_salt:DataProcessor:jmespath failed import jmespath library")
         return data
-    
+
     if isinstance(data, str):
         return jmespath_lib.search(expr, json.loads(data))
     else:
@@ -981,7 +1074,7 @@ def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
     :param use_jmespath: (bool) default is False, if True uses jmespath library
     :param use_xpath: (bool) default is False, if True use lxml library xpath
     :param path: (str) dot separated path or list of path items to results
-        within data to search in; if ``use_jmespath`` is True, path must be 
+        within data to search in; if ``use_jmespath`` is True, path must be
         jmespath query expression; if ``use_xpath`` is True, path must be
         lxml library xpath expression;
     :return: search results
@@ -990,10 +1083,10 @@ def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
 
     * if ``use_jmespath`` is True uses ``jmespath`` function with ``path`` provided
     * if ``use_xpath`` is True uses ``xpath`` function with ``path`` provided
-    
-    Next, if supplied data is a list or dictionary and ``path`` provided calls 
+
+    Next, if supplied data is a list or dictionary and ``path`` provided calls
     ``path_`` function to narrow down results before dispatching them further:
-    
+
     * if result type is a list uses ``lod_filter``
     * if result type is a dictionary uses ``key_filter``
     * if result type is a string uses ``match`` function
@@ -1005,7 +1098,7 @@ def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
         return jmespath(data, path, **kwargs)
     elif use_xpath and path:
         return xpath(data, path, **kwargs)
-        
+
     # check if need to narrow down result to given path
     if path:
         result = path_(data, path)
@@ -1082,6 +1175,59 @@ def run_ttp(
     Template inputs to parse. After parsing, all other tasks' results removed from
     MultiResult object and parsing results appended to it. If ``remove_tasks`` set to
     False, other tasks results not removed.
+
+    Sample usage::
+
+        import pprint
+        from nornir import InitNornir
+        from nornir_salt import ResultSerializer, DataProcessor, netmiko_send_commands
+
+        nr = InitNornir(config_file="nornir_config.yaml")
+
+        # define TTP template with inputs having commands attributes
+        template = '''
+        <input name="arp">
+        commands = ["show arp"]
+        </input>
+
+        <input name="version">
+        commands = ["show version"]
+        </input>
+
+        <group name="arp_cache*" input="arp">
+        Internet  {{ ip }}   {{ age }}   {{ mac }}  ARPA   {{ interface }}
+        </group>
+
+        <group name="facts.version" input="version">
+        Cisco IOS XE Software, Version {{ iose_xe_version }}
+        </group>
+        '''
+
+        # add data processor with run_ttp function
+        nr_with_dp = nr.with_processors([DataProcessor(
+            [{"fun": "run_ttp", "template": template}]
+        )])
+
+        # run task; commands for task will be dynamically populated by DataProcessor
+        # run_ttp function with commands defined within TTP template inputs
+        result = nr_with_dp.run(task=netmiko_send_commands)
+
+        # serialize results to dictionary
+        dict_result = ResultSerializer(result)
+
+        pprint.pprint(dict_result)
+
+    Running above code should print results::
+
+        {'hostname': {'run_ttp': [[{'arp_cache': [{'age': '2',
+                                    'interface': 'GigabitEthernet1',
+                                    'ip': '10.10.20.28',
+                                    'mac': '0050.56bf.f0be'},
+                                   {'age': '-',
+                                    'interface': 'GigabitEthernet1',
+                                    'ip': '10.10.20.48',
+                                    'mac': '0050.56bf.9379'}]},
+                    {'facts': {'version': {'iose_xe_version': '16.09.03'}}}]]}}
     """
     if not HAS_TTP:
         log.warning("nornir_salt:DataProcessor:parse_ttp failed import TTP library")
@@ -1210,7 +1356,7 @@ task_instance_completed_dispatcher_per_task = {
     "match": match,  # similar to include
     "xml_flake": xml_flake,  # XML flatten key filter
     "lod_filter": lod_filter,  # list of dictionaries filter
-    "jmespath": jmespath, # filter structured data using jmespath lib
+    "jmespath": jmespath,  # filter structured data using jmespath lib
     "find": find,
     # transformers
     "xml_to_json": xml_to_json,

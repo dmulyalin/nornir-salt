@@ -1032,9 +1032,9 @@ def test_lod_filter_with_uncknown_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    pprint.pprint(result, width=100)    
-    assert result == {'IOL1': {'show run | inc ntp': []},
-                      'IOL2': {'show run | inc ntp': []}}        
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': []}, 'IOL2': {'show run | inc ntp': []}}
+
 # test_lod_filter_with_uncknown_check_type_specifier()
 
 def test_lod_filter_with_glob_check_type_specifier_multikey():
@@ -1935,3 +1935,291 @@ def test_find_use_xpath_with_namespaces():
                                                      '          \n'}}
                       
 # test_find_use_xpath_with_namespaces()
+
+
+def test_lod_filter_with_eq_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "mask__eq": "32"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}} 
+                                                      
+# test_lod_filter_with_eq_check_type_specifier()
+
+def test_lod_filter_with_ge_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "mask__ge": "30"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}} 
+                                                      
+# test_lod_filter_with_ge_check_type_specifier()
+
+def test_lod_filter_with_gt_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "mask__gt": "24"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}} 
+                                                      
+# test_lod_filter_with_gt_check_type_specifier()
+
+def test_lod_filter_with_le_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "mask__le": "30"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]}}
+                                                      
+# test_lod_filter_with_le_check_type_specifier()
+
+
+def test_lod_filter_with_le_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "mask__lt": "32"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]}}
+                                                      
+# test_lod_filter_with_le_check_type_specifier()
+
+
+def test_lod_filter_with_in_list_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "interface__in": ["Gi1", "Gi2"]}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
+													  
+# test_lod_filter_with_in_list_check_type_specifier()
+
+
+def test_lod_filter_with_in_comma_sep_string_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "interface__in": "Gi1, Gi2"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
+													  
+# test_lod_filter_with_in_comma_sep_string_check_type_specifier()
+
+def test_lod_filter_with_in_string_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "interface__in": "Gi1"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
+													  
+# test_lod_filter_with_in_string_check_type_specifier()
+
+
+def test_lod_filter_with_in_integer_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "mask__in": 32}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
+													  
+# test_lod_filter_with_in_integer_check_type_specifier()
+
+
+def test_lod_filter_with_contains_check_type_specifier():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "lod_filter", "interface__contains": "2"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+            "IOL2": [
+{"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
+{"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
+{"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
+            ],
+        },
+        name="show run | inc ntp",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=100)    
+    assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
+													  
+# test_lod_filter_with_contains_check_type_specifier()

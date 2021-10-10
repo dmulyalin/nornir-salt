@@ -79,11 +79,11 @@ from difflib import get_close_matches
 
 try:
     from nornir_netmiko.connections import CONNECTION_NAME
-    
+
     HAS_NETMIKO = True
 except ImportError:
     HAS_NETMIKO = False
-    
+
 log = logging.getLogger(__name__)
 
 

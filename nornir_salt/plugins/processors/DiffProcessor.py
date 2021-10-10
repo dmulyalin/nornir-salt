@@ -201,7 +201,7 @@ class DiffProcessor:
                 # run diff using portion of prev_result file with given task results only
                 spans = prev_res_alias_data["tasks"][i.name]["span"]
                 difference = self._run_diff(
-                    prev_result=prev_result[spans[0]: spans[1]],
+                    prev_result=prev_result[spans[0] : spans[1]],
                     new_result=new_result,
                     fromfile=prev_res_filename,
                     tofile="current",

@@ -37,18 +37,20 @@ from .plugins.tasks import scrapli_send_config
 from .plugins.tasks import http_call
 from .plugins.tasks import file_read, file_list, file_remove, file_diff, files
 from .plugins.tasks import connections, conn_close, conn_list
-
-# NETCONF related plugins
 from .plugins.tasks import ncclient_call
 from .plugins.tasks import scrapli_netconf_call
-from .plugins.connections import NcclientPlugin
+from .plugins.tasks import pygnmi_call
 
+# connections plugins
+from .plugins.connections import NcclientPlugin
 from .plugins.connections import HTTPPlugin
+from .plugins.connections import PyGNMIPlugin
 
 # processors plugins
 from .plugins.processors import ToFileProcessor
 from .plugins.processors import TestsProcessor
 from .plugins.processors import DiffProcessor
+from .plugins.processors import DataProcessor
 
 __all__ = (
     "ResultSerializer",
@@ -83,4 +85,7 @@ __all__ = (
     "connections",
     "conn_close",
     "conn_list",
+    "PyGNMIPlugin",
+    "pygnmi_call",
+    "DataProcessor",
 )

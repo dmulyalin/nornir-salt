@@ -59,18 +59,22 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
 
     ``http_call`` follows these rules to form URL to send request to:
 
-    1. Use ``url`` attribute if provided and it starts with ``http://`` or ``https://``
-    2. If ``url`` attribute provided but is relative it is merged with
-        inventory ``base_url`` using formatter ``{base_url}/{url}``
-    3. If ``url`` attribute provided and is relative and no ``base_url``
-        defined in inventory ``extras`` sections uses this formatter
-        ``{transport}://{hostname}:{port}/{url}`` to form final URL
-        if ``transport`` parameter defined in inventory ``extras`` sections
-    4. If no ``url`` attribute provided use ``base_url`` to send the request if
-        ``base_url`` defined in inventory ``extras`` sections
-    5. If no ``url`` attribute provided and no ``base_url`` defined in inventory
+    1. Use ``url`` attribute if provided and it absolute - starts with ``http://`` or ``https://``
+    2. If ``url`` attribute provided but is relative - does not starts with ``http://`` or ``https://`` -
+       it is merged with inventory ``base_url`` using formatter ``{base_url}/{url}`` if ``base_url`` is
+       absolute - starts with ``http://`` or ``https://``
+    3. If ``url`` attribute provided and ``base_url`` listed in inventory and they are both relative -
+       does not startswith ``http://`` or ``https://`` - target URL formed using formatter:
+       ``{transport}://{hostname}:{port}/{base_url}/{url}``
+    4. If ``url`` attribute provided and is relative and no ``base_url`` defined in inventory ``extras``
+       sections, http_call uses this formatter ``{transport}://{hostname}:{port}/{url}`` to form final URL
+       if ``transport`` parameter defined in inventory ``extras`` sections
+    5. If no ``url`` attribute provided use ``base_url`` to send the request if ``base_url`` defined in
+       inventory ``extras`` sections and is absolute - starts with ``http://`` or ``https://``
+    6. If no ``url`` attribute provided and no ``base_url`` defined in inventory
         ``extras`` sections use this formatter ``{transport}://{hostname}:{port}/``
         if ``transport`` parameter defined in inventory ``extras`` sections
+    7. Raise error, unable to form URL
 
     Default headers added to HTTP request::
 
@@ -81,6 +85,7 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
     password inventory parameters used to form ``auth`` tuple.
     """
     result = None
+    task.name = method
 
     # get rendered data if any
     if "__task__" in task.host.data:
@@ -117,10 +122,25 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
     if url:
         # if URL provided but it is relative to base url
         if not url.startswith("http://") and not url.startswith("https://"):
-            # use base URL if it was provided in inventory
-            if base_url:
+            # use base URL if it was provided in inventory and it is absolute
+            if base_url and base_url.startswith("http"):
                 parameters["url"] = "{base_url}/{url}".format(
-                    base_url=base_url, url=url
+                    base_url=base_url.strip("/"), url=url.strip("/")
+                )
+            # use base_url if it was provided in inventory and it is relative
+            elif (
+                base_url
+                and not base_url.startswith("http")
+                and not url.startswith(base_url)
+            ):
+                parameters[
+                    "url"
+                ] = "{transport}://{hostname}:{port}/{base_url}/{url}".format(
+                    transport=transport,
+                    hostname=conn["hostname"],
+                    port=int(conn.get("port", 80 if transport == "http" else 443)),
+                    base_url=base_url.strip("/"),
+                    url=url.strip("/"),
                 )
             # form URL using transport, hostname and port parameters
             elif transport:
@@ -128,18 +148,18 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
                     transport=transport,
                     hostname=conn["hostname"],
                     port=int(conn.get("port", 80 if transport == "http" else 443)),
-                    url=url,
+                    url=url.strip("/"),
                 )
             else:
                 raise RuntimeError(
-                    "nornir-salt:http_call cannot form URL. base_url or transport required, params given: {}".format(
-                        parameters
+                    "nornir-salt:http_call cannot form URL - base_url or transport required, params: {}, base_url: {}, transport: {}".format(
+                        parameters, base_url, transport
                     )
                 )
         else:
             parameters["url"] = url
     # use base_url if no url provided
-    elif base_url:
+    elif base_url and base_url.startswith("http"):
         parameters["url"] = base_url
     # form url using transport, hostname and port parameters
     elif transport:
@@ -150,8 +170,8 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
         )
     else:
         raise RuntimeError(
-            "nornir-salt:http_call cannot form URL. url, base_url or transport required, params given: {}".format(
-                parameters
+            "nornir-salt:http_call cannot form URL - url, base_url or transport required, params: {}, base_url: {}, transport: {}".format(
+                parameters, base_url, transport
             )
         )
 
@@ -165,6 +185,11 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
     )
 
     # call requests method
+    log.debug(
+        "nornir_salt:http_call calling '{}' with params: '{}'".format(
+            method, parameters
+        )
+    )
     response = getattr(requests, method)(**parameters)
 
     # form results

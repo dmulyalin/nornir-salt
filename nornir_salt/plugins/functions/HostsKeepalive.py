@@ -80,6 +80,8 @@ def HostsKeepalive(nr):
                     is_alive = conn_obj.connection.connected
                 elif "http" in str(type(conn_obj)).lower():
                     is_alive = True
+                elif "pygnmi" in str(type(conn_obj)).lower():
+                    is_alive = True
                 else:
                     log.debug(
                         "nornir_salt:HostsKeepalive - uncknown connection '{}', type: '{}'".format(

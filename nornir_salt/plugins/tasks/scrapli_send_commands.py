@@ -97,7 +97,7 @@ def scrapli_send_commands(task: Task, commands=[], interval=0.01, **kwargs):
 
     # remove empty lines/commands that can left after rendering
     commands = [c for c in commands if c.strip()]
-    
+
     # send commands to device
     for command in commands:
         task.run(task=send_command, command=command, name=command, **kwargs)

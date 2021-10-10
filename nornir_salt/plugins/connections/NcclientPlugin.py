@@ -15,7 +15,7 @@ from nornir.core.configuration import Config
 
 try:
     from ncclient import manager
-    
+
     HAS_NCCLIENT = True
 except ImportError:
     HAS_NCCLIENT = False

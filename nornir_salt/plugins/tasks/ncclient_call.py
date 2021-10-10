@@ -74,11 +74,11 @@ log = logging.getLogger(__name__)
 
 try:
     import lxml.etree as etree
-    
+
     HAS_LXML = True
 except ImportError:
     HAS_LXML = False
-    
+
 try:
     from ncclient.manager import OPERATIONS
     from ncclient.operations.errors import MissingCapabilityError
@@ -94,16 +94,16 @@ try:
 except ImportError:
     # for ncclient<0.6.10 need to reconstruct GenericRPC class
     if HAS_NCCLIENT:
-        
+
         from ncclient.operations import RPC
-    
+
         class GenericRPC(RPC):
             def request(self, data, *args, **kwargs):
                 """
                 :param data: (str) rpc xml string
-    
+
                 Testing:
-    
+
                 * Arista cEOS - not working, transport session closed error
                 * Cisco IOS XR - working
                 """

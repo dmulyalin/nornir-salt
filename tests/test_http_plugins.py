@@ -183,10 +183,10 @@ def test_http_connection_get_google():
     )
     # pprint.pprint(res)
     
-    assert len(res["IOL1"]["http_call"]["result"]) > 100
-    assert len(res["IOL2"]["http_call"]["result"]) > 100
-    assert res["IOL1"]["http_call"]["failed"] == False
-    assert res["IOL2"]["http_call"]["failed"] == False
+    assert len(res["IOL1"]["get"]["result"]) > 100
+    assert len(res["IOL2"]["get"]["result"]) > 100
+    assert res["IOL1"]["get"]["failed"] == False
+    assert res["IOL2"]["get"]["failed"] == False
     
 # test_http_connection_get_google()
 
@@ -207,8 +207,8 @@ def test_http_get_ios_always_on_lab_base_url():
     )
     # pprint.pprint(res)
 
-    assert res["sandbox-iosxe-recomm-1"]["http_call"]["failed"] == False
-    assert "ietf-restconf:restconf" in res["sandbox-iosxe-recomm-1"]["http_call"]["result"]
+    assert res["sandbox-iosxe-recomm-1"]["get"]["failed"] == False
+    assert "ietf-restconf:restconf" in res["sandbox-iosxe-recomm-1"]["get"]["result"]
     
 # test_http_get_ios_always_on_lab_base_url()
 
@@ -225,8 +225,8 @@ def test_http_get_ios_always_on_lab_ietf_intefaces():
     )
     # pprint.pprint(res)
 
-    assert res["sandbox-iosxe-recomm-1"]["http_call"]["failed"] == False
-    assert "ietf-interfaces:interfaces" in res["sandbox-iosxe-recomm-1"]["http_call"]["result"]
-    assert len(res["sandbox-iosxe-recomm-1"]["http_call"]["result"]["ietf-interfaces:interfaces"]["interface"]) > 0
+    assert res["sandbox-iosxe-recomm-1"]["get"]["failed"] == False
+    assert "ietf-interfaces:interfaces" in res["sandbox-iosxe-recomm-1"]["get"]["result"]
+    assert len(res["sandbox-iosxe-recomm-1"]["get"]["result"]["ietf-interfaces:interfaces"]["interface"]) > 0
     
 # test_http_get_ios_always_on_lab_ietf_intefaces()

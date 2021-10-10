@@ -1,5 +1,3 @@
 from .DictInventory import DictInventory
 
-__all__ = (
-    "DictInventory"
-)
+__all__ = "DictInventory"
