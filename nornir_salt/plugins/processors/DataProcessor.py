@@ -1468,9 +1468,9 @@ class DataProcessor:
                             result, task=task, **dp_dict_copy
                         )
                     except:
-                        log.error(
-                            "nornir-salt:DataProcessor host {} function '{}' all-task error:\n{}".format(
-                                host.name, fun, traceback.format_exc()
+                        log.exception(
+                            "nornir-salt:DataProcessor host '{}' function '{}' all-task error".format(
+                                host.name, fun
                             )
                         )
                 elif fun in task_instance_completed_dispatcher_per_task:
@@ -1485,17 +1485,17 @@ class DataProcessor:
                             )
                         except:
                             i.exception = traceback.format_exc()
-                            log.error(
-                                "nornir-salt:DataProcessor host {} function '{}' per-task error:\n{}".format(
-                                    host.name, fun, traceback.format_exc()
+                            log.exception(
+                                "nornir-salt:DataProcessor host '{}' function '{}' per-task error".format(
+                                    host.name, fun
                                 )
                             )
                 else:
                     raise KeyError(fun)
             except:
-                log.error(
-                    "nornir-salt:DataProcessor host {} dp '{}' error:\n{}".format(
-                        host.name, dp_dict, traceback.format_exc()
+                log.exception(
+                    "nornir-salt:DataProcessor host '{}' dp '{}'".format(
+                        host.name, dp_dict
                     )
                 )
 
