@@ -2,7 +2,13 @@
 PyGNMIPlugin
 ############
 
-PyGNMI library connection plugin to interact with devices over gNMI.
+`PyGNMI library <https://pypi.org/project/pygnmi/>`_ connection plugin to interact 
+with devices over `gNMI <https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.md>`_ 
+protocol.
+
+This plugin maintains long running gNMI connection to devices, if this behavior 
+not desirable, consider using Nornir host's ``close_connection`` method to close
+gNMI connection.
 
 PyGNMIPlugin reference
 ========================
@@ -24,8 +30,8 @@ CONNECTION_NAME = "pygnmi"
 
 class PyGNMIPlugin:
     """
-    Full list of inventory extras see pPGNMI Docs for ``gNMIclient``
-    method.
+    Full list of inventory extras see `PyGNMI Docs <https://github.com/akarneliuk/pygnmi>`_ 
+    for ``gNMIclient`` class.
 
     Sample inventory::
 
@@ -38,9 +44,10 @@ class PyGNMIPlugin:
             pygnmi:
               extras:
                 insecure: True
+                gnmi_timeout: 10
 
     Anything under inventory ``extras`` section passed on to PyGNMI
-    ``gNMIclient`` instantiation.
+    ``gNMIclient`` class object instantiation.
     """  # noqa
 
     def open(

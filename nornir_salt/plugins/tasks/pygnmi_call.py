@@ -1,9 +1,12 @@
 """
-pgnmi_call
-##########
+pygnmi_call
+###########
 
-Task plugin to manage devices over gNMI protocol. Uses
-`PyGNMI library <https://pypi.org/project/pygnmi/>`_
+Task plugin to manage devices over gNMI protocol. 
+
+Requires `PyGNMI library <https://pypi.org/project/pygnmi/>`_ to be installed::
+
+    pip install pygnmi
 
 This task plugin is a wrapper around ``gNMIclient`` connection object
 and allows to execute any of its methods supplying method name using
@@ -15,15 +18,57 @@ Sample code to run ``pygnmi_call`` task::
     from nornir_salt import pygnmi_call
 
     nr = InitNornir(config_file="config.yaml")
+ 
+    # get device capabilities
+    capabilities = nr.run(
+        task=pygnmi_call,
+        call="capabilities"
+    )
     
-    output = nr.run(
+    # get interfaces configuration
+    get_output = nr.run(
         task=pygnmi_call,
         call="get",
         path=["openconfig-interfaces:interfaces"]
     )
 
-In addition to calling ``gNMIclient`` methods, extra call methods supported
-such as ``help``, ``dir``, ``delete`` etc, that can be used as this::
+    # update interface description
+    update_output = nr.run(
+        task=pygnmi_call,
+        call="update",
+        update=[
+            (
+                "openconfig-interfaces:interfaces/interface[name=Loopback100]/config", 
+                {"description": "Done by gNMI"}
+            )
+        ]
+    )
+
+    # delete interface configuration
+    delete_output = nr.run(
+        task=pygnmi_call,
+        call="delete",
+        delete=[
+            "openconfig-interfaces:interfaces/interface[name=Loopback1234]"
+        ]
+    )
+
+    # replace interface configuration
+    replace_output = nr.run(
+        task=pygnmi_call,
+        call="replace",
+        replace=[
+            (
+                "openconfig-interfaces:interfaces/interface[name=Loopback1234]/config", 
+                {"name": "Loopback1234", "description": "New"}
+            )
+        ]
+    )
+    
+In addition to calling ``gNMIclient`` methods, extra ``call`` functions supported
+such as ``help``, ``dir``, ``delete``, ``replace`` and ``update``. Extra functions
+can be invoked in the same way as ``gNMIclient`` connection object methods by passing 
+their name as a ``call`` attribute::
 
     from nornir import InitNornir
     from nornir_salt import pygnmi_call
@@ -40,8 +85,8 @@ pygnmi_call Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.pygnmi_call.pygnmi_call
 
-Additional Call Methods 
-=======================
+Additional Call Functions 
+=========================
 
 delete
 ------
@@ -73,7 +118,7 @@ log = logging.getLogger(__name__)
 
 
 def _call_dir(connection, **kwargs):
-    """Function to return a list of gNMIclient available methods/operations"""
+    """Function to return a list of ``gNMIclient`` available methods/operations"""
     methods = (list(dir(connection))) + ["dir", "help", "update", "delete", "replace"]
     result = sorted(
         [m for m in set(methods) if (not m.startswith("_") and not m.isupper())]
@@ -109,6 +154,20 @@ def _call_update(connection, path: list, **kwargs):
     :param connection: (obj) ``gNMIclient`` object
     :param path: (list) list with single item - path to element to update config for
     :param kwargs: (dict) configuration parameters to update
+    
+    Sample code to run ``replace`` function task::
+    
+        from nornir import InitNornir
+        from nornir_salt import pygnmi_call
+    
+        nr = InitNornir(config_file="config.yaml")
+        
+        output = nr.run(
+            task=pygnmi_call,
+            call="update",
+            path="openconfig-interfaces:interfaces/interface[name=Loopback100]/config",
+            description="Updated Loopback Description"
+        )
     """
     return connection.set(update=[(path[0], dict(kwargs))])
 
@@ -127,6 +186,21 @@ def _call_replace(connection, path: list, **kwargs):
     :param connection: (obj) ``gNMIclient`` object
     :param path: (list) list with single item - path to element to update config for
     :param kwargs: (dict) configuration parameters to replace
+    
+    Sample code to run ``replace`` function task::
+    
+        from nornir import InitNornir
+        from nornir_salt import pygnmi_call
+    
+        nr = InitNornir(config_file="config.yaml")
+        
+        output = nr.run(
+            task=pygnmi_call,
+            call="replace",
+            path="openconfig-interfaces:interfaces/interface[name=Loopback100]/config",
+            name="Loopback100",
+            description="Loopback Description"
+        )
     """
     return connection.set(replace=[(path[0], dict(kwargs))])
 
@@ -142,6 +216,19 @@ def _call_delete(connection, path: list, **kwargs):
 
     :param connection: (obj) ``gNMIclient`` object
     :param path: (list) path items to delete
+    
+    Sample code to run ``delete`` function task::
+    
+        from nornir import InitNornir
+        from nornir_salt import pygnmi_call
+    
+        nr = InitNornir(config_file="config.yaml")
+        
+        output = nr.run(
+            task=pygnmi_call,
+            call="delete",
+            path=["openconfig-interfaces:interfaces/interface[name=Loopback100]"]
+        )
     """
     return connection.set(delete=path)
 
@@ -155,7 +242,16 @@ def pygnmi_call(task: Task, call: str, name_arg: str = None, **kwargs) -> Result
     :param arg: (list) any ``*args`` to use with call method
     :param kwargs: (dict) any ``**kwargs`` to use with call method
     :param name_arg: (str) used as "name" argument with call method, need it
-        only because "name" argument used by "Nornir.run" method itself
+        only because "name" argument used by "Nornir.run" method itself ans collides 
+        with the case when need to pass gNMI path ``name`` argument to this task
+        
+    Special handling given to ``path``, ``delete``, ``replace`` and
+    ``updated`` kwargs arguments to comply with ``gNMIclient`` requirements:
+    
+    1. If ``path`` is a string, convert it to a list splitting it by ``,`` character
+    2. If ``delete`` is a string, convert it to a list splitting it by ``,`` character
+    3. If ``replace`` is a list, transform each list item to a tuple
+    4. If ``update`` is a list, transform each list item to a tuple
     """
     # update task name
     task.name = call
