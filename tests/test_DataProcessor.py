@@ -2108,7 +2108,7 @@ def test_lod_filter_with_in_list_check_type_specifier():
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
-													  
+                                                      
 # test_lod_filter_with_in_list_check_type_specifier()
 
 
@@ -2138,7 +2138,7 @@ def test_lod_filter_with_in_comma_sep_string_check_type_specifier():
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
-													  
+                                                      
 # test_lod_filter_with_in_comma_sep_string_check_type_specifier()
 
 def test_lod_filter_with_in_string_check_type_specifier():
@@ -2165,7 +2165,7 @@ def test_lod_filter_with_in_string_check_type_specifier():
     # pprint.pprint(result, width=100)    
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
-													  
+                                                      
 # test_lod_filter_with_in_string_check_type_specifier()
 
 
@@ -2193,7 +2193,7 @@ def test_lod_filter_with_in_integer_check_type_specifier():
     # pprint.pprint(result, width=100)    
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
-													  
+                                                      
 # test_lod_filter_with_in_integer_check_type_specifier()
 
 
@@ -2221,5 +2221,258 @@ def test_lod_filter_with_contains_check_type_specifier():
     # pprint.pprint(result, width=100)    
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
-													  
+                                                      
 # test_lod_filter_with_contains_check_type_specifier()
+
+
+def test_iplkp():
+    csv_table = """
+ip,name
+10.0.1.4,IOL1:Eth1
+1.1.1.1,IOL1:Lo1
+1.1.1.11,IOL1:Lo2
+1::1,IOL1:Lo3
+10.0.1.5,IOL2:Eth1
+1.101.2.2,IOL2:Lo101
+fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "iplkp", "use_csv": csv_table}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+                                                                          Address
+Interface       IP Address        Status       Protocol            MTU    Owner  
+--------------- ----------------- ------------ -------------- ----------- -------
+Ethernet1       10.0.1.4/24       up           up                 1500           
+Loopback1       1.1.1.1/24        up           up                65535           
+Loopback2       1.1.1.11/24        up           up                65535           
+Loopback3       1::1/120        up           up                65535           """,
+            "IOL2": """
+                                                                              Address
+Interface         IP Address          Status       Protocol            MTU    Owner  
+----------------- ------------------- ------------ -------------- ----------- -------
+Ethernet1         10.0.1.5/24         up           up                 1500           
+Loopback100       100.12.3.4/22       up           up                65535           
+Loopback101       1.101.2.2/32        up           up                65535           
+Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           """
+        },
+        name="show ip int brief",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=170) 
+    assert result == {'IOL1': {'show ip int brief': '\n'
+                                                    '                                                                          Address\n'
+                                                    'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
+                                                    '--------------- ----------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1       10.0.1.4(IOL1:Eth1)/24       up           up                 1500           \n'
+                                                    'Loopback1       1.1.1.1(IOL1:Lo1)/24        up           up                65535           \n'
+                                                    'Loopback2       1.1.1.11(IOL1:Lo2)/24        up           up                65535           \n'
+                                                    'Loopback3       1::1(IOL1:Lo3)/120        up           up                65535           '},
+                      'IOL2': {'show ip int brief': '\n'
+                                                    '                                                                              Address\n'
+                                                    'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
+                                                    '----------------- ------------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1         10.0.1.5(IOL2:Eth1)/24         up           up                 1500           \n'
+                                                    'Loopback100       100.12.3.4/22       up           up                65535           \n'
+                                                    'Loopback101       1.101.2.2(IOL2:Lo101)/32        up           up                65535           \n'
+                                                    'Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234(IOL2:Lo102)/24          up           up                65535           '}}
+# test_iplkp()
+
+
+def test_iplkp_with_subform():
+    csv_table = """
+ip,name
+10.0.1.4,IOL1:Eth1
+1.1.1.1,IOL1:Lo1
+1.1.1.11,IOL1:Lo2
+1::1,IOL1:Lo3
+10.0.1.5,IOL2:Eth1
+1.101.2.2,IOL2:Lo101
+fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "iplkp", "use_csv": csv_table, "subform": "{lookup}"}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+                                                                          Address
+Interface       IP Address        Status       Protocol            MTU    Owner  
+--------------- ----------------- ------------ -------------- ----------- -------
+Ethernet1       10.0.1.4/24       up           up                 1500           
+Loopback1       1.1.1.1/24        up           up                65535           
+Loopback2       1.1.1.11/24        up           up                65535           
+Loopback3       1::1/120        up           up                65535           """,
+            "IOL2": """
+                                                                              Address
+Interface         IP Address          Status       Protocol            MTU    Owner  
+----------------- ------------------- ------------ -------------- ----------- -------
+Ethernet1         10.0.1.5/24         up           up                 1500           
+Loopback100       100.12.3.4/22       up           up                65535           
+Loopback101       1.101.2.2/32        up           up                65535           
+Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           """
+        },
+        name="show ip int brief",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=170) 
+    assert result == {'IOL1': {'show ip int brief': '\n'
+                                                    '                                                                          Address\n'
+                                                    'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
+                                                    '--------------- ----------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1       IOL1:Eth1/24       up           up                 1500           \n'
+                                                    'Loopback1       IOL1:Lo1/24        up           up                65535           \n'
+                                                    'Loopback2       IOL1:Lo2/24        up           up                65535           \n'
+                                                    'Loopback3       IOL1:Lo3/120        up           up                65535           '},
+                      'IOL2': {'show ip int brief': '\n'
+                                                    '                                                                              Address\n'
+                                                    'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
+                                                    '----------------- ------------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1         IOL2:Eth1/24         up           up                 1500           \n'
+                                                    'Loopback100       100.12.3.4/22       up           up                65535           \n'
+                                                    'Loopback101       IOL2:Lo101/32        up           up                65535           \n'
+                                                    'Loopback102       IOL2:Lo102/24          up           up                65535           '}}
+# test_iplkp_with_subform()
+
+
+def test_iplkp_no_csv_no_dns():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "iplkp", "use_csv": False, "use_dns": False}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+                                                                          Address
+Interface       IP Address        Status       Protocol            MTU    Owner  
+--------------- ----------------- ------------ -------------- ----------- -------
+Ethernet1       10.0.1.4/24       up           up                 1500           
+Loopback1       1.1.1.1/24        up           up                65535           
+Loopback2       1.1.1.11/24        up           up                65535           
+Loopback3       1::1/120        up           up                65535           """,
+            "IOL2": """
+                                                                              Address
+Interface         IP Address          Status       Protocol            MTU    Owner  
+----------------- ------------------- ------------ -------------- ----------- -------
+Ethernet1         10.0.1.5/24         up           up                 1500           
+Loopback100       100.12.3.4/22       up           up                65535           
+Loopback101       1.101.2.2/32        up           up                65535           
+Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           """
+        },
+        name="show ip int brief",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=170) 
+    assert result == {'IOL1': {'show ip int brief': '\n'
+                                                    '                                                                          Address\n'
+                                                    'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
+                                                    '--------------- ----------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1       10.0.1.4/24       up           up                 1500           \n'
+                                                    'Loopback1       1.1.1.1/24        up           up                65535           \n'
+                                                    'Loopback2       1.1.1.11/24        up           up                65535           \n'
+                                                    'Loopback3       1::1/120        up           up                65535           '},
+                      'IOL2': {'show ip int brief': '\n'
+                                                    '                                                                              Address\n'
+                                                    'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
+                                                    '----------------- ------------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1         10.0.1.5/24         up           up                 1500           \n'
+                                                    'Loopback100       100.12.3.4/22       up           up                65535           \n'
+                                                    'Loopback101       1.101.2.2/32        up           up                65535           \n'
+                                                    'Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           '}}
+# test_iplkp_no_csv_no_dns()
+
+
+
+def test_iplkp_use_dns():
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "iplkp", "use_dns": True}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+                                                                          Address
+Interface       IP Address        Status       Protocol            MTU    Owner  
+--------------- ----------------- ------------ -------------- ----------- -------
+Ethernet1       192.168.3.3/24       up           up                 1500           
+Loopback2       8.8.8.8/24        up           up                65535           
+Loopback3       1::1/120        up           up                65535           """,
+            "IOL2": """
+                                                                              Address
+Interface         IP Address          Status       Protocol            MTU    Owner  
+----------------- ------------------- ------------ -------------- ----------- -------
+Loopback102       2001:4860:4860::8888/128          up           up                65535           """
+        },
+        name="show ip int brief",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=170) 
+    assert result == {'IOL1': {'show ip int brief': '\n'
+                                                    '                                                                          Address\n'
+                                                    'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
+                                                    '--------------- ----------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1       192.168.3.3/24       up           up                 1500           \n'
+                                                    'Loopback2       8.8.8.8(dns.google)/24        up           up                65535           \n'
+                                                    'Loopback3       1::1/120        up           up                65535           '},
+                      'IOL2': {'show ip int brief': '\n'
+                                                    '                                                                              Address\n'
+                                                    'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
+                                                    '----------------- ------------------- ------------ -------------- ----------- -------\n'
+                                                    'Loopback102       2001:4860:4860::8888(dns.google)/128          up           up                65535           '}}
+                      
+# test_iplkp_use_dns()
+
+
+
+def test_iplkp_use_dns_use_csv():
+    csv_table = """
+ip,name
+192.168.3.3,IOL1:Eth1
+1.1.1.1,IOL1:Lo1
+1.1.1.11,IOL1:Lo2
+1::1,IOL1:Lo3
+10.0.1.5,IOL2:Eth1
+1.101.2.2,IOL2:Lo101
+fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
+    """
+    nr_with_dp = nr.with_processors([DataProcessor(
+        [{"fun": "iplkp", "use_dns": True, "use_csv": csv_table}]
+    )])
+    output = nr_with_dp.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+                                                                          Address
+Interface       IP Address        Status       Protocol            MTU    Owner  
+--------------- ----------------- ------------ -------------- ----------- -------
+Ethernet1       192.168.3.3/24       up           up                 1500           
+Loopback2       8.8.8.8/24        up           up                65535           
+Loopback3       1::1/120        up           up                65535           """,
+            "IOL2": """
+                                                                              Address
+Interface         IP Address          Status       Protocol            MTU    Owner  
+----------------- ------------------- ------------ -------------- ----------- -------
+Loopback102       2001:4860:4860::8888/128          up           up                65535           """
+        },
+        name="show ip int brief",
+    )
+    result = ResultSerializer(output)
+    # pprint.pprint(result, width=170) 
+    assert result == {'IOL1': {'show ip int brief': '\n'
+                                                    '                                                                          Address\n'
+                                                    'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
+                                                    '--------------- ----------------- ------------ -------------- ----------- -------\n'
+                                                    'Ethernet1       192.168.3.3(IOL1:Eth1)/24       up           up                 1500           \n'
+                                                    'Loopback2       8.8.8.8(dns.google)/24        up           up                65535           \n'
+                                                    'Loopback3       1::1(IOL1:Lo3)/120        up           up                65535           '},
+                      'IOL2': {'show ip int brief': '\n'
+                                                    '                                                                              Address\n'
+                                                    'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
+                                                    '----------------- ------------------- ------------ -------------- ----------- -------\n'
+                                                    'Loopback102       2001:4860:4860::8888(dns.google)/128          up           up                65535           '}}
+                               
+# test_iplkp_use_dns_use_csv()

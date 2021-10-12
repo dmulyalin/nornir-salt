@@ -247,6 +247,8 @@ import json
 import pprint
 import traceback
 import re
+import csv
+import socket
 
 from fnmatch import fnmatchcase
 from collections import deque
@@ -841,7 +843,7 @@ def xpath(data, expr, rm_ns=False, recover=False, **kwargs):
     return etree.tostring(filtered, pretty_print=True, encoding="utf-8").decode()
 
 
-def key_filter(data, pattern=None, **kwargs):
+def key_filter(data, pattern=None, checks_required=True, **kwargs):
     """
     Reference Name ``key_filter``
 
@@ -853,6 +855,8 @@ def key_filter(data, pattern=None, **kwargs):
         and value is the criteria to check. Default check type is glob case sensitive
         pattern matching.
     :param pattern: (str) pattern to use for filtering
+    :param checks_required: (bool) if True (default) returns empty dictionary if no checks provided, 
+        returns all otherwise
     :return: filtered python dictionary
 
     Default logic is key name must pass **any** of the criteria provided.
@@ -885,7 +889,7 @@ def key_filter(data, pattern=None, **kwargs):
         "nornir_salt:DataProcessor:key_filter running filter checks {}".format(checks)
     )
     # return empty results if no checks
-    if not checks:
+    if not checks and checks_required:
         return {}
 
     return {
@@ -895,7 +899,7 @@ def key_filter(data, pattern=None, **kwargs):
     }
 
 
-def lod_filter(data, pass_all=True, strict=True, **kwargs):
+def lod_filter(data, pass_all=True, strict=True, checks_required=True, **kwargs):
     """
     Reference Name ``lod_filter``
 
@@ -916,6 +920,8 @@ def lod_filter(data, pass_all=True, strict=True, **kwargs):
         checks, if False logic is ANY
     :param strict: (bool) if True (default) invalidates list dictionary item
         if no criteria key found in dictionary
+    :param checks_required: (bool) if True (default) returns empty list if no checks provided, 
+        returns all otherwise
     :return: filtered list of dictionaries
     """
     if not isinstance(data, list):
@@ -931,7 +937,7 @@ def lod_filter(data, pass_all=True, strict=True, **kwargs):
         "nornir_salt:DataProcessor:lod_filter running filter checks {}".format(checks)
     )
     # return empty results if no checks
-    if not checks:
+    if not checks and checks_required:
         return []
 
     # run filtering
@@ -1332,6 +1338,88 @@ def add_commands_from_ttp_template(task, template, **kwargs):
                 if cmd not in task.params["commands"]:
                     task.params["commands"].append(cmd)
 
+def iplkp(
+    data, 
+    use_dns=False, 
+    use_csv=None, 
+    subform="{ip}({lookup})",
+    pattern_ipv4=r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
+    pattern_ipv6=r"(?:[a-fA-F0-9]{1,4}:|:){1,7}(?:[a-fA-F0-9]{1,4}|:?)",
+    **kwargs
+):
+    """
+    Reference name ``iplkp``
+    
+    Function to resolve IPv4 and IPv6 addresses using DNS or CSV lookups
+    and substitute them in original data with lookup results.
+    
+    :param use_dns: (bool) if true use DNS to resolve IP addresses
+    :param use_csv: (str) csv formatted string for lookup
+    :param subform: (str) substitute formatter to use with Python ``format`` function
+        to replace IP addresses, accepts two variables ``ip`` - to hold original IP 
+        addresses value and ``lookup`` for lookup result
+    :param pattern_ipv4: (str) pattern to use to search for IPv4 addresses to replace
+    :param pattern_ipv6: (str) pattern to use to search for IPv6 addresses to replace
+    :return: results with IP addresses being replaced with lookup values
+    """
+    # run sanity checks
+    if not use_dns and not use_csv:
+        return data
+    if not isinstance(data, str):
+        return data
+        
+    ret = data
+    lookup_results = {}
+    
+    # load csv data
+    if use_csv:
+        lookup_data = {
+            row[0]: row[1]
+            for row in csv.reader(iter(use_csv.splitlines()))
+            if len(row) >= 2
+        }
+    
+    # find all IPv4 and IPv6 matches in data
+    ips_v4 = re.findall(pattern_ipv4, data)
+    ips_v6 = re.findall(pattern_ipv6, data)
+    
+    # resolve IP addresses using DNS
+    if use_dns:
+        # lookup IPv4 addresses
+        for ip in ips_v4:
+            try:
+                lookup_results[ip] = socket.gethostbyaddr(ip)[0]    
+            except socket.herror:
+                continue
+        # lookup IPv6 addresses
+        for ip in ips_v6:
+            try:
+                lookup_results[ip] = socket.gethostbyaddr(ip)[0]    
+            except socket.herror:
+                continue
+
+    # resolve IP addresses using CSV data
+    if use_csv:
+        # lookup IPv4 addresses
+        lookup_results.update(
+            {ip: lookup_data[ip] for ip in ips_v4 if ip in lookup_data}
+        )                
+        # lookup IPv6 addresses
+        lookup_results.update(
+            {ip: lookup_data[ip] for ip in ips_v6 if ip in lookup_data}
+        )        
+    
+    # replace IP addresses in original data
+    for ip, lookup in lookup_results.items():
+        # use negative lookahead to avoid "1.1.1.1" matching "1.1.1.11"
+        ret = re.sub(
+            r"{}(?!\d+)".format(re.escape(ip)), 
+            subform.format(ip=ip, lookup=lookup),
+            ret
+        )
+
+    return ret
+    
 
 # --------------------------------------------------------------------------------
 # functions dispatcher dictionary
@@ -1363,6 +1451,7 @@ task_instance_completed_dispatcher_per_task = {
     "xml_flatten": xml_flatten,
     "xml_rm_ns": xml_rm_ns,
     "path": path_,
+    "iplkp": iplkp,
     # parsers
     "parse_ttp": parse_ttp,
 }
