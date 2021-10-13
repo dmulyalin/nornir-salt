@@ -693,40 +693,32 @@ def _check_equal(value, criteria):
 def _check_greater_or_equal(value, criteria):
     # compare integers
     try:
-        int(value)
-        int(criteria)
         return int(value) >= int(criteria)
-    except TypeError:
+    except ValueError:
         return False
 
 
 def _check_greater_than(value, criteria):
     # compare integers
     try:
-        int(value)
-        int(criteria)
         return int(value) > int(criteria)
-    except TypeError:
+    except ValueError:
         return False
 
 
 def _check_less_or_equal(value, criteria):
     # compare integers
     try:
-        int(value)
-        int(criteria)
         return int(value) <= int(criteria)
-    except TypeError:
+    except ValueError:
         return False
 
 
 def _check_less_than(value, criteria):
     # compare integers
     try:
-        int(value)
-        int(criteria)
         return int(value) < int(criteria)
-    except TypeError:
+    except ValueError:
         return False
 
 

@@ -1,6 +1,6 @@
 import setuptools
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __author__ = "Denis Mulyalin"
 
 with open("README.md", "r") as f:
@@ -18,9 +18,10 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     extras_require={},
     classifiers=[
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3",
+        "Topic :: Utilities",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX :: Linux",
     ],
     python_requires=">=3.6",
