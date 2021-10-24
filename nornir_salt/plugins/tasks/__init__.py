@@ -13,6 +13,7 @@ from .http_call import http_call
 from .files import files, file_read, file_list, file_remove, file_diff
 from .connections import connections, conn_close, conn_list
 from .pygnmi_call import pygnmi_call
+from .salt_clear_hcache import salt_clear_hcache
 
 __all__ = (
     "tcp_ping",
@@ -36,4 +37,5 @@ __all__ = (
     "conn_close",
     "conn_list",
     "pygnmi_call",
+    "salt_clear_hcache",
 )

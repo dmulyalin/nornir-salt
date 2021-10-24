@@ -51,7 +51,7 @@ except ImportError:
 CONNECTION_NAME = "scrapli"
 
 
-def scrapli_send_commands(task: Task, commands=[], interval=0.01, **kwargs):
+def scrapli_send_commands(task: Task, commands=[], interval=0.01, new_line_char="_br_", **kwargs):
     """
     Nornir Task function to send show commands to devices using
     ``nornir_scrapli.tasks.send_command`` plugin
@@ -66,6 +66,8 @@ def scrapli_send_commands(task: Task, commands=[], interval=0.01, **kwargs):
 
     :param commands: (list or str) list or multiline string of commands to send to device
     :param interval: (int) interval between sending commands, default 0.01s
+    :param new_line_char: (str) characters to replace in commands with new line ``\n``
+        before sending command to device, default is ``_br_``, useful to simulate enter key
     :param kwargs: (dict) any additional arguments to pass to scrapli send_command
     :return result: Nornir result object with task execution results
     """
@@ -98,9 +100,16 @@ def scrapli_send_commands(task: Task, commands=[], interval=0.01, **kwargs):
     # remove empty lines/commands that can left after rendering
     commands = [c for c in commands if c.strip()]
 
+    # iterate over commands and see if need to add empty line - hit enter
+    commands = [
+        c.replace(new_line_char, "\n") 
+        if new_line_char in c else c 
+        for c in commands
+    ]
+    
     # send commands to device
     for command in commands:
-        task.run(task=send_command, command=command, name=command, **kwargs)
+        task.run(task=send_command, command=command, name=command.strip(), **kwargs)
         time.sleep(interval)
 
     # set skip_results to True, for ResultSerializer to ignore

@@ -57,6 +57,7 @@ def netmiko_send_commands(
     interval=0.01,
     use_ps: bool = False,
     split_lines: bool = True,
+    new_line_char: str = "_br_",
     **kwargs
 ):
     """
@@ -82,6 +83,8 @@ def netmiko_send_commands(
     :param split_lines: (bool) if True (default) - split multiline string to commands,
         if False, send multiline string to device as is; honored only when ``use_ps`` is
         True, ``split_lines`` ignored if ``use_ps`` is False
+    :param new_line_char: (str) characters to replace in commands with new line ``\n``
+        before sending command to device, default is ``_br_``, useful to simulate enter key
     :return result: Nornir result object with task results named after commands
     """
     # run sanity check
@@ -106,7 +109,7 @@ def netmiko_send_commands(
     elif "filename" in task.host.data.get("__task__", {}):
         commands = task.host.data["__task__"]["filename"]
 
-    # normilize commands to a list
+    # normalize commands to a list
     if isinstance(commands, str) and split_lines:
         commands = commands.splitlines()
     elif isinstance(commands, str) and not split_lines:
@@ -115,6 +118,13 @@ def netmiko_send_commands(
     # remove empty lines/commands that can left after rendering
     commands = [c for c in commands if c.strip()]
 
+    # iterate over commands and see if need to add empty line - hit enter
+    commands = [
+        c.replace(new_line_char, "\n") 
+        if new_line_char in c else c 
+        for c in commands
+    ]
+    
     # run commands
     if use_ps:
         # send commands
@@ -122,7 +132,7 @@ def netmiko_send_commands(
             task.run(
                 task=netmiko_send_command_ps,
                 command_string=command,
-                name=command.splitlines()[0],
+                name=command.strip().splitlines()[0],
                 **kwargs
             )
             time.sleep(interval)
@@ -132,7 +142,7 @@ def netmiko_send_commands(
             task.run(
                 task=netmiko_send_command,
                 command_string=command,
-                name=command,
+                name=command.strip(),
                 **kwargs
             )
             time.sleep(interval)

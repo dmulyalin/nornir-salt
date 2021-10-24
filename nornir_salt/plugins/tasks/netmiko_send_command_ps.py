@@ -8,7 +8,7 @@ separated by '\n' newline.
 
 .. image:: ../_images/promptless_mode_v0.1.png
 
-Promptless mode allows to detect end of output from device without relying on timers or 
+Promptless mode allows to detect end of output from device without relying on timers or
 correct prompt matching (hence the name - promptless). This mode still uses pattern to 
 decide if device finished emitting data, but that pattern is not dependent on device's prompt
 regex matching.
@@ -98,28 +98,25 @@ def send_command_ps(
     strip_command=True,
     normalize=True,
     cutoff=0.6,
+    nowait=False,
 ):
-    """Execute command_string_ps on the SSH channel using promptless (ps) approach. Can be used
+    """
+    Execute command_string_ps on the SSH channel using promptless (ps) approach. Can be used
     for any commands, including commands that change prompt. Multiple commands can be sent
     separated by '\n' newline.
-    :param command_string: The command(s) to be executed on the remote device.
-    :type command_string: str
-    :param read_timeout: Timeout in seconds to wait for data from devices, default 30s, if
+    
+    :param command_string: (str) The command(s) to be executed on the remote device.
+    :param read_timeout: (int) Timeout in seconds to wait for data from devices, default 30s, if
         set to -1 will wait indefinitely
-    :type read_timeout: int
-    :param timeout: Timeout in seconds of overall wait, default 120s, if
+    :param timeout: (int) Absolute timeout in seconds of overall wait, default 120s, if
         set to -1 will wait indefinitely
-    :type timeout: int
-    :param inter_loop_sleep: Interval in seconds to sleep between reading loops, default 0.1s
-    :type inter_loop_sleep: int
-    :param initial_sleep: time to sleep after sending command, defailt 0.1s
-    :type initial_sleep: int
-    :param strip_prompt: Remove the trailing router prompt from the output (default: True).
-    :type strip_prompt: bool
-    :param strip_command: Remove the echo of the command from the output (default: True).
-    :type strip_command: bool
-    :param normalize: Ensure the proper enter is sent at end of command (default: True).
-    :type normalize: bool
+    :param inter_loop_sleep: (int) Interval in seconds to sleep between reading loops, default 0.1s
+    :param initial_sleep: (int) time to sleep after sending command, default 0.1s
+    :param strip_prompt: (bool) Remove the trailing router prompt from the output (default: True).
+    :param strip_command: (bool) Remove the echo of the command from the output (default: True).
+    :param normalize: (bool) Ensure the proper enter is sent at end of command (default: True).
+    :param nowait: (bool) Default is False, if True sends command and returns immediately without 
+        waiting for prompt right after ``initial_sleep`` timer elapsed.
     """
     data_received = ""
     previous_last_line = ""
@@ -145,6 +142,10 @@ def send_command_ps(
     # initial sleep
     time.sleep(initial_sleep)
 
+    # check if need to return immediately after sending commands
+    if nowait:
+        return "DONE"
+        
     # Main loop to get output from device
     while True:
         if read_timeout != -1 and no_data_elapsed > read_timeout:

@@ -40,6 +40,7 @@ from .plugins.tasks import connections, conn_close, conn_list
 from .plugins.tasks import ncclient_call
 from .plugins.tasks import scrapli_netconf_call
 from .plugins.tasks import pygnmi_call
+from .plugins.tasks import salt_clear_hcache
 
 # connections plugins
 from .plugins.connections import NcclientPlugin
@@ -88,4 +89,5 @@ __all__ = (
     "PyGNMIPlugin",
     "pygnmi_call",
     "DataProcessor",
+    "salt_clear_hcache",
 )
