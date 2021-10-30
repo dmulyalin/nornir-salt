@@ -146,4 +146,4 @@ Cisco IOS XE Software, Version {{ iose_xe_version }}
     assert "facts" in dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][1]
     assert len(dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][0]["arp_cache"]) > 0
     
-# test_run_ttp_docs()
+test_run_ttp_docs()

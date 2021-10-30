@@ -41,6 +41,7 @@ from .plugins.tasks import ncclient_call
 from .plugins.tasks import scrapli_netconf_call
 from .plugins.tasks import pygnmi_call
 from .plugins.tasks import salt_clear_hcache
+from .plugins.tasks import napalm_send_commands
 
 # connections plugins
 from .plugins.connections import NcclientPlugin
@@ -90,4 +91,5 @@ __all__ = (
     "pygnmi_call",
     "DataProcessor",
     "salt_clear_hcache",
+    "napalm_send_commands",
 )

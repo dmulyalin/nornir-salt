@@ -93,6 +93,8 @@ DataProcessor Functions help to process results after task completed.
      - List of Dictionaries (LOD) filter function
    * - `match`_
      - Search for regex pattern in devices output
+   * - `ntfsm`_
+     - Pase show commands output using TextFSM ntc-templates
    * - `parse_ttp`_
      - Parses text output from device into structured data
    * - `path`_
@@ -225,6 +227,10 @@ Parse functions
 
 Produce structured data out of text by parsing it.
 
+ntfsm
++++++
+.. autofunction:: nornir_salt.plugins.processors.DataProcessor.ntfsm
+
 parse_ttp
 +++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.parse_ttp
@@ -298,6 +304,16 @@ except ImportError:
     HAS_TTP = False
 
 try:
+    from ttp_templates import parse_output as ttp_templates_parse_output
+    
+    HAS_TTP_TEMPLATES = True
+except ImportError:
+    log.warning(
+        "nornir_salt:DataProcessor failed import TTP library, install: pip install ttp"
+    )
+    HAS_TTP_TEMPLATES = False
+    
+try:
     import jmespath as jmespath_lib
 
     HAS_JMESPATH = True
@@ -307,7 +323,16 @@ except ImportError:
     )
     HAS_JMESPATH = False
 
+try:
+    from ntc_templates.parse import parse_output as ntc_templates_parse_output
 
+    HAS_NTFSM = True
+except ImportError:
+    log.warning(
+        "nornir_salt:DataProcessor failed import TextFSM ntc-templates, install: pip install ntc_templates"
+    )
+    HAS_NTFSM = False
+    
 # --------------------------------------------------------------------------------
 # formatters functions: transform structured data to json, yaml etc. text
 # --------------------------------------------------------------------------------
@@ -1115,7 +1140,14 @@ def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
 # --------------------------------------------------------------------------------
 
 
-def parse_ttp(data: str, template: str, ttp_kwargs={}, res_kwargs={}, **kwargs):
+def parse_ttp(
+    result: Result,
+    task: Task,
+    host,
+    template: str = None, 
+    ttp_kwargs={}, 
+    res_kwargs={}, 
+):
     """
     Reference name ``parse_ttp``
 
@@ -1123,33 +1155,80 @@ def parse_ttp(data: str, template: str, ttp_kwargs={}, res_kwargs={}, **kwargs):
 
     Function to parse text output from device and return structured data
 
-    :param data: (str) string to parse
+    :param result: (obj) Nornir Result object
+    :param task: (obj) Nornir Task object
+    :param task: (obj) Nornir Host object
     :param template: (str) TTP template string or reference to ``ttp://`` templates
     :param ttp_kwargs: (dict) dictionary to use while instantiating TTP parse object
+        or to source ``ttp_variables`` argument for ``ttp_templates parse_output`` method
     :param res_kwargs: (dict) dictionary to use with ``result`` method
+        or to source ``structure`` argument for ``ttp_templates parse_output`` method
     :return: parsed structure
+    
+    If no template provided uses ``ttp_templates`` rpeository to source the template
+    based on host platform and CLI command string. In such a case to determine cli 
+    command to properly form TTP template name, task/subtask that produced Result 
+    object must use CLI command string as a name. For example::
+    
+        from nornir import InitNornir
+        from nornir_netmiko import netmiko_send_command
+        from nornir_salt import DataProcessor
+    
+        nr = InitNornir(config_file="config.yaml")
+    
+        nr_with_processor = nr.with_processors([
+            DataProcessor([
+                {
+                    "fun": "parse_ttp", "res_kwargs": {"structure": "flat_list"}
+                }
+            ])
+        ])
+    
+        nr_with_processor.run(
+            task=netmiko_send_command,
+            command_string="show version",
+            name="show version",
+        )
     """
     if not HAS_TTP:
         log.warning("nornir_salt:DataProcessor:parse_ttp failed import TTP library")
-        return data
+        return 
 
-    if isinstance(data, str):
-        # do parsing
-        parser = ttp(data, template, **ttp_kwargs)
-        parser.parse(one=True)
-
-        return parser.result(**res_kwargs)
-    else:
+    if not isinstance(result.result, str):
         log.warning(
-            "nornir_salt:DataProcessor:parse_ttp skipping, data is not string but {}".format(
-                type(data)
+            "nornir_salt:DataProcessor:parse_ttp skipping, result is not string but {}".format(
+                type(result.result)
             )
         )
-        return data
-
+        return 
+    
+    # do parsing
+    if template:
+        parser = ttp(result.result, template, **ttp_kwargs)
+        parser.parse(one=True)
+        result.result = parser.result(**res_kwargs)
+    elif HAS_TTP_TEMPLATES:
+        result.result = ttp_templates_parse_output(
+            data=result.result,
+            platform=host.platform,
+            command=result.name,
+            structure=res_kwargs.get("structure", "list"),
+            template_vars=ttp_kwargs.get("vars", {}),
+        )
+    else:
+        log.error(
+            "nornir_salt:DataProcessor:parse_ttp template not provided and ttp_templates not found, do nothing"
+        )
+        
 
 def run_ttp(
-    data, template, ttp_kwargs={}, res_kwargs={}, task=None, remove_tasks=True, **kwargs
+    data: MultiResult, 
+    template: str, 
+    ttp_kwargs={}, 
+    res_kwargs={}, 
+    task: Task=None, 
+    remove_tasks=True, 
+    **kwargs,
 ):
     """
     Reference name ``run_ttp``
@@ -1165,9 +1244,8 @@ def run_ttp(
     :param res_kwargs: (dict) dictionary to use with ``result`` method
     :param remove_tasks: (bool) if set to True and data is MultiResult object will remove
         other task results
-    :param task: (obj) Nornir Task object, used to form parsing results when data is
-        MultiResult object
-    :return: parsed structure
+    :param task: (obj) Nornir Task object, used to form parsing results
+    :return: Nothing, add parsing results to provided MultiResult object
 
     Provided Nornir MultiResult object processed by sorting task results across TTP
     Template inputs to parse. After parsing, all other tasks' results removed from
@@ -1229,68 +1307,124 @@ def run_ttp(
     """
     if not HAS_TTP:
         log.warning("nornir_salt:DataProcessor:parse_ttp failed import TTP library")
-        return data
+        return
+    
+    if not isinstance(data, MultiResult):
+        log.warning(
+            "nornir_salt:DataProcessor:run_ttp skipping, data is not MultiResult but {}".format(
+                type(data)
+            )
+        )
+        return
+    
+    parser = ttp(template=template, **ttp_kwargs)
+    ttp_inputs_load = parser.get_input_load()
 
-    if isinstance(data, MultiResult):
-        parser = ttp(template=template, **ttp_kwargs)
-        ttp_inputs_load = parser.get_input_load()
-
-        # go over template's inputs and add output from devices
-        for template_name, inputs in ttp_inputs_load.items():
-            # if no inputs defined, add all to default input
-            if not inputs:
-                default_input_data = []
+    # go over template's inputs and add output from devices
+    for template_name, inputs in ttp_inputs_load.items():
+        # if no inputs defined, add all to default input
+        if not inputs:
+            default_input_data = []
+            for i in data:
+                # check if need to skip this task
+                if hasattr(i, "skip_results") and i.skip_results is True:
+                    continue
+                if isinstance(i.result, str):
+                    default_input_data.append(i.result)
+            if default_input_data:
+                parser.add_input(
+                    data="\n".join(default_input_data),
+                    input_name="Default_Input",
+                    template_name=template_name,
+                )
+        # sort results across inputs with commands
+        else:
+            for input_name, input_params in inputs.items():
+                commands = input_params.get("commands", [])
+                input_data = []
                 for i in data:
                     # check if need to skip this task
                     if hasattr(i, "skip_results") and i.skip_results is True:
                         continue
-                    if isinstance(i.result, str):
-                        default_input_data.append(i.result)
-                if default_input_data:
+                    if i.name in commands and isinstance(i.result, str):
+                        input_data.append(i.result)
+                if input_data:
                     parser.add_input(
-                        data="\n".join(default_input_data),
-                        input_name="Default_Input",
+                        data="\n".join(input_data),
+                        input_name=input_name,
                         template_name=template_name,
                     )
-            # sort results across inputs with commands
-            else:
-                for input_name, input_params in inputs.items():
-                    commands = input_params.get("commands", [])
-                    input_data = []
-                    for i in data:
-                        # check if need to skip this task
-                        if hasattr(i, "skip_results") and i.skip_results is True:
-                            continue
-                        if i.name in commands and isinstance(i.result, str):
-                            input_data.append(i.result)
-                    if input_data:
-                        parser.add_input(
-                            data="\n".join(input_data),
-                            input_name=input_name,
-                            template_name=template_name,
-                        )
 
-        # run parsing in single process
-        parser.parse(one=True)
+    # run parsing in single process
+    parser.parse(one=True)
 
-        # remove other task results
-        if remove_tasks:
-            while data:
-                _ = data.pop()
+    # remove other task results
+    if remove_tasks:
+        while data:
+            _ = data.pop()
 
-        # add parsing results
-        data.append(
-            Result(host=task.host, result=parser.result(**res_kwargs), name="run_ttp")
+    # add parsing results
+    data.append(
+        Result(host=task.host, result=parser.result(**res_kwargs), name="run_ttp")
+    )
+
+
+    
+def ntfsm(result: Result, task: Task, host, **kwargs):
+    """
+    Reference name ``ntfsm``
+
+    This function performs CLI show comamnds output parsing using 
+    `TextFSM ntc-templates <https://github.com/networktocode/ntc-templates>`_.
+
+    :param result: (obj) Nornir Result object
+    :param task: (obj) Nornir Task object 
+    :param host: (obj) Nornir Host object
+    :returns: Nothing, modifies provided Result object to save parsing results
+    
+    If no such a template available to parse show command output, ntc-templates
+    ``parse_output`` method return empty list.
+    
+    For this function to determine cli command to properly form TextFSM template
+    name, task/subtask that produced Result object must use cli command string 
+    as a name. For example::
+    
+        from nornir import InitNornir
+        from nornir_netmiko import netmiko_send_command
+        from nornir_salt import DataProcessor
+    
+        nr = InitNornir(config_file="config.yaml")
+    
+        nr_with_processor = nr.with_processors([
+            DataProcessor([{"fun": "ntfsm"}])
+        ])
+    
+        nr_with_processor.run(
+            task=netmiko_send_command,
+            command_string="show version",
+            name="show version",
         )
-    else:
+    """
+    # do sanity checks
+    if not HAS_NTFSM:
+        log.warning("nornir_salt:DataProcessor:ntfsm failed import ntc-templates library")
+        return         
+    if not isinstance(result, Result):
         log.warning(
-            "nornir_salt:DataProcessor:parse_ttp skipping, data is not MultiResult but {}".format(
-                type(data)
+            "nornir_salt:DataProcessor:ntfsm skipping, data is not Result but {}".format(
+                type(result)
             )
         )
-        return data
-
-
+        return       
+    
+    # parse output
+    result.result = ntc_templates_parse_output(
+        platform=host.platform, 
+        command=result.name, 
+        data=result.result,
+    )
+        
+   
 # --------------------------------------------------------------------------------
 # misc
 # --------------------------------------------------------------------------------
@@ -1417,7 +1551,9 @@ def iplkp(
 # functions dispatcher dictionary
 # --------------------------------------------------------------------------------
 
-task_instance_completed_dispatcher_per_task = {
+task_instance_completed_dispatcher_per_result_data = {
+    # functions in this dictionary get task result data and kwargs
+    # 
     # formatters - structured data to text
     "to_str": to_str,
     "to_json": to_json,
@@ -1444,13 +1580,21 @@ task_instance_completed_dispatcher_per_task = {
     "xml_rm_ns": xml_rm_ns,
     "path": path_,
     "iplkp": iplkp,
-    # parsers
-    "parse_ttp": parse_ttp,
 }
 
 task_instance_completed_dispatcher_multiresult = {
+    # functions in this dictionary get MultiResult object and kwargs
+    # 
     # parsers
     "run_ttp": run_ttp,
+}
+
+task_instance_completed_dispatcher_per_result = {
+    # functions in this dictionary get Result, Task, Host objects and kwargs
+    # 
+    # parsers    
+    "ntfsm": ntfsm,    
+    "parse_ttp": parse_ttp,
 }
 
 task_started_dispatcher = {
@@ -1550,18 +1694,18 @@ class DataProcessor:
                         )
                     except:
                         log.exception(
-                            "nornir-salt:DataProcessor host '{}' function '{}' all-task error".format(
+                            "nornir-salt:DataProcessor host '{}' function '{}' per-multiresult error".format(
                                 host.name, fun
                             )
                         )
-                elif fun in task_instance_completed_dispatcher_per_task:
+                elif fun in task_instance_completed_dispatcher_per_result_data:
                     for i in result:
                         try:
                             # check if need to skip this task
                             if hasattr(i, "skip_results") and i.skip_results is True:
                                 continue
                             # pass task result through dp function
-                            i.result = task_instance_completed_dispatcher_per_task[fun](
+                            i.result = task_instance_completed_dispatcher_per_result_data[fun](
                                 i.result, **dp_dict_copy
                             )
                         except:
@@ -1571,6 +1715,23 @@ class DataProcessor:
                                     host.name, fun
                                 )
                             )
+                elif fun in task_instance_completed_dispatcher_per_result:
+                    for i in result:
+                        try:
+                            # check if need to skip this task
+                            if hasattr(i, "skip_results") and i.skip_results is True:
+                                continue
+                            # pass task result through dp function
+                            task_instance_completed_dispatcher_per_result[fun](
+                                result=i, task=task, host=host, **dp_dict_copy
+                            )
+                        except:
+                            i.exception = traceback.format_exc()
+                            log.exception(
+                                "nornir-salt:DataProcessor host '{}' function '{}' per-result error".format(
+                                    host.name, fun
+                                )
+                            )                    
                 else:
                     raise KeyError(fun)
             except:

@@ -2,15 +2,27 @@
 scrapli_send_commands
 #####################
 
-This test plugin uses ``nornir-scrapli`` ``send_command`` task
-to send multiple commands to devices.
+This plugin uses ``nornir-scrapli`` ``send_command`` task to send multiple commands 
+to devices pre-processing commands accordingly.
+
+Pre-processing includes:
+
+- Check and if any - retrieve per-host commands from host's inventory data 
+  ``task.host.data["__task__"]["commands"]`` or from ``task.host.data["__task__"]["filename"]``
+- If command is a multi-line string, split it to individual lines or form a list with single command
+- Iterate over commands list and remove empty strings
+- Iterate over commands and replace ``new_line_char`` with ``\\n`` new line
+
+Next, commands send one by one to device using ``send_command`` task plugin,
+each task named after the command being sent. Sleep for given ``interval`` between
+sending commands.
 
 Dependencies:
 
 * `nornir-scrapli module <https://pypi.org/project/nornir-scrapli/>`_ required
 
-scrapli_send_commands sample usage
-==================================
+Sample Usage
+============
 
 Code to invoke ``scrapli_send_commands`` task::
 
@@ -21,18 +33,14 @@ Code to invoke ``scrapli_send_commands`` task::
 
     output = nr.run(
         task=scrapli_send_commands,
-        commands=["show run", "show clock"],
-        scrapli_kwargs={}
+        commands=["show run", "show clock"]
     )
 
-scrapli_send_commands returns
-=============================
+Task scrapli_send_commands returns Nornir results object with individual tasks 
+names set equal to commands sent to device.
 
-Returns Nornir results object with individual tasks names set
-equal to commands sent to device.
-
-scrapli_send_commands reference
-===============================
+API Reference
+=============
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_send_commands.scrapli_send_commands
 """
@@ -66,7 +74,7 @@ def scrapli_send_commands(task: Task, commands=[], interval=0.01, new_line_char=
 
     :param commands: (list or str) list or multiline string of commands to send to device
     :param interval: (int) interval between sending commands, default 0.01s
-    :param new_line_char: (str) characters to replace in commands with new line ``\n``
+    :param new_line_char: (str) characters to replace in commands with new line ``\\n``
         before sending command to device, default is ``_br_``, useful to simulate enter key
     :param kwargs: (dict) any additional arguments to pass to scrapli send_command
     :return result: Nornir result object with task execution results

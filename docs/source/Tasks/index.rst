@@ -10,6 +10,7 @@ Task plugins define tasks to run against hosts. Reference `documentation <https:
    files
    http_call
    napalm_configure
+   napalm_send_commands
    ncclient_call
    netmiko_send_command_ps
    netmiko_send_commands

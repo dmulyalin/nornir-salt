@@ -2,11 +2,20 @@
 netmiko_send_config
 ###################
 
-This task plugin uses ``nornir-netmiko`` ``netmiko_send_config`` task
-to configuration commands to devices over SSH or Telnet.
+This task plugin relies on ``nornir-netmiko`` ``netmiko_send_config`` task
+to send configuration commands to devices over SSH or Telnet using Netmiko.
 
-``netmiko_send_config`` exists as part of ``nornir_salt`` repository to facilitate 
-per-host configuration rendering performed by SALT prior to running the task.
+This task plugin applies device configuration following this sequence:
+
+- Retrieve and use, if any, per-host configuration redered by SaltStack from host's
+  inventory data ``task.host.data["__task__"]["commands"]`` or 
+  ``task.host.data["__task__"]["filename"]`` locations, use configuration provided
+  by ``config`` argument otherwise
+- If confgiuration is a multiline string, split it to a list of commands
+- Push configuration commands to device using ``netmiko_send_config`` task
+- If ``commit`` argument provided, perform configuration commit if device supports it
+- If ``commit_final_delay`` argument provided, wait for a given timer and perform final commit
+- Exit device configuration mode and return configuration results
 
 Dependencies:
 
@@ -37,6 +46,7 @@ netmiko_send_config reference
 """
 import logging
 import traceback
+import time
 from nornir.core.task import Result, Task
 
 try:
@@ -49,7 +59,13 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def netmiko_send_config(task: Task, config=None, commit=True, **kwargs):
+def netmiko_send_config(
+    task: Task, 
+    config=None, 
+    commit=True, 
+    commit_final_delay=0,
+    **kwargs
+):
     """
     Salt-nornir Task function to send configuration to devices using
     ``nornir_netmiko.tasks.netmiko_send_config`` plugin.
@@ -59,7 +75,9 @@ def netmiko_send_config(task: Task, config=None, commit=True, **kwargs):
     :param config: (str or list) configuration string or list of commands to send to device
     :param commit: (bool or dict) by default commit is ``True``, as a result host
         connection commit method will be called. If ``commit`` argument is a
-        dictionary, it will be supplied to commit call using ``**commit``.
+        dictionary, it will be supplied to connection's commit method call as ``**commit``.
+    :param commit_final_delay: (int) time to wait before doing final commit, can be used in
+        conjunction with commit confirm feature if device supports it.
     :param kwargs: any additional ``**kwargs`` for ``netmiko_send_config`` function.
     :return result: Nornir result object with task execution results
 
@@ -76,7 +94,8 @@ def netmiko_send_config(task: Task, config=None, commit=True, **kwargs):
         )
 
     kwargs.setdefault("cmd_verify", False)
-
+    commit_final_delay = int(commit_final_delay)
+    
     # get configuration from host data if any
     if "commands" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["commands"]
@@ -103,6 +122,10 @@ def netmiko_send_config(task: Task, config=None, commit=True, **kwargs):
         commit = commit if isinstance(commit, dict) else {}
         try:
             conn.commit(**commit)
+            # check if need to do second commit
+            if commit_final_delay:
+                time.sleep(commit_final_delay)
+                conn.commit()
         except AttributeError:
             pass
         except:

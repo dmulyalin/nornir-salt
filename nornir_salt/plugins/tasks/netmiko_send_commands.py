@@ -83,7 +83,7 @@ def netmiko_send_commands(
     :param split_lines: (bool) if True (default) - split multiline string to commands,
         if False, send multiline string to device as is; honored only when ``use_ps`` is
         True, ``split_lines`` ignored if ``use_ps`` is False
-    :param new_line_char: (str) characters to replace in commands with new line ``\n``
+    :param new_line_char: (str) characters to replace in commands with new line ``\\n``
         before sending command to device, default is ``_br_``, useful to simulate enter key
     :return result: Nornir result object with task results named after commands
     """
