@@ -7,7 +7,7 @@ to send configuration commands to devices over SSH or Telnet.
 
 This task plugin applies device configuration following this sequence:
 
-- Retrieve and use, if any, per-host configuration redered by SaltStack from host's
+- Retrieve and use, if any, per-host configuration rendered by SaltStack from host's
   inventory data ``task.host.data["__task__"]["commands"]`` or 
   ``task.host.data["__task__"]["filename"]`` locations, use configuration provided
   by ``config`` argument otherwise

@@ -81,6 +81,8 @@ DataProcessor Functions help to process results after task completed.
      - Flattens python dictionary and filters its keys using `key_filter`_
    * - `flatten`_
      - Turn a nested structure into a flattened dictionary
+   * - `iplkp`_
+     - Replaces IPv4 and IPv6 addresses in commands output with looked up values from CSV file or DNS
    * - `jmespath`_
      - Query JSON string or structured data using JMESPath library
    * - `key_filter`_
@@ -247,6 +249,10 @@ Various functions with miscellaneous or utility purpose.
 add_commands_from_ttp_template
 ++++++++++++++++++++++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.add_commands_from_ttp_template
+
+iplkp
+++++++++++++++++++++++++++++++
+.. autofunction:: nornir_salt.plugins.processors.DataProcessor.iplkp
 """
 import logging
 import json
