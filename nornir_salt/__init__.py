@@ -42,17 +42,20 @@ from .plugins.tasks import scrapli_netconf_call
 from .plugins.tasks import pygnmi_call
 from .plugins.tasks import salt_clear_hcache
 from .plugins.tasks import napalm_send_commands
+from .plugins.tasks import sleep
 
 # connections plugins
 from .plugins.connections import NcclientPlugin
 from .plugins.connections import HTTPPlugin
 from .plugins.connections import PyGNMIPlugin
+from .plugins.connections import ConnectionsPool
 
 # processors plugins
 from .plugins.processors import ToFileProcessor
 from .plugins.processors import TestsProcessor
 from .plugins.processors import DiffProcessor
 from .plugins.processors import DataProcessor
+from .plugins.processors import SaltEventProcessor
 
 __all__ = (
     "ResultSerializer",
@@ -92,4 +95,7 @@ __all__ = (
     "DataProcessor",
     "salt_clear_hcache",
     "napalm_send_commands",
+    "ConnectionsPool",
+    "sleep",
+    "SaltEventProcessor",
 )

@@ -59,7 +59,9 @@ except ImportError:
 CONNECTION_NAME = "scrapli"
 
 
-def scrapli_send_commands(task: Task, commands=[], interval=0.01, new_line_char="_br_", **kwargs):
+def scrapli_send_commands(
+    task: Task, commands=[], interval=0.01, new_line_char="_br_", **kwargs
+):
     """
     Nornir Task function to send show commands to devices using
     ``nornir_scrapli.tasks.send_command`` plugin
@@ -110,11 +112,9 @@ def scrapli_send_commands(task: Task, commands=[], interval=0.01, new_line_char=
 
     # iterate over commands and see if need to add empty line - hit enter
     commands = [
-        c.replace(new_line_char, "\n") 
-        if new_line_char in c else c 
-        for c in commands
+        c.replace(new_line_char, "\n") if new_line_char in c else c for c in commands
     ]
-    
+
     # send commands to device
     for command in commands:
         task.run(task=send_command, command=command, name=command.strip(), **kwargs)

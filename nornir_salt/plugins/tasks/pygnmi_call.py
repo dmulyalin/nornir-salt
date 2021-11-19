@@ -154,14 +154,14 @@ def _call_update(connection, path: list, **kwargs):
     :param connection: (obj) ``gNMIclient`` object
     :param path: (list) list with single item - path to element to update config for
     :param kwargs: (dict) configuration parameters to update
-    
+
     Sample code to run ``replace`` function task::
-    
+
         from nornir import InitNornir
         from nornir_salt import pygnmi_call
-    
+
         nr = InitNornir(config_file="config.yaml")
-        
+
         output = nr.run(
             task=pygnmi_call,
             call="update",
@@ -186,14 +186,14 @@ def _call_replace(connection, path: list, **kwargs):
     :param connection: (obj) ``gNMIclient`` object
     :param path: (list) list with single item - path to element to update config for
     :param kwargs: (dict) configuration parameters to replace
-    
+
     Sample code to run ``replace`` function task::
-    
+
         from nornir import InitNornir
         from nornir_salt import pygnmi_call
-    
+
         nr = InitNornir(config_file="config.yaml")
-        
+
         output = nr.run(
             task=pygnmi_call,
             call="replace",
@@ -216,14 +216,14 @@ def _call_delete(connection, path: list, **kwargs):
 
     :param connection: (obj) ``gNMIclient`` object
     :param path: (list) path items to delete
-    
+
     Sample code to run ``delete`` function task::
-    
+
         from nornir import InitNornir
         from nornir_salt import pygnmi_call
-    
+
         nr = InitNornir(config_file="config.yaml")
-        
+
         output = nr.run(
             task=pygnmi_call,
             call="delete",
@@ -242,12 +242,12 @@ def pygnmi_call(task: Task, call: str, name_arg: str = None, **kwargs) -> Result
     :param arg: (list) any ``*args`` to use with call method
     :param kwargs: (dict) any ``**kwargs`` to use with call method
     :param name_arg: (str) used as "name" argument with call method, need it
-        only because "name" argument used by "Nornir.run" method itself ans collides 
+        only because "name" argument used by "Nornir.run" method itself ans collides
         with the case when need to pass gNMI path ``name`` argument to this task
-        
+
     Special handling given to ``path``, ``delete``, ``replace`` and
     ``updated`` kwargs arguments to comply with ``gNMIclient`` requirements:
-    
+
     1. If ``path`` is a string, convert it to a list splitting it by ``,`` character
     2. If ``delete`` is a string, convert it to a list splitting it by ``,`` character
     3. If ``replace`` is a list, transform each list item to a tuple

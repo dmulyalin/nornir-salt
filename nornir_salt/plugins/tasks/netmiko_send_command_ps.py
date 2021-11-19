@@ -1,6 +1,6 @@
 """
 netmiko_send_command_ps
-########################
+#######################
 
 Send command string to device using promptless (ps) approach. Can be used for any 
 command, including commands that change device prompt. Multiple commands can be sent
@@ -103,8 +103,8 @@ def send_command_ps(
     """
     Execute command_string_ps on the SSH channel using promptless (ps) approach. Can be used
     for any commands, including commands that change prompt. Multiple commands can be sent
-    separated by '\n' newline.
-    
+    separated by '\\n' newline.
+
     :param command_string: (str) The command(s) to be executed on the remote device.
     :param read_timeout: (int) Timeout in seconds to wait for data from devices, default 30s, if
         set to -1 will wait indefinitely
@@ -115,7 +115,7 @@ def send_command_ps(
     :param strip_prompt: (bool) Remove the trailing router prompt from the output (default: True).
     :param strip_command: (bool) Remove the echo of the command from the output (default: True).
     :param normalize: (bool) Ensure the proper enter is sent at end of command (default: True).
-    :param nowait: (bool) Default is False, if True sends command and returns immediately without 
+    :param nowait: (bool) Default is False, if True sends command and returns immediately without
         waiting for prompt right after ``initial_sleep`` timer elapsed.
     """
     data_received = ""
@@ -145,7 +145,7 @@ def send_command_ps(
     # check if need to return immediately after sending commands
     if nowait:
         return "DONE"
-        
+
     # Main loop to get output from device
     while True:
         if read_timeout != -1 and no_data_elapsed > read_timeout:

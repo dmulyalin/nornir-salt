@@ -2,8 +2,8 @@
 netmiko_send_config
 ###################
 
-This task plugin relies on ``nornir-netmiko`` ``netmiko_send_config`` task
-to send configuration commands to devices over SSH or Telnet using Netmiko.
+This task plugin relies on ``Netmiko`` conection ``send_config_set`` method
+to send configuration commands to devices over SSH or Telnet.
 
 This task plugin applies device configuration following this sequence:
 
@@ -11,8 +11,10 @@ This task plugin applies device configuration following this sequence:
   inventory data ``task.host.data["__task__"]["commands"]`` or 
   ``task.host.data["__task__"]["filename"]`` locations, use configuration provided
   by ``config`` argument otherwise
-- If confgiuration is a multiline string, split it to a list of commands
-- Push configuration commands to device using ``netmiko_send_config`` task
+- If configuration is a multi-line string, split it to a list of commands
+- Check if device in enable mode, if not enter device enabled mode if device supports it
+- Push configuration commands to device using ``send_config_set`` Netmiko connection's method,
+  if ``batch`` argument given, pushes commands in batches
 - If ``commit`` argument provided, perform configuration commit if device supports it
 - If ``commit_final_delay`` argument provided, wait for a given timer and perform final commit
 - Exit device configuration mode and return configuration results
@@ -60,10 +62,12 @@ log = logging.getLogger(__name__)
 
 
 def netmiko_send_config(
-    task: Task, 
-    config=None, 
-    commit=True, 
+    task: Task,
+    config=None,
+    commit=True,
     commit_final_delay=0,
+    batch=0,
+    enable=True,
     **kwargs
 ):
     """
@@ -78,12 +82,19 @@ def netmiko_send_config(
         dictionary, it will be supplied to connection's commit method call as ``**commit``.
     :param commit_final_delay: (int) time to wait before doing final commit, can be used in
         conjunction with commit confirm feature if device supports it.
-    :param kwargs: any additional ``**kwargs`` for ``netmiko_send_config`` function.
+    :param kwargs: (dict) any additional ``**kwargs`` for ``netmiko_send_config`` function.
+    :param batch: (int) commands count to send in batches, sends all at once by default
+    :param enable: (bool) if True (default), attempts to enter enable-mode
     :return result: Nornir result object with task execution results
 
     Default parameters supplied to ``netmiko_send_config`` function call::
 
         cmd_verify: False
+        exit_config_mode: False if batch provided else unmodified
+
+    Batch mode controlled by ``batch`` parameter, by default all configuration commands send
+    at once, but that approach might lead to Netmio timeout errors if device takes too long
+    to respond, sending commands in batches helps to overcome that problem.
     """
     # run sanity check
     if not HAS_NETMIKO:
@@ -92,30 +103,42 @@ def netmiko_send_config(
             failed=True,
             exception="No nornir_netmiko found, is it installed?",
         )
+    if kwargs.get("dry_run"):
+        raise ValueError("netmiko_send_config does not support dry_run")
 
+    task.name = "netmiko_send_config"
     kwargs.setdefault("cmd_verify", False)
     commit_final_delay = int(commit_final_delay)
-    
+    batch = max(0, int(batch))
+    task_result = Result(host=task.host, result=[], changed=True)
+    conn = task.host.get_connection("netmiko", task.nornir.config)
+
     # get configuration from host data if any
     if "commands" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["filename"]
 
-    # transform configuration to list if string given
+    # transform configuration to a list if string given
     if isinstance(config, str):
         config = config.splitlines()
 
-    # push config to device
-    task.run(
-        task=nornir_netmiko_send_config,
-        config_commands=config,
-        name="netmiko_send_config",
-        **kwargs
-    )
+    # enter enable mode
+    if enable and conn.check_enable_mode() is False:
+        conn.enable()
 
-    # get connection object to work with
-    conn = task.host.get_connection("netmiko", task.nornir.config)
+    # push config to device in batches
+    if batch:
+        kwargs["exit_config_mode"] = False
+        for i in range(0, len(config), batch):
+            chunk = config[i : i + batch]
+            task_result.result.append(
+                conn.send_config_set(config_commands=chunk, **kwargs)
+            )
+        task_result.result = "\n".join(task_result.result)
+    # push config all at once
+    else:
+        task_result.result = conn.send_config_set(config_commands=config, **kwargs)
 
     # check if need to commit
     if commit:
@@ -131,14 +154,12 @@ def netmiko_send_config(
         except:
             tb = traceback.format_exc()
             log.error("nornir-salt:netmiko_send_config commit error\n{}".format(tb))
-            for task_result in task.results:
-                task_result.failed = True
-                task_result.exception = tb
+            task_result.failed = True
+            task_result.exception = tb
+            task_result.chaned = False
 
     # check if need to exit configuration mode
     if conn.check_config_mode():
         conn.exit_config_mode()
 
-    # set skip_results to True, for ResultSerializer to ignore
-    # results for grouped task itself, which are usually None
-    return Result(host=task.host, skip_results=True)
+    return task_result

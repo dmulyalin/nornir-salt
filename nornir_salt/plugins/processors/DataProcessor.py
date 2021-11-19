@@ -268,7 +268,7 @@ try:
 
     HAS_YAML = True
 except ImportError:
-    log.warning(
+    log.debug(
         "nornir_salt:DataProcessor failed import YAML library, install: pip install pyyaml"
     )
     HAS_YAML = False
@@ -278,7 +278,7 @@ try:
 
     HAS_XMLTODICT = True
 except ImportError:
-    log.warning(
+    log.debug(
         "nornir_salt:DataProcessor failed import xmltodict library, install: pip install xmltodict"
     )
     HAS_XMLTODICT = False
@@ -288,7 +288,7 @@ try:
 
     HAS_LXML = True
 except ImportError:
-    log.warning(
+    log.debug(
         "nornir_salt:DataProcessor failed import LXML library, install: pip install lxml"
     )
     HAS_LXML = False
@@ -298,27 +298,27 @@ try:
 
     HAS_TTP = True
 except ImportError:
-    log.warning(
+    log.debug(
         "nornir_salt:DataProcessor failed import TTP library, install: pip install ttp"
     )
     HAS_TTP = False
 
 try:
     from ttp_templates import parse_output as ttp_templates_parse_output
-    
+
     HAS_TTP_TEMPLATES = True
 except ImportError:
-    log.warning(
-        "nornir_salt:DataProcessor failed import TTP library, install: pip install ttp"
+    log.debug(
+        "nornir_salt:DataProcessor failed import TTP templates library, install: pip install ttp_templates"
     )
     HAS_TTP_TEMPLATES = False
-    
+
 try:
     import jmespath as jmespath_lib
 
     HAS_JMESPATH = True
 except ImportError:
-    log.warning(
+    log.debug(
         "nornir_salt:DataProcessor failed import jmespath library, install: pip install jmespath"
     )
     HAS_JMESPATH = False
@@ -328,11 +328,11 @@ try:
 
     HAS_NTFSM = True
 except ImportError:
-    log.warning(
+    log.debug(
         "nornir_salt:DataProcessor failed import TextFSM ntc-templates, install: pip install ntc_templates"
     )
     HAS_NTFSM = False
-    
+
 # --------------------------------------------------------------------------------
 # formatters functions: transform structured data to json, yaml etc. text
 # --------------------------------------------------------------------------------
@@ -872,7 +872,7 @@ def key_filter(data, pattern=None, checks_required=True, **kwargs):
         and value is the criteria to check. Default check type is glob case sensitive
         pattern matching.
     :param pattern: (str) pattern to use for filtering
-    :param checks_required: (bool) if True (default) returns empty dictionary if no checks provided, 
+    :param checks_required: (bool) if True (default) returns empty dictionary if no checks provided,
         returns all otherwise
     :return: filtered python dictionary
 
@@ -937,7 +937,7 @@ def lod_filter(data, pass_all=True, strict=True, checks_required=True, **kwargs)
         checks, if False logic is ANY
     :param strict: (bool) if True (default) invalidates list dictionary item
         if no criteria key found in dictionary
-    :param checks_required: (bool) if True (default) returns empty list if no checks provided, 
+    :param checks_required: (bool) if True (default) returns empty list if no checks provided,
         returns all otherwise
     :return: filtered list of dictionaries
     """
@@ -1144,9 +1144,9 @@ def parse_ttp(
     result: Result,
     task: Task,
     host,
-    template: str = None, 
-    ttp_kwargs={}, 
-    res_kwargs={}, 
+    template: str = None,
+    ttp_kwargs={},
+    res_kwargs={},
 ):
     """
     Reference name ``parse_ttp``
@@ -1164,18 +1164,18 @@ def parse_ttp(
     :param res_kwargs: (dict) dictionary to use with ``result`` method
         or to source ``structure`` argument for ``ttp_templates parse_output`` method
     :return: parsed structure
-    
+
     If no template provided uses ``ttp_templates`` rpeository to source the template
-    based on host platform and CLI command string. In such a case to determine cli 
-    command to properly form TTP template name, task/subtask that produced Result 
+    based on host platform and CLI command string. In such a case to determine cli
+    command to properly form TTP template name, task/subtask that produced Result
     object must use CLI command string as a name. For example::
-    
+
         from nornir import InitNornir
         from nornir_netmiko import netmiko_send_command
         from nornir_salt import DataProcessor
-    
+
         nr = InitNornir(config_file="config.yaml")
-    
+
         nr_with_processor = nr.with_processors([
             DataProcessor([
                 {
@@ -1183,7 +1183,7 @@ def parse_ttp(
                 }
             ])
         ])
-    
+
         nr_with_processor.run(
             task=netmiko_send_command,
             command_string="show version",
@@ -1192,7 +1192,7 @@ def parse_ttp(
     """
     if not HAS_TTP:
         log.warning("nornir_salt:DataProcessor:parse_ttp failed import TTP library")
-        return 
+        return
 
     if not isinstance(result.result, str):
         log.warning(
@@ -1200,8 +1200,8 @@ def parse_ttp(
                 type(result.result)
             )
         )
-        return 
-    
+        return
+
     # do parsing
     if template:
         parser = ttp(result.result, template, **ttp_kwargs)
@@ -1219,15 +1219,15 @@ def parse_ttp(
         log.error(
             "nornir_salt:DataProcessor:parse_ttp template not provided and ttp_templates not found, do nothing"
         )
-        
+
 
 def run_ttp(
-    data: MultiResult, 
-    template: str, 
-    ttp_kwargs={}, 
-    res_kwargs={}, 
-    task: Task=None, 
-    remove_tasks=True, 
+    data: MultiResult,
+    template: str,
+    ttp_kwargs={},
+    res_kwargs={},
+    task: Task = None,
+    remove_tasks=True,
     **kwargs,
 ):
     """
@@ -1308,7 +1308,7 @@ def run_ttp(
     if not HAS_TTP:
         log.warning("nornir_salt:DataProcessor:parse_ttp failed import TTP library")
         return
-    
+
     if not isinstance(data, MultiResult):
         log.warning(
             "nornir_salt:DataProcessor:run_ttp skipping, data is not MultiResult but {}".format(
@@ -1316,7 +1316,7 @@ def run_ttp(
             )
         )
         return
-    
+
     parser = ttp(template=template, **ttp_kwargs)
     ttp_inputs_load = parser.get_input_load()
 
@@ -1369,36 +1369,35 @@ def run_ttp(
     )
 
 
-    
 def ntfsm(result: Result, task: Task, host, **kwargs):
     """
     Reference name ``ntfsm``
 
-    This function performs CLI show comamnds output parsing using 
+    This function performs CLI show comamnds output parsing using
     `TextFSM ntc-templates <https://github.com/networktocode/ntc-templates>`_.
 
     :param result: (obj) Nornir Result object
-    :param task: (obj) Nornir Task object 
+    :param task: (obj) Nornir Task object
     :param host: (obj) Nornir Host object
     :returns: Nothing, modifies provided Result object to save parsing results
-    
+
     If no such a template available to parse show command output, ntc-templates
     ``parse_output`` method return empty list.
-    
+
     For this function to determine cli command to properly form TextFSM template
-    name, task/subtask that produced Result object must use cli command string 
+    name, task/subtask that produced Result object must use cli command string
     as a name. For example::
-    
+
         from nornir import InitNornir
         from nornir_netmiko import netmiko_send_command
         from nornir_salt import DataProcessor
-    
+
         nr = InitNornir(config_file="config.yaml")
-    
+
         nr_with_processor = nr.with_processors([
             DataProcessor([{"fun": "ntfsm"}])
         ])
-    
+
         nr_with_processor.run(
             task=netmiko_send_command,
             command_string="show version",
@@ -1407,24 +1406,26 @@ def ntfsm(result: Result, task: Task, host, **kwargs):
     """
     # do sanity checks
     if not HAS_NTFSM:
-        log.warning("nornir_salt:DataProcessor:ntfsm failed import ntc-templates library")
-        return         
+        log.warning(
+            "nornir_salt:DataProcessor:ntfsm failed import ntc-templates library"
+        )
+        return
     if not isinstance(result, Result):
         log.warning(
             "nornir_salt:DataProcessor:ntfsm skipping, data is not Result but {}".format(
                 type(result)
             )
         )
-        return       
-    
+        return
+
     # parse output
     result.result = ntc_templates_parse_output(
-        platform=host.platform, 
-        command=result.name, 
+        platform=host.platform,
+        command=result.name,
         data=result.result,
     )
-        
-   
+
+
 # --------------------------------------------------------------------------------
 # misc
 # --------------------------------------------------------------------------------
@@ -1464,25 +1465,26 @@ def add_commands_from_ttp_template(task, template, **kwargs):
                 if cmd not in task.params["commands"]:
                     task.params["commands"].append(cmd)
 
+
 def iplkp(
-    data, 
-    use_dns=False, 
-    use_csv=None, 
+    data,
+    use_dns=False,
+    use_csv=None,
     subform="{ip}({lookup})",
     pattern_ipv4=r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
     pattern_ipv6=r"(?:[a-fA-F0-9]{1,4}:|:){1,7}(?:[a-fA-F0-9]{1,4}|:?)",
-    **kwargs
+    **kwargs,
 ):
     """
     Reference name ``iplkp``
-    
+
     Function to resolve IPv4 and IPv6 addresses using DNS or CSV lookups
     and substitute them in original data with lookup results.
-    
+
     :param use_dns: (bool) if true use DNS to resolve IP addresses
     :param use_csv: (str) csv formatted string for lookup
     :param subform: (str) substitute formatter to use with Python ``format`` function
-        to replace IP addresses, accepts two variables ``ip`` - to hold original IP 
+        to replace IP addresses, accepts two variables ``ip`` - to hold original IP
         addresses value and ``lookup`` for lookup result
     :param pattern_ipv4: (str) pattern to use to search for IPv4 addresses to replace
     :param pattern_ipv6: (str) pattern to use to search for IPv6 addresses to replace
@@ -1493,10 +1495,10 @@ def iplkp(
         return data
     if not isinstance(data, str):
         return data
-        
+
     ret = data
     lookup_results = {}
-    
+
     # load csv data
     if use_csv:
         lookup_data = {
@@ -1504,23 +1506,23 @@ def iplkp(
             for row in csv.reader(iter(use_csv.splitlines()))
             if len(row) >= 2
         }
-    
+
     # find all IPv4 and IPv6 matches in data
     ips_v4 = re.findall(pattern_ipv4, data)
     ips_v6 = re.findall(pattern_ipv6, data)
-    
+
     # resolve IP addresses using DNS
     if use_dns:
         # lookup IPv4 addresses
         for ip in ips_v4:
             try:
-                lookup_results[ip] = socket.gethostbyaddr(ip)[0]    
+                lookup_results[ip] = socket.gethostbyaddr(ip)[0]
             except socket.herror:
                 continue
         # lookup IPv6 addresses
         for ip in ips_v6:
             try:
-                lookup_results[ip] = socket.gethostbyaddr(ip)[0]    
+                lookup_results[ip] = socket.gethostbyaddr(ip)[0]
             except socket.herror:
                 continue
 
@@ -1529,23 +1531,23 @@ def iplkp(
         # lookup IPv4 addresses
         lookup_results.update(
             {ip: lookup_data[ip] for ip in ips_v4 if ip in lookup_data}
-        )                
+        )
         # lookup IPv6 addresses
         lookup_results.update(
             {ip: lookup_data[ip] for ip in ips_v6 if ip in lookup_data}
-        )        
-    
+        )
+
     # replace IP addresses in original data
     for ip, lookup in lookup_results.items():
         # use negative lookahead to avoid "1.1.1.1" matching "1.1.1.11"
         ret = re.sub(
-            r"{}(?!\d+)".format(re.escape(ip)), 
+            r"{}(?!\d+)".format(re.escape(ip)),
             subform.format(ip=ip, lookup=lookup),
-            ret
+            ret,
         )
 
     return ret
-    
+
 
 # --------------------------------------------------------------------------------
 # functions dispatcher dictionary
@@ -1553,7 +1555,7 @@ def iplkp(
 
 task_instance_completed_dispatcher_per_result_data = {
     # functions in this dictionary get task result data and kwargs
-    # 
+    #
     # formatters - structured data to text
     "to_str": to_str,
     "to_json": to_json,
@@ -1584,16 +1586,16 @@ task_instance_completed_dispatcher_per_result_data = {
 
 task_instance_completed_dispatcher_multiresult = {
     # functions in this dictionary get MultiResult object and kwargs
-    # 
+    #
     # parsers
     "run_ttp": run_ttp,
 }
 
 task_instance_completed_dispatcher_per_result = {
     # functions in this dictionary get Result, Task, Host objects and kwargs
-    # 
-    # parsers    
-    "ntfsm": ntfsm,    
+    #
+    # parsers
+    "ntfsm": ntfsm,
     "parse_ttp": parse_ttp,
 }
 
@@ -1705,8 +1707,10 @@ class DataProcessor:
                             if hasattr(i, "skip_results") and i.skip_results is True:
                                 continue
                             # pass task result through dp function
-                            i.result = task_instance_completed_dispatcher_per_result_data[fun](
-                                i.result, **dp_dict_copy
+                            i.result = (
+                                task_instance_completed_dispatcher_per_result_data[fun](
+                                    i.result, **dp_dict_copy
+                                )
                             )
                         except:
                             i.exception = traceback.format_exc()
@@ -1731,7 +1735,7 @@ class DataProcessor:
                                 "nornir-salt:DataProcessor host '{}' function '{}' per-result error".format(
                                     host.name, fun
                                 )
-                            )                    
+                            )
                 else:
                     raise KeyError(fun)
             except:

@@ -30,7 +30,7 @@ CONNECTION_NAME = "pygnmi"
 
 class PyGNMIPlugin:
     """
-    Full list of inventory extras see `PyGNMI Docs <https://github.com/akarneliuk/pygnmi>`_ 
+    Full list of inventory extras see `PyGNMI Docs <https://github.com/akarneliuk/pygnmi>`_
     for ``gNMIclient`` class.
 
     Sample inventory::

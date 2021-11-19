@@ -10,5 +10,6 @@ Reference `documentation <https://nornir.readthedocs.io/en/latest/plugins/index.
    
    DataProcessor
    DiffProcessor
+   SaltEventProcessor
    TestsProcessor
-   ToFileProcessor
+   ToFileProcessor 

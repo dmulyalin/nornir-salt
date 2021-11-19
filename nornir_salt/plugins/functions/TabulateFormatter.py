@@ -80,6 +80,7 @@ def TabulateFormatter(
     Supported values for ``tabulate`` attribute:
 
     * ``brief`` - ``tablefmt`` is ``grid``, ``showindex`` is ``True``, ``headers`` are ``host, name, result, exception``
+    * ``terse`` - ``tablefmt`` is ``simple``, ``showindex`` is ``True``, ``headers`` are ``host, name, result, exception``
     * ``True`` - uses ``headers``, no other formatting
     * ``False`` - does nothing, returns original results
     * ``extend`` - if result is a list, extends it to form final table, appends it as is otherwise
@@ -111,9 +112,9 @@ def TabulateFormatter(
         headers_exclude = [i.strip() for i in headers_exclude.split(",")]
 
     # form tabulate parameters and results
-    if tabulate == "brief":
+    if tabulate in ["brief", "terse"]:
         tabulate = {
-            "tablefmt": "grid",
+            "tablefmt": "grid" if tabulate == "brief" else "simple",
             "showindex": True,
             "headers": ["host", "name", "result", "exception"],
         }

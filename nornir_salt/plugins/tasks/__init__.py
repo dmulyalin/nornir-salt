@@ -15,6 +15,7 @@ from .connections import connections, conn_close, conn_list
 from .pygnmi_call import pygnmi_call
 from .salt_clear_hcache import salt_clear_hcache
 from .napalm_send_commands import napalm_send_commands
+from .sleep import sleep
 
 __all__ = (
     "tcp_ping",
@@ -40,4 +41,5 @@ __all__ = (
     "pygnmi_call",
     "salt_clear_hcache",
     "napalm_send_commands",
+    "sleep",
 )

@@ -231,7 +231,7 @@ try:
 
     HAS_CERBERUS = True
 except ImportError:
-    log.error("Failed to import Cerberus library, install: pip install cerberus")
+    log.debug("Failed to import Cerberus library, install: pip install cerberus")
     HAS_CERBERUS = False
 
 # return datum template dictionary
@@ -343,10 +343,10 @@ def EvalTest(host, result, expr, revert=False, err_msg=None, globs={}, **kwargs)
             ret["exception"] = err_msg if err_msg else "Expression evaluated to False"
     except AssertionError as e:
         ret.update({"result": "FAIL", "success": False})
-        ret["exception"] = e
+        ret["exception"] = err_msg if err_msg else (str(e) or "AssertionError")
     except:
         ret.update({"result": "ERROR", "success": False})
-        ret["exception"] = traceback.format_exc()
+        ret["exception"] = err_msg if err_msg else traceback.format_exc()
 
     # revert results
     if revert:

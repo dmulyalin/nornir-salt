@@ -18,7 +18,9 @@ Task plugins define tasks to run against hosts. Reference `documentation <https:
    nr_test
    pygnmi_call
    salt_cfg_gen
+   salt_clear_hcache
    scrapli_netconf_call
    scrapli_send_commands
    scrapli_send_config
+   sleep
    tcp_ping

@@ -275,10 +275,10 @@ def _filter_FB(ret, pattern):
     # run filtering
     if isinstance(pattern, list):
         return ret.filter(
-            filter_func=lambda h: any([fnmatchcase(h.name, p) for p in pattern])
+            filter_func=lambda h: any([fnmatchcase(h.name, str(p)) for p in pattern])
         )
     else:
-        return ret.filter(filter_func=lambda h: fnmatchcase(h.name, pattern))
+        return ret.filter(filter_func=lambda h: fnmatchcase(h.name, str(pattern)))
 
 
 def _filter_FC(ret, pattern):
@@ -290,9 +290,11 @@ def _filter_FC(ret, pattern):
         pattern = [i.strip() for i in pattern.split(",")]
     # run filtering
     if isinstance(pattern, list):
-        return ret.filter(filter_func=lambda h: any([p in h.name for p in pattern]))
+        return ret.filter(
+            filter_func=lambda h: any([str(p) in h.name for p in pattern])
+        )
     else:
-        return ret.filter(filter_func=lambda h: pattern in h.name)
+        return ret.filter(filter_func=lambda h: str(pattern) in h.name)
 
 
 def _filter_FR(ret, pattern):
@@ -304,11 +306,11 @@ def _filter_FR(ret, pattern):
     # run filtering
     if isinstance(pattern, list):
         return ret.filter(
-            filter_func=lambda h: any([re.search(p, h.name) for p in pattern])
+            filter_func=lambda h: any([re.search(str(p), h.name) for p in pattern])
         )
     else:
         return ret.filter(
-            filter_func=lambda h: True if re.search(pattern, h.name) else False
+            filter_func=lambda h: True if re.search(str(pattern), h.name) else False
         )
 
 

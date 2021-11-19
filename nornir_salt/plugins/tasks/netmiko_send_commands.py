@@ -120,22 +120,22 @@ def netmiko_send_commands(
 
     # iterate over commands and see if need to add empty line - hit enter
     commands = [
-        c.replace(new_line_char, "\n") 
-        if new_line_char in c else c 
-        for c in commands
+        c.replace(new_line_char, "\n") if new_line_char in c else c for c in commands
     ]
-    
+
     # run commands
     if use_ps:
         # send commands
-        for command in commands:
+        for index, command in enumerate(commands):
             task.run(
                 task=netmiko_send_command_ps,
                 command_string=command,
                 name=command.strip().splitlines()[0],
                 **kwargs
             )
-            time.sleep(interval)
+            # do not sleep after last command sent
+            if index != len(commands) - 1:
+                time.sleep(interval)
     else:
         # send commands
         for command in commands:

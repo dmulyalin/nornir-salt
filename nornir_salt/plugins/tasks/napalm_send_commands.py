@@ -66,7 +66,7 @@ def napalm_send_commands(
     new_line_char: str = "_br_",
 ):
     """
-    Nornir Task function to send show commands to devices using ``napalm_cli`` task 
+    Nornir Task function to send show commands to devices using ``napalm_cli`` task
     plugin.
 
     Per-host ``commands`` can be provided using host's object ``data`` attribute
@@ -93,7 +93,7 @@ def napalm_send_commands(
             failed=True,
             exception="No nornir-napalm found, is it installed?",
         )
-    
+
     # get per-host commands if any
     if "commands" in task.host.data.get("__task__", {}):
         if commands:
@@ -114,23 +114,23 @@ def napalm_send_commands(
 
     # iterate over commands and see if need to add empty line - hit enter
     commands = [
-        c.replace(new_line_char, "\n") 
-        if new_line_char in c else c 
-        for c in commands
+        c.replace(new_line_char, "\n") if new_line_char in c else c for c in commands
     ]
-    
+
     # send commands one by one
     if isinstance(interval, (int, float)):
-        for command in commands:
-            task.run(task=napalm_cli, commands=[command])      
-            time.sleep(interval)
+        for index, command in enumerate(commands):
+            task.run(task=napalm_cli, commands=[command])
+            # do not sleep after last command sent
+            if index != len(commands) - 1:
+                time.sleep(interval)
     # send all at once
     else:
         task.run(task=napalm_cli, commands=commands)
-    
+
     # iterate over results and form per-command results
     per_command_results = []
-    while task.results: 
+    while task.results:
         res = task.results.pop()
         # check if task failed, do nothing if so
         if res.failed or res.exception:
@@ -146,7 +146,7 @@ def napalm_send_commands(
                 )
             )
     task.results.extend(per_command_results)
-                
+
     # set skip_results to True, for ResultSerializer to ignore
     # results for grouped task itself, which are usually None
     return Result(host=task.host, skip_results=True)

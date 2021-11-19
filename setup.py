@@ -1,6 +1,6 @@
 import setuptools
 
-__version__ = "0.6.1"
+__version__ = "0.7.0"
 __author__ = "Denis Mulyalin"
 
 with open("README.md", "r") as f:
@@ -40,5 +40,6 @@ setuptools.setup(
     ncclient=nornir_salt:NcclientPlugin
     http=nornir_salt:HTTPPlugin
     pygnmi=nornir_salt:PyGNMIPlugin
+    ConnectionsPool=nornir_salt:ConnectionsPool
     """,
 )
