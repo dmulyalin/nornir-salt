@@ -1,0 +1,1 @@
+.. automodule:: nornir_salt.plugins.tasks.pyatsunicon_send_commands

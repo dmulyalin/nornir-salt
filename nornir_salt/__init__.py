@@ -43,12 +43,15 @@ from .plugins.tasks import pygnmi_call
 from .plugins.tasks import salt_clear_hcache
 from .plugins.tasks import napalm_send_commands
 from .plugins.tasks import sleep
+from .plugins.tasks import pyatsunicon_send_commands
+from .plugins.tasks import pyatsunicon_send_config
 
 # connections plugins
 from .plugins.connections import NcclientPlugin
 from .plugins.connections import HTTPPlugin
 from .plugins.connections import PyGNMIPlugin
 from .plugins.connections import ConnectionsPool
+from .plugins.connections import PyATSUnicon
 
 # processors plugins
 from .plugins.processors import ToFileProcessor
@@ -98,4 +101,7 @@ __all__ = (
     "ConnectionsPool",
     "sleep",
     "SaltEventProcessor",
+    "PyATSUnicon",
+    "pyatsunicon_send_commands",
+    "pyatsunicon_send_config",
 )

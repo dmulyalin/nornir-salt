@@ -6,10 +6,12 @@ Helper function to transform Nornir results object in python dictionary to
 ease programmatic consumption or further transformation in other formats
 such as JSON or YAML
 
-ResultSerializer supports serialization of these object types::
+ResultSerializer supports serialization of results of these object types::
 
     list, tuple, dict, str, int, bool, set, type(None)
     
+If task result is not one of above types, it is converted to string.
+
 Exception object transformed to string.
 
 ResultSerializer Sample Usage
@@ -235,12 +237,13 @@ def ResultSerializer(
                         for k, v in vars(i).items()
                         if k not in skip and type(v) in supported_types
                     }
+                    ret[hostname][i.name].setdefault("result", str(i.result))
                     ret[hostname][i.name]["failed"] = True if exception else i.failed
                     ret[hostname][i.name]["exception"] = exception
                     ret[hostname][i.name].pop("name")
                 # form results for the rest of tasks
                 else:
-                    ret[hostname][i.name] = i.result
+                    ret[hostname][i.name] = i.result if type(i.result) in supported_types else str(i.result)
 
     # form plain list of results
     else:
@@ -271,11 +274,18 @@ def ResultSerializer(
                             if k not in skip and type(v) in supported_types
                         }
                     )
+                    ret[-1].setdefault("result", str(i.result))
                     ret[-1]["failed"] = True if exception else i.failed
                     ret[-1]["exception"] = exception
                     ret[-1]["host"] = i.host.name
                 # form results for the rest of tasks
                 else:
-                    ret.append({"host": hostname, "name": i.name, "result": i.result})
+                    ret.append(
+                        {
+                            "host": hostname, 
+                            "name": i.name, 
+                            "result": i.result if type(i.result) in supported_types else str(i.result)
+                        }
+                    )
 
     return ret

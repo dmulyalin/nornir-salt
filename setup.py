@@ -41,5 +41,6 @@ setuptools.setup(
     http=nornir_salt:HTTPPlugin
     pygnmi=nornir_salt:PyGNMIPlugin
     ConnectionsPool=nornir_salt:ConnectionsPool
+    pyatsunicon=nornir_salt:PyATSUnicon
     """,
 )

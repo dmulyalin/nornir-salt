@@ -112,7 +112,7 @@ def _load_index_data(base_url, index):
 
 def file_read(
     task,
-    filegroup: [str, list],
+    filegroup,
     base_url: str = "/var/nornir-salt/",
     task_name: str = None,
     last: int = 1,
@@ -191,7 +191,7 @@ def file_read(
 
 def file_list(
     task,
-    filegroup: [str, list] = [],
+    filegroup = [],
     base_url: str = "/var/nornir-salt/",
     index: str = "common",
     **kwargs
@@ -246,7 +246,7 @@ def file_list(
 
 def file_remove(
     task,
-    filegroup: [str, list, bool],
+    filegroup,
     base_url: str = "/var/nornir-salt/",
     index: str = "common",
     **kwargs
@@ -315,10 +315,10 @@ def file_remove(
 
 def file_diff(
     task,
-    filegroup: [str, list],
+    filegroup,
     base_url: str = "/var/nornir-salt/",
     task_name: str = None,
-    last: [int, list, str] = [1, 2],
+    last=[1, 2],
     index: str = "common",
     **kwargs
 ):

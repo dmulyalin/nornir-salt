@@ -8,3 +8,5 @@ Connection plugins help to connect with devices. Reference `documentation <https
 .. automodule:: nornir_salt.plugins.connections.HTTPPlugin
 
 .. automodule:: nornir_salt.plugins.connections.PyGNMIPlugin
+
+.. automodule:: nornir_salt.plugins.connections.PyATSUnicon

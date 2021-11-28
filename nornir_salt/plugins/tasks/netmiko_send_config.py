@@ -38,8 +38,8 @@ Code to invoke ``netmiko_send_config`` task::
 netmiko_send_config returns
 ===========================
 
-Returns Nornir results object with individual tasks names set
-equal to commands sent to device.
+Returns Nornir results object with task name set to ``netmiko_send_config`` 
+and results containing commands execution CLI output.
 
 netmiko_send_config reference
 =============================
@@ -60,6 +60,9 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+# define connection name for RetryRunner to properly detect it using:
+# connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
+CONNECTION_NAME = "netmiko"
 
 def netmiko_send_config(
     task: Task,
@@ -82,7 +85,6 @@ def netmiko_send_config(
         dictionary, it will be supplied to connection's commit method call as ``**commit``.
     :param commit_final_delay: (int) time to wait before doing final commit, can be used in
         conjunction with commit confirm feature if device supports it.
-    :param kwargs: (dict) any additional ``**kwargs`` for ``netmiko_send_config`` function.
     :param batch: (int) commands count to send in batches, sends all at once by default
     :param enable: (bool) if True (default), attempts to enter enable-mode
     :return result: Nornir result object with task execution results
@@ -111,7 +113,7 @@ def netmiko_send_config(
     commit_final_delay = int(commit_final_delay)
     batch = max(0, int(batch))
     task_result = Result(host=task.host, result=[], changed=True)
-    conn = task.host.get_connection("netmiko", task.nornir.config)
+    conn = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
 
     # get configuration from host data if any
     if "commands" in task.host.data.get("__task__", {}):
@@ -156,7 +158,7 @@ def netmiko_send_config(
             log.error("nornir-salt:netmiko_send_config commit error\n{}".format(tb))
             task_result.failed = True
             task_result.exception = tb
-            task_result.chaned = False
+            task_result.changed = False
 
     # check if need to exit configuration mode
     if conn.check_config_mode():
