@@ -5,7 +5,7 @@ scrapli_send_config
 This task plugin uses ``nornir-scrapli`` ``scrapli_send_config`` task
 to send configuration commands to devices over SSH or Telnet.
 
-``scrapli_send_config`` exists as part of ``nornir_salt`` repository to facilitate 
+``scrapli_send_config`` exists as part of ``nornir_salt`` repository to facilitate
 per-host configuration rendering performed by SALT prior to running the task.
 
 Dependencies:
@@ -77,13 +77,7 @@ def scrapli_send_config(task: Task, config=None, **kwargs):
         config = task.host.data["__task__"]["filename"]
 
     # transform configuration to string if list/tuple given
-    if isinstance(
-        config,
-        (
-            list,
-            tuple,
-        ),
-    ):
+    if isinstance(config, (list, tuple)):
         config = "\n".join(config)
 
     # push config to device

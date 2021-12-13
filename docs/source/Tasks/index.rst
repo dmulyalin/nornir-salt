@@ -5,7 +5,7 @@ Task plugins define tasks to run against hosts. Reference `documentation <https:
 
 .. toctree::
    :maxdepth: 3
-   
+
    connections
    files
    http_call

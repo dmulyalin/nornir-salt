@@ -8,7 +8,7 @@ to send configuration commands to devices over SSH or Telnet.
 This task plugin applies device configuration following this sequence:
 
 - Retrieve and use, if any, per-host configuration rendered by SaltStack from host's
-  inventory data ``task.host.data["__task__"]["commands"]`` or 
+  inventory data ``task.host.data["__task__"]["commands"]`` or
   ``task.host.data["__task__"]["filename"]`` locations, use configuration provided
   by ``config`` argument otherwise
 - If configuration is a multi-line string, split it to a list of commands
@@ -32,13 +32,13 @@ Code to invoke ``netmiko_send_config`` task::
 
     output = nr.run(
         task=netmiko_send_config,
-        commands=["sinterface loopback 0", "description 'configured by script'"]
+        commands=["interface loopback 0", "description 'configured by script'"]
     )
 
 netmiko_send_config returns
 ===========================
 
-Returns Nornir results object with task name set to ``netmiko_send_config`` 
+Returns Nornir results object with task name set to ``netmiko_send_config``
 and results containing commands execution CLI output.
 
 netmiko_send_config reference
@@ -52,7 +52,9 @@ import time
 from nornir.core.task import Result, Task
 
 try:
-    from nornir_netmiko.tasks import netmiko_send_config as nornir_netmiko_send_config
+    from nornir_netmiko.tasks import (  # noqa
+        netmiko_send_config as nornir_netmiko_send_config,
+    )
 
     HAS_NETMIKO = True
 except ImportError:
@@ -63,6 +65,7 @@ log = logging.getLogger(__name__)
 # define connection name for RetryRunner to properly detect it using:
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
 CONNECTION_NAME = "netmiko"
+
 
 def netmiko_send_config(
     task: Task,

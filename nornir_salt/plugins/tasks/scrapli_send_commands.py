@@ -2,12 +2,12 @@
 scrapli_send_commands
 #####################
 
-This plugin uses ``nornir-scrapli`` ``send_command`` task to send multiple commands 
+This plugin uses ``nornir-scrapli`` ``send_command`` task to send multiple commands
 to devices pre-processing commands accordingly.
 
 Pre-processing includes:
 
-- Check and if any - retrieve per-host commands from host's inventory data 
+- Check and if any - retrieve per-host commands from host's inventory data
   ``task.host.data["__task__"]["commands"]`` or from ``task.host.data["__task__"]["filename"]``
 - If command is a multi-line string, split it to individual lines or form a list with single command
 - Iterate over commands list and remove empty strings
@@ -36,7 +36,7 @@ Code to invoke ``scrapli_send_commands`` task::
         commands=["show run", "show clock"]
     )
 
-Task scrapli_send_commands returns Nornir results object with individual tasks 
+Task scrapli_send_commands returns Nornir results object with individual tasks
 names set equal to commands sent to device.
 
 API Reference

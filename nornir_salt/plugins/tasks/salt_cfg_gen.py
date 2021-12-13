@@ -35,13 +35,7 @@ def salt_cfg_gen(task, config=None, **kwargs):
         config = task.host.data["__task__"]["filename"]
 
     # transform configuration to string if list/tuple given
-    if isinstance(
-        config,
-        (
-            list,
-            tuple,
-        ),
-    ):
+    if isinstance(config, (list, tuple)):
         config = "\n".join(config)
 
     return Result(host=task.host, result=config)

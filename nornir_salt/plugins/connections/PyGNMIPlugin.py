@@ -2,11 +2,11 @@
 PyGNMIPlugin
 ############
 
-`PyGNMI library <https://pypi.org/project/pygnmi/>`_ connection plugin to interact 
-with devices over `gNMI <https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.md>`_ 
+`PyGNMI library <https://pypi.org/project/pygnmi/>`_ connection plugin to interact
+with devices over `gNMI <https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.md>`_
 protocol.
 
-This plugin maintains long running gNMI connection to devices, if this behavior 
+This plugin maintains long running gNMI connection to devices, if this behavior
 not desirable, consider using Nornir host's ``close_connection`` method to close
 gNMI connection.
 

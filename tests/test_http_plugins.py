@@ -59,8 +59,8 @@ hosts:
     hostname: 192.168.217.7
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
@@ -69,7 +69,7 @@ groups:
         port: 8080
         extras:
           verify: False
-    
+
 defaults: {}
 """
 lab_inventory_dict = yaml.safe_load(lab_inventory)
@@ -80,8 +80,8 @@ hosts:
     hostname: sandbox-iosxe-latest-1.cisco.com
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: developer
     password: C1sco12345
@@ -91,7 +91,7 @@ groups:
         extras:
           transport: https
           base_url: "https://sandbox-iosxe-latest-1.cisco.com/restconf/"
-          verify: False    
+          verify: False
     """
 cisco_always_on_sandpox_inventory = yaml.safe_load(cisco_always_on_sandpox)
 
@@ -122,7 +122,7 @@ ConnectionPluginRegister.register("http", HTTPPlugin)
 nr = init(lab_inventory_dict)
 always_on_nr = init(cisco_always_on_sandpox_inventory)
 
-    
+
 def clean_up_folder():
     # remove previous files and folder
     if os.path.exists("./tofile_outputs/"):
@@ -138,12 +138,12 @@ def clean_up_folder():
 @skip_if_no_nornir
 def task_open_http_connection(task):
     http_conn = task.host.get_connection("http", task.nornir.config)
-  
+
     return Result(task.host, result=http_conn)
 
 @skip_if_no_nornir
 def test_http_connection_open():
-    
+
     http_conn = ResultSerializer(nr.run(task=task_open_http_connection))
     # pprint.pprint(res)
 
@@ -154,7 +154,7 @@ def test_http_connection_open():
     assert http_conn["IOL1"]["task_open_http_connection"]['platform'] ==  'ios'
     assert http_conn["IOL1"]["task_open_http_connection"]['port'] == 8080
     assert http_conn["IOL1"]["task_open_http_connection"]['username'] ==  'cisco'
-    
+
     assert 'configuration' in http_conn["IOL2"]["task_open_http_connection"]
     assert http_conn["IOL2"]["task_open_http_connection"]['extras'] == {'verify': False}
     assert http_conn["IOL2"]["task_open_http_connection"]['hostname'] ==  '192.168.217.7'
@@ -172,7 +172,7 @@ def test_http_connection_open():
 @skip_if_no_internet
 @skip_if_no_nornir
 def test_http_connection_get_google():
-    
+
     res = ResultSerializer(
         nr.run(
             task=http_call,
@@ -182,12 +182,12 @@ def test_http_connection_get_google():
         add_details=True
     )
     # pprint.pprint(res)
-    
+
     assert len(res["IOL1"]["get"]["result"]) > 100
     assert len(res["IOL2"]["get"]["result"]) > 100
     assert res["IOL1"]["get"]["failed"] == False
     assert res["IOL2"]["get"]["failed"] == False
-    
+
 # test_http_connection_get_google()
 
 # ----------------------------------------------------------------------
@@ -197,7 +197,7 @@ def test_http_connection_get_google():
 
 @skip_if_no_always_on_access
 @skip_if_no_nornir
-def test_http_get_ios_always_on_lab_base_url():  
+def test_http_get_ios_always_on_lab_base_url():
     res = ResultSerializer(
         always_on_nr.run(
             task=http_call,
@@ -209,12 +209,12 @@ def test_http_get_ios_always_on_lab_base_url():
 
     assert res["sandbox-iosxe-recomm-1"]["get"]["failed"] == False
     assert "ietf-restconf:restconf" in res["sandbox-iosxe-recomm-1"]["get"]["result"]
-    
+
 # test_http_get_ios_always_on_lab_base_url()
 
 @skip_if_no_always_on_access
 @skip_if_no_nornir
-def test_http_get_ios_always_on_lab_ietf_intefaces(): 
+def test_http_get_ios_always_on_lab_ietf_intefaces():
     res = ResultSerializer(
         always_on_nr.run(
             task=http_call,
@@ -228,5 +228,5 @@ def test_http_get_ios_always_on_lab_ietf_intefaces():
     assert res["sandbox-iosxe-recomm-1"]["get"]["failed"] == False
     assert "ietf-interfaces:interfaces" in res["sandbox-iosxe-recomm-1"]["get"]["result"]
     assert len(res["sandbox-iosxe-recomm-1"]["get"]["result"]["ietf-interfaces:interfaces"]["interface"]) > 0
-    
+
 # test_http_get_ios_always_on_lab_ietf_intefaces()

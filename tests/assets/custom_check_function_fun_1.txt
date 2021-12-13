@@ -7,5 +7,5 @@ def fun_1(result):
             "result": "FAIL",
             "success": False
         })
-    
+
     return ret

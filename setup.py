@@ -25,9 +25,7 @@ setuptools.setup(
         "Operating System :: POSIX :: Linux",
     ],
     python_requires=">=3.6",
-    install_requires=[
-        "nornir==3.*",
-    ],
+    install_requires=["nornir==3.*"],
     entry_points="""
     [nornir.plugins.inventory]
     DictInventory=nornir_salt:DictInventory

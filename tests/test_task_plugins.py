@@ -43,12 +43,12 @@ hosts:
     hostname: 192.168.217.7
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
-    
+
 defaults: {}
 """
 lab_inventory_dict = yaml.safe_load(lab_inventory)

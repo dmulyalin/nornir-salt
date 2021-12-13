@@ -10,7 +10,7 @@ try:
     from nornir import InitNornir
     from nornir.core.plugins.inventory import InventoryPluginRegister
     from nornir.core.task import Result
-    
+
     HAS_NORNIR = True
 except ImportError:
     HAS_NORNIR = False
@@ -85,7 +85,7 @@ def nr_test_grouped_subtasks(task, task_1, task_2):
     """
     Test grouped task
     """
-    task.run(**task_1)    
+    task.run(**task_1)
     task.run(**task_2)
     return Result(host=task.host, skip_results=True)
 
@@ -202,17 +202,17 @@ IOL2    False     check ntp config  ntp server 7.7.7.8
 @skip_if_no_nornir
 def test_tabulate_sort_by_key_value():
     iol1_res_ntp = [
-{"ntp": "1.1.1.1"},   
+{"ntp": "1.1.1.1"},
     ]
     iol2_res_ntp = [
-{"ntp": "2.2.2.2"},       
+{"ntp": "2.2.2.2"},
     ]
     iol1_res_log = [
-{"log": "3.3.3.3"},       
+{"log": "3.3.3.3"},
     ]
     iol2_res_log = [
-{"log": "4.4.4.4"},       
-    ]     
+{"log": "4.4.4.4"},
+    ]
     result = nr.run(
         task=nr_test_grouped_subtasks,
         task_1={
@@ -247,17 +247,17 @@ IOL2    False     show run | inc logging  [{'log': '4.4.4.4'}]"""
 @skip_if_no_nornir
 def test_tabulate_sort_by_key_value_reverse():
     iol1_res_ntp = [
-{"ntp": "1.1.1.1"},   
+{"ntp": "1.1.1.1"},
     ]
     iol2_res_ntp = [
-{"ntp": "2.2.2.2"},       
+{"ntp": "2.2.2.2"},
     ]
     iol1_res_log = [
-{"log": "3.3.3.3"},       
+{"log": "3.3.3.3"},
     ]
     iol2_res_log = [
-{"log": "4.4.4.4"},       
-    ]     
+{"log": "4.4.4.4"},
+    ]
     result = nr.run(
         task=nr_test_grouped_subtasks,
         task_1={

@@ -13,7 +13,6 @@ SaltEventProcessor reference
 .. autofunction:: nornir_salt.plugins.processors.SaltEventProcessor.SaltEventProcessor
 """
 import logging
-import traceback
 import time
 
 from nornir.core.inventory import Host
@@ -113,10 +112,7 @@ class SaltEventProcessor:
 
     def task_instance_started(self, task: Task, host: Host) -> None:
         tag = "nornir-proxy/{jid}/{proxy_id}/{host}/task/started/{task_name}".format(
-            proxy_id=self.proxy_id,
-            host=host.name,
-            task_name=task.name,
-            jid=self.jid,
+            proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
             "timestamp": self._timestamp(),
@@ -135,10 +131,7 @@ class SaltEventProcessor:
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
         tag = "nornir-proxy/{jid}/{proxy_id}/{host}/task/completed/{task_name}".format(
-            proxy_id=self.proxy_id,
-            host=host.name,
-            task_name=task.name,
-            jid=self.jid,
+            proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
             "timestamp": self._timestamp(),
@@ -155,10 +148,7 @@ class SaltEventProcessor:
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
         tag = "nornir-proxy/{jid}/{proxy_id}/{host}/subtask/started/{task_name}".format(
-            proxy_id=self.proxy_id,
-            host=host.name,
-            task_name=task.name,
-            jid=self.jid,
+            proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
             "timestamp": self._timestamp(),
@@ -176,13 +166,8 @@ class SaltEventProcessor:
     def subtask_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
-        tag = (
-            "nornir-proxy/{jid}/{proxy_id}/{host}/subtask/completed/{task_name}".format(
-                proxy_id=self.proxy_id,
-                host=host.name,
-                task_name=task.name,
-                jid=self.jid,
-            )
+        tag = "nornir-proxy/{jid}/{proxy_id}/{host}/subtask/completed/{task_name}".format(
+            proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
             "timestamp": self._timestamp(),

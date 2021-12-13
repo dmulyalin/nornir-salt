@@ -62,7 +62,7 @@ try:
     has_connection_to_cisco_iosxr_always_on_router = True
 except:
     has_connection_to_cisco_iosxr_always_on_router = False
-    
+
 skip_if_has_no_cisco_iosxr_always_on_router = pytest.mark.skipif(
     has_connection_to_cisco_iosxr_always_on_router == False,
     reason="Has no connection to sandbox-iosxr-1.cisco.com router",

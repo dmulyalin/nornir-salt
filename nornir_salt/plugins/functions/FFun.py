@@ -21,7 +21,7 @@ FO - Filter Object
 
 Filter using `Nornir Filter Object <https://nornir.readthedocs.io/en/latest/tutorial/inventory.html#Filter-Object>`_
 
-Examples:: 
+Examples::
 
     # Platform ios and hostname 192.168.217.7:
     filtered_hosts = FFun(NornirObj, FO={"platform": "ios", "hostname": "192.168.217.7"})
@@ -34,7 +34,7 @@ Examples::
 
     # Location B1 and platform ios or any host at location B2:
     filtered_hosts = FFun(NornirObj, FO=[{"location": "B1", "platform": "ios"}, {"location": "B2"}])
-    
+
 FB - Filter gloB
 ----------------
 
@@ -42,15 +42,15 @@ Filter hosts by name using Glob Patterns matching `fnmatchcase <https://docs.pyt
 
     # Match R1, R2, R# hostnames but not R11 or R4:
     filtered_hosts = FFun(NornirObj, FB="R[123]")
-    
+
     # Match R1, R2, and SW1 but not R11 or R4 or eSW1 using list of patterns:
     filtered_hosts = FFun(NornirObj, FB=["R[12]", "SW*"])
 
     # Match R1, R2, and SW1 but not R11 or R4 or eSW1 using comma separated list of patterns:
     filtered_hosts = FFun(NornirObj, FB="R[12], SW*")
-    
+
 If list of patterns provided, host matching at least one pattern will pass this check.
-    
+
 FC - Filter Contains Any
 ------------------------
 
@@ -58,13 +58,13 @@ Filter hosts by checking if their name contains any of the string patterns::
 
     # Match core-switch-1 but not switch-1:
     filtered_hosts = FFun(NornirObj, FC="core-switch")
-    
+
     # Match R1, R2, and SW1 but not ER33 or CR4 using list of patterns:
     filtered_hosts = FFun(NornirObj, FC=["R1", "R2", "SW"])
 
     # Match R1, R2, and SW1 but not ER33 or CR4 using comma separated list of patterns:
     filtered_hosts = FFun(NornirObj, FC="R1, R2, SW")
-    
+
 If list of patterns provided, host matching at least one pattern will pass this check.
 
 FR - Filter Regex
@@ -74,10 +74,10 @@ Filter hosts by checking if their name contains any of regular expression patter
 
     # Match core-switch-1 but not switch-1:
     filtered_hosts = FFun(NornirObj, FR=".+core-switch.+")
-    
+
     # Match R1, R2, and SW1 but not ER33 or CR4 using list of patterns:
     filtered_hosts = FFun(NornirObj, FR=["^R1$", "^R2$", "^SW$"])
-    
+
 If list of patterns provided, host matching at least one pattern will pass this check.
 
 FG - Filter Group
@@ -115,10 +115,10 @@ Negate matching results if ``FN`` argument set to ``True``::
     # will match all hosts except R1 and R2
     filtered_hosts = FFun(NornirObj, FL="R1, R2", FN=True)
 
-FFun passes through all the ``Fx`` functions filtering hosts normally, ``FN`` 
-function called at the end to form a set of non matched hosts, that set used 
+FFun passes through all the ``Fx`` functions filtering hosts normally, ``FN``
+function called at the end to form a set of non matched hosts, that set used
 with ``FL`` function to provide final match result.
-    
+
 FFun sample usage
 =================
 
@@ -129,7 +129,7 @@ Example how to invoke FFun filtering::
     from nornir import InitNornir
     from nornir_netmiko import netmiko_send_command
     from nornir_salt.plugins.functions import FFun
-    
+
     inventory_data = '''
     hosts:
       R1:
@@ -146,7 +146,7 @@ Example how to invoke FFun filtering::
         data:
           role: access
           site: B3
-    
+
     groups:
       lab:
         username: cisco
@@ -155,15 +155,15 @@ Example how to invoke FFun filtering::
         username: cisco@
         password: cisco
     '''
-    
+
     inventory_dict = yaml.safe_load(inventory_data)
-    
+
     NornirObj = InitNornir(config_file="config.yaml")
-    
+
     filtered_hosts = FFun(NornirObj, FB="R*", FG="lab", FP="192.168.1.0/24", FO={"role": "core"})
-    
+
     pprint.pprint(filtered_hosts.dict()["inventory"]["hosts"])
-    
+
     # should print:
     # {'R1': {'connection_options': {},
     #         'data': {'role': 'core', 'site': 'B1'},
@@ -174,7 +174,7 @@ Example how to invoke FFun filtering::
     #         'platform': 'ios',
     #         'port': None,
     #         'username': 'cisco'}}
-    
+
     result = filtered_hosts.run(
         task=netmiko_send_command,
         command_string="show clock"

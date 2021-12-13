@@ -2,11 +2,11 @@
 ConnectionsPool
 ###############
 
-`PyGNMI library <https://pypi.org/project/pygnmi/>`_ connection plugin to interact 
-with devices over `gNMI <https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.md>`_ 
+`PyGNMI library <https://pypi.org/project/pygnmi/>`_ connection plugin to interact with devices over
+`gNMI <https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.md>`_
 protocol.
 
-This plugin maintains long running gNMI connection to devices, if this behavior 
+This plugin maintains long running gNMI connection to devices, if this behavior
 not desirable, consider using Nornir host's ``close_connection`` method to close
 gNMI connection.
 
@@ -14,7 +14,7 @@ ConnectionsPool reference
 =========================
 
 .. autofunction:: nornir_salt.plugins.connections.ConnectionsPool.ConnectionsPool
-"""
+"""  # noqa
 import logging
 import time
 from typing import Any, Dict, Optional
@@ -129,8 +129,7 @@ class ConnectionsPool:
             # establish additional connection
             if len(self.connections) < self.max:
                 conn = host.get_connection(
-                    connection_name,
-                    configuration=self.parameters["configuration"],
+                    connection_name, configuration=self.parameters["configuration"]
                 )
                 c = ConnObjWrap(conn, host)
                 _ = host.connections.pop(connection_name)
@@ -146,7 +145,7 @@ class ConnectionsPool:
         # if reached this point it means failed to get connection
         else:
             raise RuntimeError(
-                "nornir-salt:ConnectionPool {} failed to acquire connection '{}'".format(
+                "nornir-salt:ConnectionPool {} failed to acquire connection '{}'".format(  # noqa
                     host.name, connection_name
                 )
             )

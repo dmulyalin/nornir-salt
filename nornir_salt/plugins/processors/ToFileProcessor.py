@@ -135,7 +135,7 @@ class ToFileProcessor:
 
         host_filename = "{tf}__{timestamp}__{rand}__{hostname}.txt".format(
             timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"),
-            rand=random.randint(0, 1000),
+            rand=random.randint(0, 1000),  # nosec
             hostname=host.name,
             tf=self.tf,
         )

@@ -7,7 +7,7 @@ to send multiple commands to devices pre-processing commands accordingly.
 
 Pre-processing includes:
 
-- Check and if any - retrieve per-host commands from host's inventory data 
+- Check and if any - retrieve per-host commands from host's inventory data
   ``task.host.data["__task__"]["commands"]`` or from ``task.host.data["__task__"]["filename"]``
 - If command is a multi-line string, split it to individual lines or form a list with single command
 - Iterate over commands list and remove empty strings
@@ -15,11 +15,11 @@ Pre-processing includes:
 
 Tere are several modes that ``pyatsunicon_send_commands`` task plugin can operate in:
 
-1. If ``parse`` is true and device platform supports it, send commands one by one parsing 
-   their output waiting for ``interval`` in betwen commands if ``interval`` provided, if 
-   no parser available for this platofrm to parse command output, exception message returned 
+1. If ``parse`` is true and device platform supports it, send commands one by one parsing
+   their output waiting for ``interval`` in betwen commands if ``interval`` provided, if
+   no parser available for this platofrm to parse command output, exception message returned
    for such a command
-2. If ``interval`` argument provided, commands send one by one to device using 
+2. If ``interval`` argument provided, commands send one by one to device using
    ``execute`` method sleeping for given ``interval`` between commands
 3. If ``via`` argument refers to connections pool object, send commands in parallel,
    commands excution order not guaranteed
@@ -59,7 +59,7 @@ Given this inventory::
                     protocol: ssh
                     ip: 10.0.1.4
                     pool: 3
-                  
+
 Code to invoke ``pyatsunicon_send_commands`` task::
 
     from nornir_salt import pyatsunicon_send_commands
@@ -69,21 +69,21 @@ Code to invoke ``pyatsunicon_send_commands`` task::
         task=pyatsunicon_send_commands,
         commands=["show run", "show clock"]
     )
-    
+
     # send via vty_1 connection pool of 3 SSH connections
     output_via_pool = nr.run(
         task=pyatsunicon_send_commands,
         commands=["show run", "show clock"],
         via="vty_1"
-    )  
-    
+    )
+
     # send via "default" connection with 5s interval between commands
     output_with_interval = nr.run(
         task=pyatsunicon_send_commands,
         commands=["show run", "show clock"],
         interval=5
     )
-    
+
     # send commands and parse output
     output_parse = nr.run(
         task=pyatsunicon_send_commands,
@@ -110,7 +110,7 @@ try:
     from pyats.connections.pool import ConnectionPool
     from genie.libs.parser.utils.common import ParserNotFound
     from genie.libs.parser.utils import get_parser
-    
+
     HAS_PYATS = True
 except ImportError:
     HAS_PYATS = False
@@ -121,10 +121,11 @@ log = logging.getLogger(__name__)
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
 CONNECTION_NAME = "pyatsunicon"
 
+
 def _form_results(task, res, command):
     """
     Helper function to save code on forming results out of PyATS output
-    
+
     :param task: (obj) Nornir task object
     :param res: (str, dict) PyATS command execution results
     :param command: (str, list) command string or list of commands sent
@@ -132,23 +133,12 @@ def _form_results(task, res, command):
     # if non-multiline or single command was provided res is a string
     if isinstance(res, str):
         cmd = ", ".join(command) if isinstance(command, list) else command.strip()
-        task.results.append(
-            Result( 
-                host=task.host,
-                result=res,
-                name=cmd,
-            )     
-        )
+        task.results.append(Result(host=task.host, result=res, name=cmd))
     # if multiline command provided or a list of commands res is a dictionary
     elif isinstance(res, dict):
         for cmd, output in res.items():
-            task.results.append(
-                Result(
-                    host=task.host,
-                    result=output,
-                    name=cmd.strip(),
-                )     
-            )   
+            task.results.append(Result(host=task.host, result=output, name=cmd.strip()))
+
 
 def pyatsunicon_send_commands(
     task: Task,
@@ -181,7 +171,7 @@ def pyatsunicon_send_commands(
     :param via: (str) testbed inventory connection name, default is ``default``
     :param parse: (bool) if True, parses command output and returns structured data
     :return result: Nornir result object with task results named after commands
-    """    
+    """
     # run sanity check
     if not HAS_PYATS:
         return Result(
@@ -189,7 +179,7 @@ def pyatsunicon_send_commands(
             failed=True,
             exception="Failed to import PyATS library, is it installed?",
         )
-    
+
     # get per-host commands if any
     if "commands" in task.host.data.get("__task__", {}):
         if commands:
@@ -214,7 +204,7 @@ def pyatsunicon_send_commands(
     commands = [
         c.replace(new_line_char, "\n") if new_line_char in c else c for c in commands
     ]
-    
+
     # get PyATS testbed, device and connection objects
     testbed = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     device = testbed.devices[task.host.name]
@@ -222,16 +212,18 @@ def pyatsunicon_send_commands(
         connection = getattr(device, via)
     else:
         raise RuntimeError("{} has no connection '{}'".format(task.host.name, via))
-    
+
     # check if nee to parse output
     if parse:
-        log.debug("nornir-salt:pyatsunicon_send_commands sending commands one by one and parsing output")
+        log.debug(
+            "nornir-salt:pyatsunicon_send_commands sending commands one by one and parsing output"
+        )
         for command in commands:
             try:
-                get_parser(command, device) # raises exception if no parse available
+                get_parser(command, device)  # raises exception if no parse available
                 output = connection.execute(command, **kwargs)
                 result = device.parse(command, output=output)
-                result = result.q.reconstruct() # result is PyATS Dq Dict object
+                result = result.q.reconstruct()  # result is PyATS Dq Dict object
                 exception = None
             except ParserNotFound as e:
                 result = str(e)
@@ -243,31 +235,43 @@ def pyatsunicon_send_commands(
                     exception=exception,
                     name=command.strip(),
                 )
-            )          
+            )
             if isinstance(interval, (int, float)):
                 time.sleep(interval)
     # send commands one by one with interval
     elif isinstance(interval, (int, float)):
-        log.debug("nornir-salt:pyatsunicon_send_commands connection '{}', sending commands with '{}s' interval".format(via, interval))
+        log.debug(
+            "nornir-salt:pyatsunicon_send_commands connection '{}', sending commands with '{}s' interval".format(
+                via, interval
+            )
+        )
         for command in commands:
             _form_results(task, connection.execute(command, **kwargs), command)
             time.sleep(interval)
     # make use of PyATS connections pool to send commands in parrallel
     elif isinstance(connection, ConnectionPool):
-        size = connection._pool_size if hasattr(connection, "_pool_size") else 5            
-        log.debug("nornir-salt:pyatsunicon_send_commands connections pool '{}', size '{}', sending commands in parrallel".format(via, size))
+        size = connection._pool_size if hasattr(connection, "_pool_size") else 5
+        log.debug(
+            "nornir-salt:pyatsunicon_send_commands connections pool '{}', size '{}', sending commands in parrallel".format(
+                via, size
+            )
+        )
         # execute threads to send commands across multiple connections
         with ThreadPoolExecutor(size) as pool:
             cmd_futures = {
-                pool.submit(lambda cmd: connection.execute(cmd, **kwargs), cmd): cmd 
+                pool.submit(lambda cmd: connection.execute(cmd, **kwargs), cmd): cmd
                 for cmd in commands
             }
             for future in as_completed(cmd_futures):
                 _form_results(task, future.result(), cmd_futures[future])
     # send all commands at once
     else:
-        log.debug("nornir-salt:pyatsunicon_send_commands connection '{}', sending commands all at once".format(via))
-        _form_results(task, connection.execute(commands, **kwargs), commands)                       
+        log.debug(
+            "nornir-salt:pyatsunicon_send_commands connection '{}', sending commands all at once".format(
+                via
+            )
+        )
+        _form_results(task, connection.execute(commands, **kwargs), commands)
 
     # set skip_results to True, for ResultSerializer to ignore
     # results for grouped task itself, which are usually None

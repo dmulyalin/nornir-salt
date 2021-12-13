@@ -3,7 +3,7 @@ ncclient_call
 #############
 
 `Ncclient <https://github.com/ncclient>`_ is a popular library to interact with
-devices using NETCONF, this plugin is a wrapper around ncclient connection 
+devices using NETCONF, this plugin is a wrapper around ncclient connection
 manager object.
 
 NETCONF protocol has a specific set of RPC calls available for use, rather
@@ -20,7 +20,7 @@ Sample code to run ``ncclient_call`` task::
     from nornir_salt import ncclient_call
 
     nr = InitNornir(config_file="config.yaml")
-    
+
     output = nr.run(
         task=ncclient_call,
         call="get_config",
@@ -73,7 +73,7 @@ from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
 log = logging.getLogger(__name__)
 
 try:
-    import lxml.etree as etree
+    import lxml.etree as etree  # nosec
 
     HAS_LXML = True
 except ImportError:
@@ -107,7 +107,7 @@ except ImportError:
                 * Arista cEOS - not working, transport session closed error
                 * Cisco IOS XR - working
                 """
-                ele = etree.fromstring(data.encode("UTF-8"))
+                ele = etree.fromstring(data.encode("UTF-8"))  # nosec
                 return self._request(ele)
 
 
@@ -236,9 +236,7 @@ def ncclient_call(task: Task, call: str, *args, **kwargs) -> Result:
     # run sanity check
     if not HAS_NCCLIENT:
         return Result(
-            host=task.host,
-            failed=True,
-            exception="No Ncclient found, is it installed?",
+            host=task.host, failed=True, exception="No Ncclient found, is it installed?"
         )
 
     # initiate parameters

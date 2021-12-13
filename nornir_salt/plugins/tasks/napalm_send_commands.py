@@ -7,14 +7,14 @@ to send multiple commands to devices pre-processing commands accordingly.
 
 Pre-processing includes:
 
-- Check and if any - retrieve per-host commands from host's inventory data 
+- Check and if any - retrieve per-host commands from host's inventory data
   ``task.host.data["__task__"]["commands"]`` or from ``task.host.data["__task__"]["filename"]``
 - If command is a multi-line string, split it to individual lines or form a list with single command
 - Iterate over commands list and remove empty strings
 - Iterate over commands and replace ``new_line_char`` with ``\\n`` new line
 
-Next, if ``interval`` argument provided commands send one by one to device using 
-``napalm_cli`` task plugin sleeping for given ``interval`` between commands. If 
+Next, if ``interval`` argument provided commands send one by one to device using
+``napalm_cli`` task plugin sleeping for given ``interval`` between commands. If
 ``interval`` argument is not provided, all commands sent at once.
 
 Dependencies:
@@ -33,7 +33,7 @@ Code to invoke ``napalm_send_commands`` task::
         commands=["show run", "show clock"]
     )
 
-Task ``napalm_send_commands`` returns Nornir results object with individual tasks 
+Task ``napalm_send_commands`` returns Nornir results object with individual tasks
 names set equal to commands sent to device.
 
 API Reference
@@ -60,10 +60,7 @@ CONNECTION_NAME = "napalm"
 
 
 def napalm_send_commands(
-    task: Task,
-    commands=[],
-    interval=None,
-    new_line_char: str = "_br_",
+    task: Task, commands=[], interval=None, new_line_char: str = "_br_"
 ):
     """
     Nornir Task function to send show commands to devices using ``napalm_cli`` task
@@ -139,11 +136,7 @@ def napalm_send_commands(
         # iterate over dictionary result and construct per-command result
         for command, output in res.result.items():
             per_command_results.append(
-                Result(
-                    host=task.host,
-                    result=output,
-                    name=command.strip(),
-                )
+                Result(host=task.host, result=output, name=command.strip())
             )
     task.results.extend(per_command_results)
 

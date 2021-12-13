@@ -12,10 +12,12 @@ import pprint
 sys.path.insert(0, "..")
 
 from nornir import InitNornir
-
+from nornir.core.plugins.inventory import InventoryPluginRegister
+	
 # these libs imported from nornir_salt dir
 from nornir_salt.plugins.functions import FFun
-
+from nornir_salt import DictInventory
+	
 inventory_data = """
 hosts:
   R1:
@@ -57,21 +59,10 @@ groups:
 """
 
 inventory_dict = yaml.safe_load(inventory_data)
+InventoryPluginRegister.register("DictInventory", DictInventory)
 
 NornirObj = InitNornir(
-    runner={
-        "plugin": "RetryRunner",
-        "options": {
-            "num_workers": 100,
-            "num_connectors": 10,
-            "connect_retry": 3,
-            "connect_backoff": 1000,
-            "connect_splay": 100,
-            "task_retry": 3,
-            "task_backoff": 1000,
-            "task_splay": 100,
-        },
-    },
+    runner={"plugin": "serial"},
     inventory={
         "plugin": "DictInventory",
         "options": {
@@ -286,9 +277,9 @@ def test_FR():
                                  'platform': 'ios',
                                  'port': None,
                                  'username': None}}
-# test_FR()    
-    
-    
+# test_FR()
+
+
 def test_FR_list():
     res = FFun(NornirObj, FR=["R[12]", "SW\d"])
     res_dict = res.dict()
@@ -321,8 +312,8 @@ def test_FR_list():
                                  'platform': 'nxos_ssh',
                                  'port': None,
                                  'username': None}}
-# test_FR_list()                                 
-    
+# test_FR_list()
+
 def test_FO_list_of_dict():
     res = FFun(NornirObj, FO=[{"role": "agg", "platform": "ios"}, {"site": "B3"}])
     res_dict = res.dict()
@@ -550,7 +541,7 @@ def test_FB_with_FN():
                                   'platform': 'nxos_ssh',
                                   'port': None,
                                   'username': None}}
-         
+
 # test_FB_with_FN()
 
 

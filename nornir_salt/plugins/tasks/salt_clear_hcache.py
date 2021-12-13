@@ -2,30 +2,30 @@
 salt_clear_hcache
 #################
 
-Task to clear hosts' task results cache stored  in data. This task 
-plugin does not have much practical applicability outside of 
+Task to clear hosts' task results cache stored  in data. This task
+plugin does not have much practical applicability outside of
 SaltStack environment.
-    
+
 salt_clear_hcache sample usage
 ==============================
- 
+
 Sample code to run ``salt_clear_hcache`` task::
 
     import pprint
     from nornir import InitNornir
     from nornir_salt.plugins.tasks import salt_clear_hcache
-    
+
     nr = InitNornir(config_file="config.yaml")
-    
+
     result = NornirObj.run(
         task=salt_clear_hcache,
         cache_keys=["cache_key1", "cache_key2"]
     )
 
     result_dictionary = ResultSerializer(result)
-    
+
     pprint.pprint(result_dictionary)
-    
+
 
 salt_clear_cache returns dictionary of cleared cache keys with status
 
@@ -38,14 +38,14 @@ salt_clear_cache reference
 .. autofunction:: nornir_salt.plugins.tasks.salt_clear_hcache.salt_clear_hcache
 """
 import logging
-from typing import Optional, List
+from typing import List
 
 from nornir.core.task import Result, Task
 
 log = logging.getLogger(__name__)
 
 
-def salt_clear_hcache(task: Task, cache_keys: list = None, **kwargs) -> Result:
+def salt_clear_hcache(task: Task, cache_keys: List = None, **kwargs) -> Result:
     """
     Function to iterate over provided cache keys and delete them from hosts's data.
 

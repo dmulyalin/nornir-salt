@@ -14,4 +14,3 @@ Welcome to nornir-salt's documentation!
    Tasks/index
    Processors/index
    Functions/index
-

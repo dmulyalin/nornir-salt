@@ -76,4 +76,3 @@ html_static_path = ['_static']
 
 # to make crossreferencing section names between documents work
 autosectionlabel_prefix_document = True
-

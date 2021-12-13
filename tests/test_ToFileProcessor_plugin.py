@@ -48,12 +48,12 @@ hosts:
     hostname: 192.168.217.7
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
-    
+
 defaults: {}
 """
 lab_inventory_dict = yaml.safe_load(lab_inventory)
@@ -208,7 +208,7 @@ def test_to_file_struct_data():
     iol2_res = [
 {"ip": "4.4.4.4", "interface": "Gi2"},
     ]
-        
+
     # run test to generate the file
     nr_with_tf = nr.with_processors(
         [ToFileProcessor(tf="config_for_read", base_url="./tofile_outputs/")]
@@ -238,5 +238,5 @@ def test_to_file_struct_data():
             with open(filname, "r") as f:
                 content = json.loads(f.read())
                 assert content == iol2_res
-                
+
 # test_to_file_struct_data()

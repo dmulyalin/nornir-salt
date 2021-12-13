@@ -1,8 +1,8 @@
 """
-For some reason tests test_file_diff_certain_task_name and 
-test_file_diff_whole_result_non_exist_filegroup if run from 
-test_files_task_plugins.py file, produce error with due to 
-output folder contains no files. If move these two tests in 
+For some reason tests test_file_diff_certain_task_name and
+test_file_diff_whole_result_non_exist_filegroup if run from
+test_files_task_plugins.py file, produce error with due to
+output folder contains no files. If move these two tests in
 separate file all works fine. ALso running tests individually
 also works fine even if theu are part of test_files_task_plugins.py
 file.
@@ -15,7 +15,7 @@ import logging
 import yaml
 import pytest
 import time
-import json 
+import json
 
 sys.path.insert(0, "..")
 
@@ -59,12 +59,12 @@ hosts:
     hostname: 192.168.217.7
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
-    
+
 defaults: {}
 """
 lab_inventory_dict = yaml.safe_load(lab_inventory)
@@ -108,32 +108,32 @@ def nr_test_grouped_subtasks(task, task_1, task_2):
     """
     Test grouped task
     """
-    task.run(**task_1)    
+    task.run(**task_1)
     task.run(**task_2)
     return Result(host=task.host, skip_results=True)
-    
+
 def generate_files(tf):
     """
     Helper function to generate files by running task
     """
     iol1_res_ntp = [
-{"ntp": "1.1.1.1"},   
+{"ntp": "1.1.1.1"},
     ]
     iol2_res_ntp = [
-{"ntp": "2.2.2.2"},       
+{"ntp": "2.2.2.2"},
     ]
     iol1_res_log = [
-{"log": "3.3.3.3"},       
+{"log": "3.3.3.3"},
     ]
     iol2_res_log = [
-{"log": "4.4.4.4"},       
-    ]     
-    
+{"log": "4.4.4.4"},
+    ]
+
     # run test to generate the file
     nr_with_tf = nr.with_processors(
         [ToFileProcessor(tf=tf, base_url="./tofile_outputs/")]
     )
-    
+
     # first task run
     nr_with_tf.run(
         task=nr_test_grouped_subtasks,
@@ -154,7 +154,7 @@ def generate_files(tf):
             "name": "show run | inc logging",
         },
     )
-    
+
 # ----------------------------------------------------------------------
 # tests that need Nornir
 # ----------------------------------------------------------------------
@@ -183,7 +183,7 @@ ntp server 7.7.7.9
     nr_with_tf1 = nr.with_processors(
         [ToFileProcessor(tf="device_config", base_url="./tofile_outputs/")]
     )
-        
+
     # first task run
     _ = nr_with_tf1.run(
         task=nr_test_grouped_subtasks,
@@ -225,7 +225,7 @@ ntp server 7.7.7.9
             "name": "show run | inc logging",
         },
     )
-    
+
     # run task to diff
     output = nr.run(
         task=file_diff,
@@ -233,7 +233,7 @@ ntp server 7.7.7.9
         filegroup="device_config",
         task_name="show run | inc ntp"
     )
-    
+
     res_task_diff = ResultSerializer(output, add_details=True)
 
     pprint.pprint(res_task_diff, width=150)
@@ -243,11 +243,11 @@ ntp server 7.7.7.9
  ntp server 7.7.7.7
 +ntp server 1.1.1.1""" in res_task_diff["IOL1"]["device_config"]["result"]
     assert res_task_diff["IOL1"]["device_config"]["result"].count("device_config") == 2
-    
+
     assert """-ntp server 7.7.7.7
 +ntp server 7.7.7.9""" in res_task_diff["IOL2"]["device_config"]["result"]
     assert res_task_diff["IOL2"]["device_config"]["result"].count("device_config") == 2
-    
+
 # test_file_diff_certain_task_name()
 
 @skip_if_no_nornir
@@ -270,7 +270,7 @@ ntp server 7.7.7.7
     iol2_res_new = """
 ntp server 7.7.7.9
         """
-        
+
     # run test to generate the file
     nr_with_tf = nr.with_processors(
         [ToFileProcessor(tf="ntp_config", base_url="./tofile_outputs/")]
@@ -290,8 +290,8 @@ ntp server 7.7.7.9
             "IOL2": iol2_res_new,
         },
         name="show run | inc ntp",
-    )  
-   
+    )
+
     # run task to diff
     output = nr.run(
         task=file_diff,
@@ -299,12 +299,12 @@ ntp server 7.7.7.9
         filegroup="non_existing",
     )
     res = ResultSerializer(output, add_details=True)
-    
+
     # pprint.pprint(res, width=150)
-    
+
     assert res["IOL1"]["non_existing"]["failed"] == True
     assert "non_existing files not found" in res["IOL1"]["non_existing"]["exception"]
     assert res["IOL2"]["non_existing"]["failed"] == True
     assert "non_existing files not found" in res["IOL2"]["non_existing"]["exception"]
-    
+
 # test_file_diff_whole_result_non_exist_filegroup()

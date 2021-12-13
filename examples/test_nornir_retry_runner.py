@@ -2,7 +2,7 @@ import yaml
 import pprint
 from nornir import InitNornir
 from nornir.core.task import Result, Task
-from nornir_netmiko import netmiko_send_command, netmiko_send_config
+from nornir_netmiko import netmiko_send_command
 from nornir_salt.plugins.functions import ResultSerializer
 
 inventory_data = """
@@ -19,8 +19,8 @@ hosts:
 #    hostname: 192.168.1.154
 #    platform: ios
 #    groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
@@ -39,46 +39,42 @@ NornirObj = InitNornir(
             "connect_splay": 100,
             "task_retry": 3,
             "task_backoff": 1000,
-            "task_splay": 100
-        }
+            "task_splay": 100,
+        },
     },
     inventory={
         "plugin": "DictInventory",
         "options": {
             "hosts": inventory_dict["hosts"],
             "groups": inventory_dict["groups"],
-            "defaults": inventory_dict.get("defaults", {})
-        }
+            "defaults": inventory_dict.get("defaults", {}),
+        },
     },
 )
 
-def _task_group_netmiko_send_commands(task, commands):
+
+def _task_group_netmiko_send_commands(task: Task, commands):
     # run commands
-    import ipdb; ipdb.set_trace()
+    import ipdb
+
+    ipdb.set_trace()
     for command in commands:
-        task.run(
-            task=netmiko_send_command,
-            command_string=command,
-            name=command
-        )
+        task.run(task=netmiko_send_command, command_string=command, name=command)
     return Result(host=task.host)
-    
+
+
 # run single task
-result1 = NornirObj.run(
-    task=netmiko_send_command, 
-    command_string="show clock"
-)
+result1 = NornirObj.run(task=netmiko_send_command, command_string="show clock")
 
 # run grouped tasks
 result2 = NornirObj.run(
-    task=_task_group_netmiko_send_commands, 
-    commands=["show clock", "show run | inc hostname"]
+    task=_task_group_netmiko_send_commands,
+    commands=["show clock", "show run | inc hostname"],
 )
 
 # run another single task
 result3 = NornirObj.run(
-    task=netmiko_send_command, 
-    command_string="show run | inc hostname"
+    task=netmiko_send_command, command_string="show run | inc hostname"
 )
 
 NornirObj.close_connections()

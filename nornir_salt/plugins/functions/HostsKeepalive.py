@@ -19,7 +19,7 @@ open, preventing it from timeout due to inactivity.
 - http - HTTP connections non-persistent hence ``HostsKeepalive`` does nothing
 - pyatsunicon - uses ``is_connected`` method
 
-For other connection types ``HostsKeepalive`` logs warning message about connection 
+For other connection types ``HostsKeepalive`` logs warning message about connection
 type being unknown and keeps connection intact.
 
 .. note:: HostsKeepalive only checks previously established connections, it
@@ -84,10 +84,9 @@ def HostsKeepalive(nr):
                 elif "pygnmi" in str(type(conn_obj)).lower():
                     is_alive = True
                 elif "pyats" in str(type(conn_obj)).lower():
-                    is_alive = all([
-                        d.is_connected() 
-                        for d in conn_obj.connection.devices.values()
-                    ])
+                    is_alive = all(
+                        [d.is_connected() for d in conn_obj.connection.devices.values()]
+                    )
                 else:
                     log.debug(
                         "nornir_salt:HostsKeepalive - uncknown connection '{}', type: '{}'".format(

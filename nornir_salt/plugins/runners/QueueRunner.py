@@ -2,12 +2,12 @@
 QueueRunner plugin
 ##################
 
-QueueRunner plugin implements simple queue for task execution instead of starting 
-threads for ongoing tasks. 
+QueueRunner plugin implements simple queue for task execution instead of starting
+threads for ongoing tasks.
 
-For example, if number of threads 10, but task need to be executed on 20 hosts, 
-threaded runner will start first 10 threads to run task for first 10 hosts, 
-after that start another 10 threads to run task for remaining 10 hosts. 
+For example, if number of threads 10, but task need to be executed on 20 hosts,
+threaded runner will start first 10 threads to run task for first 10 hosts,
+after that start another 10 threads to run task for remaining 10 hosts.
 
 Above process works well for majority of cases, but using QueueRunner might be
 beneficial in certain situations, e.g. QueueRunner pros:
@@ -37,7 +37,7 @@ Need to instruct Nornir to use QueueRunner on instantiation::
             }
         }
     )
-    
+
 QueueRunner Reference
 =====================
 

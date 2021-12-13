@@ -4,12 +4,12 @@ scrapli_netconf_call
 
 Dependencies: `Scrapli Netconf <https://pypi.org/project/scrapli-netconf/>`_ need to be installed
 
-Scrapli Netconf is a library to interact with devices using NETCONF. ``scrapli_netconf_call`` task 
+Scrapli Netconf is a library to interact with devices using NETCONF. ``scrapli_netconf_call`` task
 plugin is a wrapper around Scrapli Netconf connection object.
 
 NETCONF protocol has a specific set of RPC calls available for use, rather
 than coding separate task for each of them, ``scrapli_netconf_call`` made to execute
-any arbitrary method supported by Scrapli Netconf connection object plus a set 
+any arbitrary method supported by Scrapli Netconf connection object plus a set
 of additional helper methods for extended functionality.
 
 Sample code to run ``scrapli_netconf_call`` task::
@@ -18,7 +18,7 @@ Sample code to run ``scrapli_netconf_call`` task::
     from nornir_salt import scrapli_netconf_call
 
     nr = InitNornir(config_file="config.yaml")
-    
+
     output = nr.run(
         task=scrapli_netconf_call,
         call="get_config",

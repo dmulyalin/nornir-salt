@@ -2,24 +2,24 @@
 netmiko_send_command_ps
 #######################
 
-Send command string to device using promptless (ps) approach. Can be used for any 
+Send command string to device using promptless (ps) approach. Can be used for any
 command, including commands that change device prompt. Multiple commands can be sent
 separated by '\n' newline.
 
 .. image:: ../_images/promptless_mode_v0.1.png
 
 Promptless mode allows to detect end of output from device without relying on timers or
-correct prompt matching (hence the name - promptless). This mode still uses pattern to 
+correct prompt matching (hence the name - promptless). This mode still uses pattern to
 decide if device finished emitting data, but that pattern is not dependent on device's prompt
 regex matching.
 
-Each reading cycle, data from device read as fast as possible until device either finishes or 
-pose to prepare more data. Latter case detected and handled using read timeout timer and checking 
+Each reading cycle, data from device read as fast as possible until device either finishes or
+pose to prepare more data. Latter case detected and handled using read timeout timer and checking
 if new data received. To detect when device finishes producing output, algorithm sends two space
 character to device and checks in next read cycle if last line contains two additional spaces,
 concluding that end of output detected if so and continue cycling otherwise.
 
-Overall its similar to how Humans interact with device prompt to verify that its still operational 
+Overall its similar to how Humans interact with device prompt to verify that its still operational
 - try hitting space or type something in terminal to see if its appears on the screen.
 
 Dependencies:
@@ -35,7 +35,7 @@ Code to invoke ``netmiko_send_command_ps`` task::
     from nornir_salt import netmiko_send_command_ps
 
     nr = InitNornir(config_file="config.yaml")
-    
+
     commands = '''
     show ip int brief
     conf t
@@ -45,7 +45,7 @@ Code to invoke ``netmiko_send_command_ps`` task::
     show ip int brief
     wr
     '''
-    
+
     output = nr.run(
         task=netmiko_send_command_ps,
         commands="show run",
@@ -57,7 +57,7 @@ Code to invoke ``netmiko_send_command_ps`` task::
         commands=commands,
         netmiko_kwargs={}
     )
-    
+
 netmiko_send_command_ps returns
 ================================
 

@@ -8,7 +8,7 @@ to send configuration commands to devices over SSH or Telnet.
 This task plugin applies device configuration following this sequence:
 
 - Retrieve and use, if any, per-host configuration rendered by SaltStack from host's
-  inventory data ``task.host.data["__task__"]["commands"]`` or 
+  inventory data ``task.host.data["__task__"]["commands"]`` or
   ``task.host.data["__task__"]["filename"]`` locations, use configuration provided
   by ``config`` argument otherwise
 - If configuration is a multi-line string, split it to a list of commands
@@ -36,8 +36,8 @@ Code to invoke ``pyatsunicon_send_config`` task::
         commands=["sinterface loopback 0", "description 'configured by script'"]
     )
 
-``pyatsunicon_send_config`` returns Nornir results object with task name set 
-to ``pyatsunicon_send_config`` and results containing configuration commands 
+``pyatsunicon_send_config`` returns Nornir results object with task name set
+to ``pyatsunicon_send_config`` and results containing configuration commands
 applied to device.
 
 API Reference
@@ -47,7 +47,6 @@ API Reference
 """
 import logging
 import traceback
-import time
 from nornir.core.task import Result, Task
 
 log = logging.getLogger(__name__)
@@ -56,25 +55,22 @@ log = logging.getLogger(__name__)
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
 CONNECTION_NAME = "pyatsunicon"
 
-def pyatsunicon_send_config(
-    task: Task,
-    config: str = None,
-    **kwargs
-):
+
+def pyatsunicon_send_config(task: Task, config: str = None, **kwargs):
     """
     Salt-nornir Task function to send configuration to devices using
     ``nornir_netmiko.tasks.pyatsunicon_send_config`` plugin.
-    
+
     Device ``configure`` method does not support specifying connection to use to
     send configuration via.
 
     :param config: (str or list) configuration string or list of commands to send to device
     :param kwargs: (dict) any additional ``**kwargs`` for device connection ``configure`` method
     :return result: Nornir result object with task execution results
-    
+
     Device ``configure`` method supports below additional arguments that can be passed
     via ``**kwargs``:
-    
+
     :param reply: Addition Dialogs for interactive config commands.
     :param timeout: Timeout value in sec, Default Value is 30 sec
     :param error_pattern: list of regex to detect command errors
@@ -97,7 +93,7 @@ def pyatsunicon_send_config(
     # get PyATS testbed, device object
     testbed = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     device = testbed.devices[task.host.name]
-        
+
     # get configuration from host data if any
     if "commands" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["commands"]
@@ -107,13 +103,10 @@ def pyatsunicon_send_config(
     # transform configuration to a list if string given
     if isinstance(config, str):
         config = config.splitlines()
-        
+
     # send config
     try:
-        task_result.result = device.configure(
-            config,
-            **kwargs
-        )
+        task_result.result = device.configure(config, **kwargs)
     except:
         log.exception("nornir-salt:pyatsunicon_send_config configure error")
         task_result.failed = True

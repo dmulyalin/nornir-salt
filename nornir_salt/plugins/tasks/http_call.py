@@ -101,11 +101,7 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
     )
 
     # form requests parameters
-    parameters = {
-        "timeout": (5, 5),
-        **conn["extras"],
-        **kwargs,
-    }
+    parameters = {"timeout": (5, 5), **conn["extras"], **kwargs}
 
     # clean up parameters
     transport = parameters.pop("transport", None)

@@ -3,7 +3,7 @@ DictInventory plugin
 ####################
 
 DictInventory is an inventory plugin that loads data from Python dictionaries.
-  
+
 DictInventory sample usage
 ==========================
 
@@ -11,7 +11,7 @@ Need to instruct Nornir to use DictInventory plugin on instantiation::
 
     import yaml
     from nornir import InitNornir
-    
+
     inventory_data = '''
     hosts:
       R1:
@@ -26,15 +26,15 @@ Need to instruct Nornir to use DictInventory plugin on instantiation::
         hostname: 192.168.1.154
         platform: ios
         groups: [lab]
-    
+
     groups:
       lab:
         username: cisco
         password: cisco
     '''
-    
+
     inventory_dict = yaml.safe_load(inventory_data)
-    
+
     NornirObj = InitNornir(
         inventory={
             "plugin": "DictInventory",

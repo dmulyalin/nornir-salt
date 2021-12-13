@@ -47,12 +47,12 @@ hosts:
     hostname: 192.168.217.7
     platform: ios
     groups: [lab]
-    
-groups: 
+
+groups:
   lab:
     username: cisco
     password: cisco
-    
+
 defaults: {}
 """
 lab_inventory_dict = yaml.safe_load(lab_inventory)
@@ -167,7 +167,7 @@ ntp server 9.9.9.9
     #                                            '@@ -1 +1,2 @@\n'
     #                                            ' ntp server 7.7.7.7\n'
     #                                            '+ntp server 9.9.9.9\n'}}}
-                                           
+
     assert (
         """-Timestamp 12:12:12
 +Timestamp 14:14:14
@@ -274,6 +274,6 @@ ntp server 9.9.9.9
  ntp server 7.7.7.7
 +ntp server 9.9.9.9"""
         in res["IOL2"]["show run | inc ntp"]["diff"]
-    )    
-    
+    )
+
 # test_diff_processor_in_diff_is_true()

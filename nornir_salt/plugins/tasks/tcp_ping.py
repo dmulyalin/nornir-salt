@@ -4,7 +4,7 @@ tcp_ping
 
 Tests connection to a TCP port trying to establish a three way
 handshake. Useful for network discovery or testing.
-    
+
 tcp_ping sample usage
 =====================
 
@@ -14,23 +14,23 @@ Sample code to run ``tcp_ping`` task::
     from nornir import InitNornir
     from nornir_salt.plugins.tasks import tcp_ping
     from nornir_salt.plugins.functions import ResultSerializer
-    
+
     nr = InitNornir(config_file="config.yaml")
-    
+
     result = NornirObj.run(
         task=tcp_ping,
         ports=[22]
     )
 
     result_dictionary = ResultSerializer(result)
-    
+
     pprint.pprint(result_dictionary)
-    
+
     # prints:
-    # 
+    #
     # {'IOL1': {'tcp_ping': {22: True}},
     #  'IOL2': {'tcp_ping': {22: True}}}
-    
+
 
 tcp_ping returns
 ================

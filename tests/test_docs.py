@@ -50,7 +50,7 @@ try:
     has_connection_to_cisco_iosxe_always_on_router = True
 except:
     has_connection_to_cisco_iosxe_always_on_router = False
-    
+
 skip_if_has_no_cisco_iosxe_always_on_router = pytest.mark.skipif(
     has_connection_to_cisco_iosxe_always_on_router == False,
     reason="Has no connection to sandbox-iosxe-recomm-1.cisco.com router",
@@ -83,7 +83,7 @@ def init(opts):
 @skip_if_no_nornir
 def test_run_ttp_docs():
     nr = init(cisco_iosxe_always_on_router_dict)
-    
+
     # define TTP template with inputs having commands attributes
     template = '''
 <input name="arp">
@@ -100,21 +100,21 @@ Internet  {{ ip }}   {{ age }}   {{ mac }}  ARPA   {{ interface }}
 
 <group name="facts.version" input="version">
 Cisco IOS XE Software, Version {{ iose_xe_version }}
-</group>    
+</group>
     '''
-    
+
     # add data processor with run_ttp function
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "run_ttp", "template": template}]
-    )]) 
-    
-    # run task; commands for task will be dynamically populated by DataProcessor 
+    )])
+
+    # run task; commands for task will be dynamically populated by DataProcessor
     # run_ttp function with commands defined within TTP template inputs
     result = nr_with_dp.run(task=netmiko_send_commands)
-    
+
     # serialize results to dictionary
     dict_result = ResultSerializer(result)
-    
+
     pprint.pprint(dict_result)
     # prints:
     # {'sandbox-iosxe-recomm-1': {'run_ttp': [[{'arp_cache': [{'age': '0',
@@ -145,5 +145,5 @@ Cisco IOS XE Software, Version {{ iose_xe_version }}
     assert "arp_cache" in dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][0]
     assert "facts" in dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][1]
     assert len(dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][0]["arp_cache"]) > 0
-    
-test_run_ttp_docs()
+
+# test_run_ttp_docs()

@@ -118,7 +118,7 @@ dict_ntp_data = {'rpc-reply': {'@message-id': 'urn:uuid:2412b1be-e949-4ebc-93e4-
                                                                                               'iburst': 'false',
                                                                                               'prefer': 'false',
                                                                                               'version': '4'}}]}}}}}}
-                                                                                              
+
 
 dict_ntp_data_flattened = {'rpc-reply.@message-id': 'urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6',
                            'rpc-reply.@xmlns': 'urn:ietf:params:xml:ns:netconf:base:1.0',
@@ -136,8 +136,8 @@ dict_ntp_data_flattened = {'rpc-reply.@message-id': 'urn:uuid:2412b1be-e949-4ebc
                            'rpc-reply.data.system.ntp.servers.server.1.config.iburst': 'false',
                            'rpc-reply.data.system.ntp.servers.server.1.config.prefer': 'false',
                            'rpc-reply.data.system.ntp.servers.server.1.config.version': '4'}
-                                                      
-                                                      
+
+
 # ----------------------------------------------------------------------
 # Initialize Nornir
 # ----------------------------------------------------------------------
@@ -200,10 +200,10 @@ def nr_test_grouped_subtasks(task, task_1, task_2, **kwargs):
     """
     Test grouped task
     """
-    task.run(**task_1)    
+    task.run(**task_1)
     task.run(**task_2)
     return Result(host=task.host, skip_results=True)
-    
+
 # ----------------------------------------------------------------------
 # tests that need Nornir
 # ----------------------------------------------------------------------
@@ -248,7 +248,7 @@ def test_struct_to_json_kwargs():
     # pprint.pprint(result)
     assert result == {'IOL1': {'show run | inc ntp': '{\n  "a": 1,\n  "b": 2\n}'},
                       'IOL2': {'show run | inc ntp': '{\n  "c": 3,\n  "d": 4\n}'}}
-                      
+
 # test_struct_to_json_kwargs()
 
 @skip_if_no_nornir
@@ -410,7 +410,7 @@ def test_struct_to_flatten_dict():
     # pprint.pprint(result)
     assert result["IOL1"]["show run | inc ntp"] == dict_ntp_data_flattened
     assert result["IOL2"]["show run | inc ntp"] == dict_ntp_data_flattened
-    
+
 # test_struct_to_flatten_dict()
 
 
@@ -432,7 +432,7 @@ def test_struct_to_unflatten_dict():
     # pprint.pprint(result)
     assert result["IOL1"]["show run | inc ntp"] == dict_ntp_data
     assert result["IOL2"]["show run | inc ntp"] == dict_ntp_data
-    
+
 # test_struct_to_unflatten_dict()
 
 
@@ -466,7 +466,7 @@ def test_struct_to_unflatten_list():
                                                       {'a': {'b': [{'c': 3}, 4]}}]},
                       'IOL2': {'show run | inc ntp': [{'a': {'b': [{'c': 1}, {'c': 2}]}},
                                                       {'a': {'b': [{'c': 3}, 4]}}]}}
-                                 
+
 # test_struct_to_unflatten_list()
 
 
@@ -496,7 +496,7 @@ def test_struct_to_unflatten_list_first_non_0_index():
     )
     result = ResultSerializer(output, to_dict=True)
     pprint.pprint(result)
-                                 
+
 # test_struct_to_unflatten_list_first_non_0_index()
 
 
@@ -584,7 +584,7 @@ def test_xml_xpath_elem_by_value():
 
 @skip_if_no_nornir
 def test_xml_xpath_smart_string_false():
-    """ results are XML filtered using XPATH 
+    """ results are XML filtered using XPATH
     Test that smart_string=False works for ethree.xpath
     """
     nr_with_dp = nr.with_processors([DataProcessor(
@@ -701,7 +701,7 @@ def test_xml_rm_ns():
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result, width=200)
-    
+
     assert result == {'IOL1': {'show run | inc ntp': '<rpc-reply message-id="urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6">\n'
                                 '  <data time-modified="2021-07-15T19:54:35.034953141Z">\n'
                                 '    <system>\n'
@@ -766,7 +766,7 @@ def test_xml_rm_ns():
                                 '    </system>\n'
                                 '  </data>\n'
                                 '</rpc-reply>\n'}}
-    
+
 # test_xml_rm_ns()
 
 @skip_if_no_nornir
@@ -845,13 +845,13 @@ interface {{ interface }}
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
-  description RID            
+  description RID
             """,
             "IOL2": """
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
-  description RID            
+  description RID
             """,
         },
         name="show run | inc ntp",
@@ -864,7 +864,7 @@ interface Loopback0
                    'IOL2': {'show run | inc ntp': [{'description': 'Storage Management',
                                                     'interface': 'Port-Chanel11'},
                                                    {'description': 'RID', 'interface': 'Loopback0'}]}}
-    
+
 # test_parse_ttp()
 
 def test_match():
@@ -878,22 +878,22 @@ def test_match():
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
-  description PID            
+  description PID
             """,
             "IOL2": """
 interface Port-Chanel11
   description Storage Management Space
 interface Loopback0
-  description RID/PID         
+  description RID/PID
             """,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': '  description Storage Management'},
                    'IOL2': {'show run | inc ntp': '  description Storage Management Space'}}
-                   
+
 # test_match()
 
 def test_match_with_before():
@@ -907,23 +907,23 @@ def test_match_with_before():
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
-  description PID            
+  description PID
             """,
             "IOL2": """
 interface Port-Chanel11
   description Storage Management Space
 interface Loopback0
-  description RID/PID         
+  description RID/PID
             """,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': '--\ninterface Port-Chanel11\n  description Storage Management'},
                    'IOL2': {'show run | inc ntp': '--\n'
                                                   'interface Port-Chanel11\n'
-                                                  '  description Storage Management Space'}}               
+                                                  '  description Storage Management Space'}}
 # test_match_with_before()
 
 def test_match_int_pattern():
@@ -937,22 +937,22 @@ def test_match_int_pattern():
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
-  description PID            
+  description PID
             """,
             "IOL2": """
 interface Port-Chanel11
   description Storage Management Space
 interface Loopback0
-  description RID/PID         
+  description RID/PID
             """,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': 'interface Port-Chanel11'},
                       'IOL2': {'show run | inc ntp': 'interface Port-Chanel11'}}
-                   
+
 # test_match_int_pattern()
 
 def test_lod_filter():
@@ -976,11 +976,11 @@ def test_lod_filter():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
-                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}        
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}
 # test_lod_filter()
 
 def test_lod_filter_with_glob_check_type_specifier():
@@ -1004,11 +1004,11 @@ def test_lod_filter_with_glob_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
-                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}        
+                                                      {'interface': 'Gi3', 'ip': '1.1.1.1'}]}}
 # test_lod_filter_with_glob_check_type_specifier()
 
 def test_lod_filter_with_uncknown_check_type_specifier():
@@ -1032,7 +1032,7 @@ def test_lod_filter_with_uncknown_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': []}, 'IOL2': {'show run | inc ntp': []}}
 
 # test_lod_filter_with_uncknown_check_type_specifier()
@@ -1058,19 +1058,19 @@ def test_lod_filter_with_glob_check_type_specifier_multikey():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'}]},
-                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'}]}}   
-                      
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'}]}}
+
 # test_lod_filter_with_glob_check_type_specifier_multikey()
 
 
 def test_parse_ttp_multiple_tasks():
-    """ 
+    """
     Test TTP parsing for multiple task results with sorting across
     multiple inputs using commands attribute
     """
-    
+
     template = """
 <group name="ntp*">
 ntp server {{ ntp_server }}
@@ -1080,7 +1080,7 @@ ntp server {{ ntp_server }}
 logging host {{ log_server }}
 </group>
     """
-    
+
     iol1_res_ntp = """
 Timestamp 12:12:12
 
@@ -1096,8 +1096,8 @@ logging host 4.4.4.4
         """
     iol2_res_log = """
 logging host 5.5.5.5
-        """   
-        
+        """
+
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "parse_ttp", "template": template, "res_kwargs": {"structure": "flat_list"}}]
     )])
@@ -1128,7 +1128,7 @@ logging host 5.5.5.5
                             'show run | inc ntp': [{'ntp': [{'ntp_server': '7.7.7.8'}, {'ntp_server': '7.7.7.7'}]}]},
                    'IOL2': {'show run | inc logging': [{'log': [{'log_server': '5.5.5.5'}]}],
                             'show run | inc ntp': [{'ntp': [{'ntp_server': '7.7.7.7'}]}]}}
-                             
+
 # test_parse_ttp_multiple_tasks()
 
 
@@ -1154,7 +1154,7 @@ def test_path_function():
     )
     result = ResultSerializer(output)
     pprint.pprint(result)
-    
+
     assert result == {'IOL1': {'show run | inc ntp': '1.2.3.4'},
                       'IOL2': {'show run | inc ntp': '1.2.3.4'}}
 
@@ -1203,7 +1203,7 @@ def test_path_highhly_nested_data_path_with_quotes():
     # pprint.pprint(result)
 
     assert result == {'IOL1': {'show run | inc ntp': '443'}, 'IOL2': {'show run | inc ntp': '80'}}
- 
+
 # test_path_highhly_nested_data_path_with_quotes()
 
 
@@ -1249,7 +1249,7 @@ def test_path_highhly_nested_data_path_is_list():
     # pprint.pprint(result)
 
     assert result == {'IOL1': {'show run | inc ntp': '443'}, 'IOL2': {'show run | inc ntp': '80'}}
- 
+
 # test_path_highhly_nested_data_path_is_list()
 
 
@@ -1275,9 +1275,9 @@ def test_find_in_list():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    
+
     # pprint.pprint(result)
-    
+
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
@@ -1307,9 +1307,9 @@ def test_find_in_list_with_path():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    
+
     # pprint.pprint(result)
-    
+
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3'},
@@ -1339,13 +1339,13 @@ def test_find_in_dict_key_filter():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    
+
     # pprint.pprint(result)
 
     assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
                                                       'Gi3': {'ip': '2.2.2.2'}}},
                       'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
-                      
+
 # test_find_in_dict_key_filter()
 
 
@@ -1369,13 +1369,13 @@ def test_find_in_dict_key_filter_with_path():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    
+
     # pprint.pprint(result)
 
     assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
                                                       'Gi3': {'ip': '2.2.2.2'}}},
                       'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
-                      
+
 # test_find_in_dict_key_filter_with_path()
 
 
@@ -1393,7 +1393,7 @@ interface Lo0
 !
 interface Lo1
  description this interface has description
- ip address 1.1.1.1 32    
+ ip address 1.1.1.1 32
 !
             """,
             "IOL2": """
@@ -1405,13 +1405,13 @@ interface Lo0
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    
+
     # pprint.pprint(result)
 
     assert result == {'IOL1': {'show run | inc ntp': ' ip address 1.0.0.0 32\n'
-                                                     ' ip address 1.1.1.1 32    '},
+                                                     ' ip address 1.1.1.1 32'},
                       'IOL2': {'show run | inc ntp': ' ip address 1.0.0.0 32'}}
-                      
+
 # test_find_in_text_match_filter()
 
 
@@ -1430,7 +1430,7 @@ interface Lo0
 !
 interface Lo1
  description this interface has description
- ip address 1.1.1.1 32    
+ ip address 1.1.1.1 32
 !
             """}},
             "IOL2": {"interfaces": {"cfg": """
@@ -1442,13 +1442,13 @@ interface Lo0
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    
+
     # pprint.pprint(result)
 
     assert result == {'IOL1': {'show run | inc ntp': ' ip address 1.0.0.0 32\n'
-                                                     ' ip address 1.1.1.1 32    '},
+                                                     ' ip address 1.1.1.1 32'},
                       'IOL2': {'show run | inc ntp': ' ip address 1.0.0.0 32'}}
-                      
+
 # test_find_in_text_match_filter_with_path()
 
 
@@ -1476,9 +1476,9 @@ def test_key_filter_check_specifier_glob():
     assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
                                                       'Gi3': {'ip': '2.2.2.2'}}},
                       'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
-                      
+
 # test_key_filter_check_specifier_glob()
-    
+
 def test_key_filter_check_specifier_re():
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "key_filter", "pattern__re": "Gi2|Gi3"}]
@@ -1503,7 +1503,7 @@ def test_key_filter_check_specifier_re():
     assert result == {'IOL1': {'show run | inc ntp': {'Gi2': {'ip': '1.1.1.1'},
                                                       'Gi3': {'ip': '2.2.2.2'}}},
                       'IOL2': {'show run | inc ntp': {'Gi3': {'ip': '2.2.2.2'}}}}
-                      
+
 # test_key_filter_check_specifier_re()
 
 
@@ -1523,15 +1523,15 @@ ntp server {{ ntp_server }}
 
 <group name="log*" input="log_cfg">
 logging host {{ log_server }}
-</group>    
+</group>
     """
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "run_ttp", "template": template, "remove_tasks": False}]
-    )])    
+    )])
     output = nr_with_dp.run(
         task=nr_test,
         commands=[]
-    )    
+    )
     result = ResultSerializer(output)
     pprint.pprint(result)
     assert result == {'IOL1': {'nr_test': {'commands': ['show run | inc ntp',
@@ -1540,7 +1540,7 @@ logging host {{ log_server }}
                       'IOL2': {'nr_test': {'commands': ['show run | inc ntp',
                                                         'show run | inc logging']},
                                'run_ttp': [[]]}}
-                                   
+
 # test_parse_ttp_task_start_commands_extraction()
 
 
@@ -1558,8 +1558,8 @@ logging host 4.4.4.4
         """
     iol2_res_log = """
 logging host 5.5.5.5
-        """ 
-        
+        """
+
     template = """
 <input name="ntp_cfg">
 commands = ["show run | inc ntp"]
@@ -1575,11 +1575,11 @@ ntp server {{ ntp_server }}
 
 <group name="log*" input="log_cfg">
 logging host {{ log_server }}
-</group>    
+</group>
     """
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "run_ttp", "template": template}]
-    )])    
+    )])
     output = nr_with_dp.run(
         task=nr_test_grouped_subtasks,
         task_1={
@@ -1619,8 +1619,8 @@ logging host {{ log_server }}
                        'result': [[{'ntp': [{'ntp_server': '7.7.7.7'}]},
                                    {'log': [{'log_server': '5.5.5.5'}]}]]}]
 # test_parse_ttp_run_non_default_inputs_only()
-    
-    
+
+
 def test_parse_ttp_run_inputs_with_default_input():
     iol1_res_ntp = """
 ntp server 7.7.7.8
@@ -1635,8 +1635,8 @@ logging host 4.4.4.4
         """
     iol2_res_log = """
 logging host 5.5.5.5
-        """ 
-        
+        """
+
     template = """
 <input>
 commands = ["show run | inc ntp"]
@@ -1652,11 +1652,11 @@ ntp server {{ ntp_server }}
 
 <group name="log*" input="log_cfg">
 logging host {{ log_server }}
-</group>    
+</group>
     """
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "run_ttp", "template": template}]
-    )])    
+    )])
     output = nr_with_dp.run(
         task=nr_test_grouped_subtasks,
         task_1={
@@ -1695,7 +1695,7 @@ logging host {{ log_server }}
                        'name': 'run_ttp',
                        'result': [[{'ntp': [{'ntp_server': '7.7.7.7'}]},
                                    {'log': [{'log_server': '5.5.5.5'}]}]]}]
-                                   
+
 # test_parse_ttp_run_inputs_with_default_input()
 
 def test_parse_ttp_run_default_input_only():
@@ -1712,8 +1712,8 @@ logging host 4.4.4.4
         """
     iol2_res_log = """
 logging host 5.5.5.5
-        """ 
-        
+        """
+
     template = """
 <input>
 commands = [
@@ -1728,11 +1728,11 @@ ntp server {{ ntp_server }}
 
 <group name="log*">
 logging host {{ log_server }}
-</group>    
+</group>
     """
     nr_with_dp = nr.with_processors([DataProcessor(
         [{"fun": "run_ttp", "template": template}]
-    )])    
+    )])
     output = nr_with_dp.run(
         task=nr_test_grouped_subtasks,
         task_1={
@@ -1771,7 +1771,7 @@ logging host {{ log_server }}
                        'name': 'run_ttp',
                        'result': [[{'log': [{'log_server': '5.5.5.5'}],
                                     'ntp': [{'ntp_server': '7.7.7.7'}]}]]}]
-                                   
+
 # test_parse_ttp_run_default_input_only()
 
 def test_jmespath_struct_data():
@@ -1804,7 +1804,7 @@ def test_jmespath_struct_data():
     # pprint.pprint(result, width=150)
     assert result == {'IOL1': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}},
                       'IOL2': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}}}
-                      
+
 # test_jmespath_struct_data()
 
 
@@ -1839,7 +1839,7 @@ def test_jmespath_json_data():
     # pprint.pprint(result, width=150)
     assert result == {'IOL1': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}},
                       'IOL2': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}}}
-                      
+
 # test_jmespath_json_data()
 
 
@@ -1873,7 +1873,7 @@ def test_find_use_jmespath():
     # pprint.pprint(result, width=150)
     assert result == {'IOL1': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}},
                       'IOL2': {'show run | inc ntp': {'WashingtonCities': 'Bellevue, Olympia, Seattle'}}}
-                      
+
 # test_find_use_jmespath()
 
 
@@ -1933,7 +1933,7 @@ def test_find_use_xpath_with_namespaces():
                                                      '              <version>4</version>\n'
                                                      '            </config>\n'
                                                      '          \n'}}
-                      
+
 # test_find_use_xpath_with_namespaces()
 
 
@@ -1958,10 +1958,10 @@ def test_lod_filter_with_eq_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
-                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}} 
-                                                      
+                      'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
+
 # test_lod_filter_with_eq_check_type_specifier()
 
 def test_lod_filter_with_ge_check_type_specifier():
@@ -1985,12 +1985,12 @@ def test_lod_filter_with_ge_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
-                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}} 
-                                                      
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
+
 # test_lod_filter_with_ge_check_type_specifier()
 
 
@@ -2015,11 +2015,11 @@ def test_lod_filter_with_ge_check_type_specifier_wrong_type():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    pprint.pprint(result, width=100)    
+    pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
-													  
-# test_lod_filter_with_ge_check_type_specifier_wrong_type()													  
+
+# test_lod_filter_with_ge_check_type_specifier_wrong_type()
 
 def test_lod_filter_with_gt_check_type_specifier():
     nr_with_dp = nr.with_processors([DataProcessor(
@@ -2042,12 +2042,12 @@ def test_lod_filter_with_gt_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
-                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}} 
-                                                      
+                                                      {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
+
 # test_lod_filter_with_gt_check_type_specifier()
 
 def test_lod_filter_with_le_check_type_specifier():
@@ -2071,12 +2071,12 @@ def test_lod_filter_with_le_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    pprint.pprint(result, width=100)    
+    pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]}}
-                                                      
+
 # test_lod_filter_with_le_check_type_specifier()
 
 
@@ -2101,12 +2101,12 @@ def test_lod_filter_with_le_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'},
                                                       {'interface': 'Gi3', 'ip': '1.1.1.1', 'mask': '24'}]}}
-                                                      
+
 # test_lod_filter_with_le_check_type_specifier()
 
 
@@ -2131,12 +2131,12 @@ def test_lod_filter_with_in_list_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    pprint.pprint(result, width=100)    
+    pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
-                                                      
+
 # test_lod_filter_with_in_list_check_type_specifier()
 
 
@@ -2161,12 +2161,12 @@ def test_lod_filter_with_in_comma_sep_string_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'},
                                                       {'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
-                                                      
+
 # test_lod_filter_with_in_comma_sep_string_check_type_specifier()
 
 def test_lod_filter_with_in_string_check_type_specifier():
@@ -2190,10 +2190,10 @@ def test_lod_filter_with_in_string_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
-                                                      
+
 # test_lod_filter_with_in_string_check_type_specifier()
 
 
@@ -2218,10 +2218,10 @@ def test_lod_filter_with_in_integer_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi1', 'ip': '1.2.3.4', 'mask': '32'}]}}
-                                                      
+
 # test_lod_filter_with_in_integer_check_type_specifier()
 
 
@@ -2246,10 +2246,10 @@ def test_lod_filter_with_contains_check_type_specifier():
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=100)    
+    # pprint.pprint(result, width=100)
     assert result == {'IOL1': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]},
                       'IOL2': {'show run | inc ntp': [{'interface': 'Gi2', 'ip': '1.1.2.3', 'mask': '30'}]}}
-                                                      
+
 # test_lod_filter_with_contains_check_type_specifier()
 
 
@@ -2272,25 +2272,25 @@ fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
         ret_data_per_host={
             "IOL1": """
                                                                           Address
-Interface       IP Address        Status       Protocol            MTU    Owner  
+Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
-Ethernet1       10.0.1.4/24       up           up                 1500           
-Loopback1       1.1.1.1/24        up           up                65535           
-Loopback2       1.1.1.11/24        up           up                65535           
+Ethernet1       10.0.1.4/24       up           up                 1500
+Loopback1       1.1.1.1/24        up           up                65535
+Loopback2       1.1.1.11/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
             "IOL2": """
                                                                               Address
-Interface         IP Address          Status       Protocol            MTU    Owner  
+Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
-Ethernet1         10.0.1.5/24         up           up                 1500           
-Loopback100       100.12.3.4/22       up           up                65535           
-Loopback101       1.101.2.2/32        up           up                65535           
+Ethernet1         10.0.1.5/24         up           up                 1500
+Loopback100       100.12.3.4/22       up           up                65535
+Loopback101       1.101.2.2/32        up           up                65535
 Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           """
         },
         name="show ip int brief",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=170) 
+    # pprint.pprint(result, width=170)
     assert result == {'IOL1': {'show ip int brief': '\n'
                                                     '                                                                          Address\n'
                                                     'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
@@ -2329,25 +2329,25 @@ fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
         ret_data_per_host={
             "IOL1": """
                                                                           Address
-Interface       IP Address        Status       Protocol            MTU    Owner  
+Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
-Ethernet1       10.0.1.4/24       up           up                 1500           
-Loopback1       1.1.1.1/24        up           up                65535           
-Loopback2       1.1.1.11/24        up           up                65535           
+Ethernet1       10.0.1.4/24       up           up                 1500
+Loopback1       1.1.1.1/24        up           up                65535
+Loopback2       1.1.1.11/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
             "IOL2": """
                                                                               Address
-Interface         IP Address          Status       Protocol            MTU    Owner  
+Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
-Ethernet1         10.0.1.5/24         up           up                 1500           
-Loopback100       100.12.3.4/22       up           up                65535           
-Loopback101       1.101.2.2/32        up           up                65535           
+Ethernet1         10.0.1.5/24         up           up                 1500
+Loopback100       100.12.3.4/22       up           up                65535
+Loopback101       1.101.2.2/32        up           up                65535
 Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           """
         },
         name="show ip int brief",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=170) 
+    # pprint.pprint(result, width=170)
     assert result == {'IOL1': {'show ip int brief': '\n'
                                                     '                                                                          Address\n'
                                                     'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
@@ -2376,40 +2376,40 @@ def test_iplkp_no_csv_no_dns():
         ret_data_per_host={
             "IOL1": """
                                                                           Address
-Interface       IP Address        Status       Protocol            MTU    Owner  
+Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
-Ethernet1       10.0.1.4/24       up           up                 1500           
-Loopback1       1.1.1.1/24        up           up                65535           
-Loopback2       1.1.1.11/24        up           up                65535           
+Ethernet1       10.0.1.4/24       up           up                 1500
+Loopback1       1.1.1.1/24        up           up                65535
+Loopback2       1.1.1.11/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
             "IOL2": """
                                                                               Address
-Interface         IP Address          Status       Protocol            MTU    Owner  
+Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
-Ethernet1         10.0.1.5/24         up           up                 1500           
-Loopback100       100.12.3.4/22       up           up                65535           
-Loopback101       1.101.2.2/32        up           up                65535           
+Ethernet1         10.0.1.5/24         up           up                 1500
+Loopback100       100.12.3.4/22       up           up                65535
+Loopback101       1.101.2.2/32        up           up                65535
 Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           """
         },
         name="show ip int brief",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=170) 
+    # pprint.pprint(result, width=170)
     assert result == {'IOL1': {'show ip int brief': '\n'
                                                     '                                                                          Address\n'
                                                     'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
                                                     '--------------- ----------------- ------------ -------------- ----------- -------\n'
-                                                    'Ethernet1       10.0.1.4/24       up           up                 1500           \n'
-                                                    'Loopback1       1.1.1.1/24        up           up                65535           \n'
-                                                    'Loopback2       1.1.1.11/24        up           up                65535           \n'
+                                                    'Ethernet1       10.0.1.4/24       up           up                 1500\n'
+                                                    'Loopback1       1.1.1.1/24        up           up                65535\n'
+                                                    'Loopback2       1.1.1.11/24        up           up                65535\n'
                                                     'Loopback3       1::1/120        up           up                65535           '},
                       'IOL2': {'show ip int brief': '\n'
                                                     '                                                                              Address\n'
                                                     'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
                                                     '----------------- ------------------- ------------ -------------- ----------- -------\n'
-                                                    'Ethernet1         10.0.1.5/24         up           up                 1500           \n'
-                                                    'Loopback100       100.12.3.4/22       up           up                65535           \n'
-                                                    'Loopback101       1.101.2.2/32        up           up                65535           \n'
+                                                    'Ethernet1         10.0.1.5/24         up           up                 1500\n'
+                                                    'Loopback100       100.12.3.4/22       up           up                65535\n'
+                                                    'Loopback101       1.101.2.2/32        up           up                65535\n'
                                                     'Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up           up                65535           '}}
 # test_iplkp_no_csv_no_dns()
 
@@ -2424,34 +2424,34 @@ def test_iplkp_use_dns():
         ret_data_per_host={
             "IOL1": """
                                                                           Address
-Interface       IP Address        Status       Protocol            MTU    Owner  
+Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
-Ethernet1       192.168.3.3/24       up           up                 1500           
-Loopback2       8.8.8.8/24        up           up                65535           
+Ethernet1       192.168.3.3/24       up           up                 1500
+Loopback2       8.8.8.8/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
             "IOL2": """
                                                                               Address
-Interface         IP Address          Status       Protocol            MTU    Owner  
+Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
 Loopback102       2001:4860:4860::8888/128          up           up                65535           """
         },
         name="show ip int brief",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=170) 
+    # pprint.pprint(result, width=170)
     assert result == {'IOL1': {'show ip int brief': '\n'
                                                     '                                                                          Address\n'
                                                     'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
                                                     '--------------- ----------------- ------------ -------------- ----------- -------\n'
-                                                    'Ethernet1       192.168.3.3/24       up           up                 1500           \n'
-                                                    'Loopback2       8.8.8.8(dns.google)/24        up           up                65535           \n'
+                                                    'Ethernet1       192.168.3.3/24       up           up                 1500\n'
+                                                    'Loopback2       8.8.8.8(dns.google)/24        up           up                65535\n'
                                                     'Loopback3       1::1/120        up           up                65535           '},
                       'IOL2': {'show ip int brief': '\n'
                                                     '                                                                              Address\n'
                                                     'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
                                                     '----------------- ------------------- ------------ -------------- ----------- -------\n'
                                                     'Loopback102       2001:4860:4860::8888(dns.google)/128          up           up                65535           '}}
-                      
+
 # test_iplkp_use_dns()
 
 
@@ -2475,32 +2475,32 @@ fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
         ret_data_per_host={
             "IOL1": """
                                                                           Address
-Interface       IP Address        Status       Protocol            MTU    Owner  
+Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
-Ethernet1       192.168.3.3/24       up           up                 1500           
-Loopback2       8.8.8.8/24        up           up                65535           
+Ethernet1       192.168.3.3/24       up           up                 1500
+Loopback2       8.8.8.8/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
             "IOL2": """
                                                                               Address
-Interface         IP Address          Status       Protocol            MTU    Owner  
+Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
 Loopback102       2001:4860:4860::8888/128          up           up                65535           """
         },
         name="show ip int brief",
     )
     result = ResultSerializer(output)
-    # pprint.pprint(result, width=170) 
+    # pprint.pprint(result, width=170)
     assert result == {'IOL1': {'show ip int brief': '\n'
                                                     '                                                                          Address\n'
-                                                    'Interface       IP Address        Status       Protocol            MTU    Owner  \n'
+                                                    'Interface       IP Address        Status       Protocol            MTU    Owner\n'
                                                     '--------------- ----------------- ------------ -------------- ----------- -------\n'
-                                                    'Ethernet1       192.168.3.3(IOL1:Eth1)/24       up           up                 1500           \n'
-                                                    'Loopback2       8.8.8.8(dns.google)/24        up           up                65535           \n'
+                                                    'Ethernet1       192.168.3.3(IOL1:Eth1)/24       up           up                 1500\n'
+                                                    'Loopback2       8.8.8.8(dns.google)/24        up           up                65535\n'
                                                     'Loopback3       1::1(IOL1:Lo3)/120        up           up                65535           '},
                       'IOL2': {'show ip int brief': '\n'
                                                     '                                                                              Address\n'
-                                                    'Interface         IP Address          Status       Protocol            MTU    Owner  \n'
+                                                    'Interface         IP Address          Status       Protocol            MTU    Owner\n'
                                                     '----------------- ------------------- ------------ -------------- ----------- -------\n'
                                                     'Loopback102       2001:4860:4860::8888(dns.google)/128          up           up                65535           '}}
-                               
+
 # test_iplkp_use_dns_use_csv()

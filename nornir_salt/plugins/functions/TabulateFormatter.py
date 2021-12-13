@@ -5,7 +5,7 @@ TabulateFormatter
 Function to transform results in a text table format using Tabulate module.
 
 TabulateFormatter works with a list of dictionaries to represent them as a table,
-if Nornir AggregatedResult object passed on to TabulateFormatter it uses 
+if Nornir AggregatedResult object passed on to TabulateFormatter it uses
 ResultSerializer function to serialize results into a list of dictionaries.
 
 Dependencies:
@@ -36,7 +36,7 @@ Sample code to use TabulateFormatter::
     # Sun Jul 11 08:41:06 2021  False              False     show clock                   0             0               ceos2
     # Timezone: UTC
     # Clock source: local
-   
+
 Reference
 =========
 

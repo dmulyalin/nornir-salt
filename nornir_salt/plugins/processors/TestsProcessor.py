@@ -331,11 +331,11 @@ def EvalTest(host, result, expr, revert=False, err_msg=None, globs={}, **kwargs)
 
     try:
         if expr.strip().startswith("assert"):
-            check_result = exec(
+            check_result = exec(  # nosec
                 expr, {"result": result.result, "host": host, **globs}, {}
             )
         else:
-            check_result = eval(
+            check_result = eval(  # nosec
                 expr, {"result": result.result, "host": host, **globs}, {}
             )
         if check_result is False:
@@ -432,11 +432,12 @@ def _load_custom_fun_from_text(function_text, function_name, globals_dictionary=
     Helper function to load custom function code from text using
     Python ``exec`` built-in function
     """
-    assert (
-        function_name in function_text
-    ), "nornir-salt:CustomFunctionTest no '{}' function in function text".format(
-        function_name
-    )
+    if function_name not in function_text:
+        raise RuntimeError(
+            "nornir-salt:CustomFunctionTest no '{}' function in function text".format(
+                function_name
+            )
+        )
 
     data = {}
     glob_dict = {
@@ -448,7 +449,7 @@ def _load_custom_fun_from_text(function_text, function_name, globals_dictionary=
     glob_dict.update(globals_dictionary)
 
     # load function by running exec
-    exec(compile(function_text, "<string>", "exec"), glob_dict, data)
+    exec(compile(function_text, "<string>", "exec"), glob_dict, data)  # nosec
 
     # add extracted functions to globals for recursion to work
     glob_dict.update(data)

@@ -157,7 +157,7 @@ To connect to devices behind jumphost, need to define jumphost parameters in hos
 
 .. note:: Only Netmiko `connection_name="netmiko"` and Ncclient `connection_name="ncclient"`
     tasks, support connecting to hosts behind Jumphosts using above inventory data.
-    
+
 RetryRunner Reference
 =====================
 
@@ -212,7 +212,7 @@ def worker(
                 host.name, task.name
             )
         )
-        time.sleep(random.randrange(0, task_splay) / 1000)
+        time.sleep(random.randrange(0, task_splay) / 1000)  # nosec
         work_result = task.start(host)
         if task.results.failed:
             log.error(
@@ -288,16 +288,14 @@ def connector(
         params.setdefault("connection_name", connection_name)
         if connection_name and connection_name not in host.connections:
             try:
-                time.sleep(random.randrange(0, connect_splay) / 1000)
+                time.sleep(random.randrange(0, connect_splay) / 1000)  # nosec
                 if host.get("jumphost") and connection_name in ["netmiko", "ncclient"]:
                     extras = host.get_connection_parameters(connection_name).extras
                     extras["sock"] = connect_to_device_behind_jumphost(
                         host, jumphosts_connections
                     )
                     host.open_connection(
-                        connection_name,
-                        configuration=task.nornir.config,
-                        extras=extras,
+                        connection_name, configuration=task.nornir.config, extras=extras
                     )
                 else:
                     host.open_connection(
@@ -396,7 +394,7 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
     else:
         # sleep random time waiting for connection to jumphost to establish
         while jumphosts_connections[jumphost["hostname"]] == "__connecting__":
-            time.sleep(random.randrange(0, 500) / 1000)
+            time.sleep(random.randrange(0, 500) / 1000)  # nosec
         if jumphosts_connections[jumphost["hostname"]] == "__failed__":
             # add exception info to host data to include in results
             error_msg = "nornir_salt:RetryRunner failed connection to jumphost '{}' in another thread".format(

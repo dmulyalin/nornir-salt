@@ -2,7 +2,7 @@
 pygnmi_call
 ###########
 
-Task plugin to manage devices over gNMI protocol. 
+Task plugin to manage devices over gNMI protocol.
 
 Requires `PyGNMI library <https://pypi.org/project/pygnmi/>`_ to be installed::
 
@@ -18,13 +18,13 @@ Sample code to run ``pygnmi_call`` task::
     from nornir_salt import pygnmi_call
 
     nr = InitNornir(config_file="config.yaml")
- 
+
     # get device capabilities
     capabilities = nr.run(
         task=pygnmi_call,
         call="capabilities"
     )
-    
+
     # get interfaces configuration
     get_output = nr.run(
         task=pygnmi_call,
@@ -38,7 +38,7 @@ Sample code to run ``pygnmi_call`` task::
         call="update",
         update=[
             (
-                "openconfig-interfaces:interfaces/interface[name=Loopback100]/config", 
+                "openconfig-interfaces:interfaces/interface[name=Loopback100]/config",
                 {"description": "Done by gNMI"}
             )
         ]
@@ -59,22 +59,22 @@ Sample code to run ``pygnmi_call`` task::
         call="replace",
         replace=[
             (
-                "openconfig-interfaces:interfaces/interface[name=Loopback1234]/config", 
+                "openconfig-interfaces:interfaces/interface[name=Loopback1234]/config",
                 {"name": "Loopback1234", "description": "New"}
             )
         ]
     )
-    
+
 In addition to calling ``gNMIclient`` methods, extra ``call`` functions supported
 such as ``help``, ``dir``, ``delete``, ``replace`` and ``update``. Extra functions
-can be invoked in the same way as ``gNMIclient`` connection object methods by passing 
+can be invoked in the same way as ``gNMIclient`` connection object methods by passing
 their name as a ``call`` attribute::
 
     from nornir import InitNornir
     from nornir_salt import pygnmi_call
 
     nr = InitNornir(config_file="config.yaml")
-    
+
     available_methods = nr.run(
         task=pygnmi_call,
         call="dir",
@@ -85,7 +85,7 @@ pygnmi_call Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.pygnmi_call.pygnmi_call
 
-Additional Call Functions 
+Additional Call Functions
 =========================
 
 delete
@@ -108,7 +108,6 @@ update
 ------
 .. autofunction:: nornir_salt.plugins.tasks.pygnmi_call._call_update
 """
-import traceback
 import logging
 
 from nornir.core.task import Result, Task

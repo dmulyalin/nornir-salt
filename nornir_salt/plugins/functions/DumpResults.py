@@ -2,7 +2,7 @@
 DumpResults
 ###########
 
-Function to take data and save it to the file, adding details to 
+Function to take data and save it to the file, adding details to
 ``ToFileProcessor`` and ``files`` task text database index.
 
 ``DumpResults`` does not perform any formatting on data supplied,
@@ -12,7 +12,7 @@ data converted to string using ``str(data)`` prior to saving it.
 Primary use case for ``DumpResults`` is mainly related to Salt Stack
 restriction on Event Bus maximum data transmission size, as a result in
 certain cases need to save full results to local file system instead.
-    
+
 DumpResults sample usage
 ========================
 
@@ -32,7 +32,7 @@ Code to invoke ``DumpResults`` function ::
 
     serialized_output = ResultSerializer(result)
     DumpResults(serialized_output, filegroup="running_config", base_url="./tofile_outputs/")
-    
+
 DumpResults reference
 =====================
 
@@ -125,7 +125,7 @@ def DumpResults(
     # form filename
     dump_filename = "{filegroup}__{timestamp}__{rand}__{proxy_id}.txt".format(
         timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"),
-        rand=random.randint(0, 1000),
+        rand=random.randint(0, 1000),  # nosec
         proxy_id=proxy_id,
         filegroup=filegroup,
     )

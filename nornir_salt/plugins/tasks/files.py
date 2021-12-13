@@ -16,7 +16,7 @@ Code to invoke ``files`` task plugins::
     from nornir_netmiko import netmiko_send_command
 
     nr = InitNornir(config_file="config.yaml")
-    
+
     # save results to files
     nr_with_tf = nr.with_processors(
         [ToFileProcessor(tf="config_for_read", base_url="./tofile_outputs/")]
@@ -191,7 +191,7 @@ def file_read(
 
 def file_list(
     task,
-    filegroup = [],
+    filegroup=[],
     base_url: str = "/var/nornir-salt/",
     index: str = "common",
     **kwargs

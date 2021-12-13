@@ -54,11 +54,7 @@ def conn_close(task, conn_name="all", *args, **kwargs):
     for conn in list(task.host.connections.keys()):
         if conn_name != "all" and conn != conn_name:
             continue
-        ret.append(
-            {
-                "connection_name": conn,
-            }
-        )
+        ret.append({"connection_name": conn})
         try:
             task.host.close_connection(conn)
         except:
@@ -83,8 +79,5 @@ def connections(task, call, *args, **kwargs):
     * ls - calls conn_list
     * close - calls conn_close
     """
-    dispatcher = {
-        "ls": conn_list,
-        "close": conn_close,
-    }
+    dispatcher = {"ls": conn_list, "close": conn_close}
     return dispatcher[call](task, *args, **kwargs)

@@ -33,7 +33,7 @@ Filtering mini-query-language specification
 
 ``lod_filter``, ``key_filter`` and ``find`` key name may be appended with check type
 specifier suffix to instruct what type of check to execute with criteria against key
-value in a format ``key_name__<check_type>``. For example ``key_name__glob`` would 
+value in a format ``key_name__<check_type>``. For example ``key_name__glob`` would
 use glob pattern matching.
 
 +--------------+---------------------------------------+-----------------+------------------------------+
@@ -290,7 +290,7 @@ except ImportError:
     HAS_XMLTODICT = False
 
 try:
-    from lxml import etree
+    from lxml import etree  # nosec
 
     HAS_LXML = True
 except ImportError:
@@ -1147,12 +1147,7 @@ def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
 
 
 def parse_ttp(
-    result: Result,
-    task: Task,
-    host,
-    template: str = None,
-    ttp_kwargs={},
-    res_kwargs={},
+    result: Result, task: Task, host, template: str = None, ttp_kwargs={}, res_kwargs={}
 ):
     """
     Reference name ``parse_ttp``
@@ -1426,9 +1421,7 @@ def ntfsm(result: Result, task: Task, host, **kwargs):
 
     # parse output
     result.result = ntc_templates_parse_output(
-        platform=host.platform,
-        command=result.name,
-        data=result.result,
+        platform=host.platform, command=result.name, data=result.result
     )
 
 
@@ -1594,7 +1587,7 @@ task_instance_completed_dispatcher_multiresult = {
     # functions in this dictionary get MultiResult object and kwargs
     #
     # parsers
-    "run_ttp": run_ttp,
+    "run_ttp": run_ttp
 }
 
 task_instance_completed_dispatcher_per_result = {
@@ -1605,9 +1598,7 @@ task_instance_completed_dispatcher_per_result = {
     "parse_ttp": parse_ttp,
 }
 
-task_started_dispatcher = {
-    "run_ttp": add_commands_from_ttp_template,
-}
+task_started_dispatcher = {"run_ttp": add_commands_from_ttp_template}
 
 
 class DataProcessor:
@@ -1713,10 +1704,10 @@ class DataProcessor:
                             if hasattr(i, "skip_results") and i.skip_results is True:
                                 continue
                             # pass task result through dp function
-                            i.result = (
-                                task_instance_completed_dispatcher_per_result_data[fun](
-                                    i.result, **dp_dict_copy
-                                )
+                            i.result = task_instance_completed_dispatcher_per_result_data[
+                                fun
+                            ](
+                                i.result, **dp_dict_copy
                             )
                         except:
                             i.exception = traceback.format_exc()

@@ -5,7 +5,7 @@ napalm_configure
 This task plugin uses ``nornir-napalm`` ``napalm_configure`` task
 to configuration commands to devices over SSH or Telnet.
 
-``napalm_configure`` exists as part of ``nornir_salt`` repository to facilitate 
+``napalm_configure`` exists as part of ``nornir_salt`` repository to facilitate
 per-host configuration rendering performed by SALT prior to running the task.
 
 Dependencies:
@@ -76,13 +76,7 @@ def napalm_configure(task: Task, config=None, **kwargs):
         config = task.host.data["__task__"]["filename"]
 
     # transform configuration to string if list/tuple given
-    if isinstance(
-        config,
-        (
-            list,
-            tuple,
-        ),
-    ):
+    if isinstance(config, (list, tuple)):
         config = "\n".join(config)
 
     # push config to device

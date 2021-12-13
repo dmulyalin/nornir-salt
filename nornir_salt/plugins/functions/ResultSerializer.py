@@ -9,7 +9,7 @@ such as JSON or YAML
 ResultSerializer supports serialization of results of these object types::
 
     list, tuple, dict, str, int, bool, set, type(None)
-    
+
 If task result is not one of above types, it is converted to string.
 
 Exception object transformed to string.
@@ -243,7 +243,9 @@ def ResultSerializer(
                     ret[hostname][i.name].pop("name")
                 # form results for the rest of tasks
                 else:
-                    ret[hostname][i.name] = i.result if type(i.result) in supported_types else str(i.result)
+                    ret[hostname][i.name] = (
+                        i.result if type(i.result) in supported_types else str(i.result)
+                    )
 
     # form plain list of results
     else:
@@ -282,9 +284,11 @@ def ResultSerializer(
                 else:
                     ret.append(
                         {
-                            "host": hostname, 
-                            "name": i.name, 
-                            "result": i.result if type(i.result) in supported_types else str(i.result)
+                            "host": hostname,
+                            "name": i.name,
+                            "result": i.result
+                            if type(i.result) in supported_types
+                            else str(i.result),
                         }
                     )
 
