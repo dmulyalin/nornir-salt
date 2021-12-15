@@ -193,7 +193,7 @@ def ResultSerializer(
     nr_results,
     add_details=False,
     to_dict=True,
-    skip=["severity_level", "stderr", "stdout", "host"],
+    skip=None,
 ):
     """
     :param nr_results: ``nornir.core.task.AggregatedResult`` object
@@ -204,6 +204,7 @@ def ResultSerializer(
     :param skip: (list) list of Result object attributes names to omit, default is
         "severity_level", "stderr", "stdout", "host"
     """
+    skip = skip or ["severity_level", "stderr", "stdout", "host"]
     # run check
     if not isinstance(nr_results, AggregatedResult):
         return nr_results
@@ -212,7 +213,7 @@ def ResultSerializer(
     if to_dict:
         ret = {}
         for hostname, results in nr_results.items():
-            for index, i in enumerate(results):
+            for i in results:
                 exception = (
                     str(i.exception)
                     if i.exception is not None

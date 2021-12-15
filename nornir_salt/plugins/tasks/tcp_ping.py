@@ -50,7 +50,7 @@ from nornir.core.task import Result, Task
 
 
 def tcp_ping(
-    task: Task, ports: List[int] = [], timeout: int = 1, host: Optional[str] = None
+    task: Task, ports: List[int] = None, timeout: int = 1, host: Optional[str] = None
 ) -> Result:
     """
     :param ports: list of int, optional, tcp ports to ping, defaults to host's port or 22
@@ -58,6 +58,8 @@ def tcp_ping(
     :param host: string, optional, address to TCP ping, defaults to hosts's ``hostname`` value
     :returns: dictionary of port numbers as keys with True/False as values
     """
+    ports = ports or []
+    
     if not ports:
         ports = [task.host.port if task.host.port else 22]
     elif isinstance(ports, int):

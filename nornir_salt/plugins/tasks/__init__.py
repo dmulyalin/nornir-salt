@@ -16,8 +16,8 @@ from .pygnmi_call import pygnmi_call
 from .salt_clear_hcache import salt_clear_hcache
 from .napalm_send_commands import napalm_send_commands
 from .sleep import sleep
-from .pyatsunicon_send_commands import pyatsunicon_send_commands
-from .pyatsunicon_send_config import pyatsunicon_send_config
+from .pyats_send_commands import pyats_send_commands
+from .pyats_send_config import pyats_send_config
 
 __all__ = (
     "tcp_ping",
@@ -44,6 +44,6 @@ __all__ = (
     "salt_clear_hcache",
     "napalm_send_commands",
     "sleep",
-    "pyatsunicon_send_commands",
-    "pyatsunicon_send_config",
+    "pyats_send_commands",
+    "pyats_send_config",
 )

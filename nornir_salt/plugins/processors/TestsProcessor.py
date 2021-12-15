@@ -272,7 +272,7 @@ def _get_result_by_path(data, path, host):
                 yield result
 
 
-def EvalTest(host, result, expr, revert=False, err_msg=None, globs={}, **kwargs):
+def EvalTest(host, result, expr, revert=False, err_msg=None, globs=None, **kwargs):
     """
     Function to check result running python built-in ``Eval`` or ``Exec``
     function against provided python expression.
@@ -326,6 +326,7 @@ def EvalTest(host, result, expr, revert=False, err_msg=None, globs={}, **kwargs)
     :param kwargs: (dict) any additional ``**kwargs`` keyword arguments to include in return Result object
     :return result: ``nornir.core.task.Result`` object with test results
     """
+    globs = globs or {}
     ret = test_result_template.copy()
     ret.update(kwargs)
 
@@ -427,7 +428,7 @@ def CerberusTest(host, result, schema, allow_unknown=True, **kwargs):
         )
 
 
-def _load_custom_fun_from_text(function_text, function_name, globals_dictionary={}):
+def _load_custom_fun_from_text(function_text, function_name, globals_dictionary=None):
     """
     Helper function to load custom function code from text using
     Python ``exec`` built-in function
@@ -438,7 +439,8 @@ def _load_custom_fun_from_text(function_text, function_name, globals_dictionary=
                 function_name
             )
         )
-
+        
+    globals_dictionary = globals_dictionary or {}
     data = {}
     glob_dict = {
         "__builtins__": __builtins__,
@@ -464,9 +466,8 @@ def CustomFunctionTest(
     function_text=None,
     function_call=None,
     function_name="run",
-    function_kwargs={},
-    use_all_tasks=False,
-    globals_dictionary={},
+    function_kwargs=None,
+    globals_dictionary=None,
     **kwargs
 ):
     """
@@ -478,7 +479,6 @@ def CustomFunctionTest(
     :param function_file: (str) OS path to file with ``function_name`` function
     :param function_text: (str) Python code text for ``function_name`` function
     :param function_call: (callable) reference to callable python function
-    :param use_all_tasks: (bool) if True passes all host results to custom function, default False
     :param globals_dictionary: (dict) dictionary to merge with global space of the custom function,
       used only if ``function_file`` or ``function_text`` arguments provided.
     :param function_kwargs: (dict) ``**function_kwargs`` to pass on to custom function
@@ -550,6 +550,9 @@ def CustomFunctionTest(
                         })
             return ret
     """
+    function_kwargs = function_kwargs or {}
+    globals_dictionary = globals_dictionary or {}
+    
     # form ret structure
     ret = test_result_template.copy()
     ret.update(kwargs)

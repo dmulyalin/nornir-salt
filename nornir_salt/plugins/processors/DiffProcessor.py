@@ -70,15 +70,15 @@ class DiffProcessor:
         base_url="/var/nornir-salt/",
         last=1,
         in_diff=False,
-        ignore_lines=[r"^\s*[\n\r]+$"],
-        remove_patterns=[],
+        ignore_lines=None,
+        remove_patterns=None,
         index=None,
     ):
         self.diff = diff
         self.base_url = base_url
         self.last = last
-        self.ignore_lines = ignore_lines
-        self.remove_patterns = remove_patterns
+        self.ignore_lines = ignore_lines or [r"^\s*[\n\r]+$"]
+        self.remove_patterns = remove_patterns or []
         self.in_diff = in_diff
         self.index = index or "common"
 

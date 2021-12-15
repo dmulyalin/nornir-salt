@@ -43,8 +43,8 @@ from .plugins.tasks import pygnmi_call
 from .plugins.tasks import salt_clear_hcache
 from .plugins.tasks import napalm_send_commands
 from .plugins.tasks import sleep
-from .plugins.tasks import pyatsunicon_send_commands
-from .plugins.tasks import pyatsunicon_send_config
+from .plugins.tasks import pyats_send_commands
+from .plugins.tasks import pyats_send_config
 
 # connections plugins
 from .plugins.connections import NcclientPlugin
@@ -102,6 +102,6 @@ __all__ = (
     "sleep",
     "SaltEventProcessor",
     "PyATSUnicon",
-    "pyatsunicon_send_commands",
-    "pyatsunicon_send_config",
+    "pyats_send_commands",
+    "pyats_send_config",
 )

@@ -17,7 +17,7 @@ open, preventing it from timeout due to inactivity.
 - scrapli - uses ``isalive()`` method to check connection
 - ncclient - uses ``connected`` attribute of connection manager to check connection status
 - http - HTTP connections non-persistent hence ``HostsKeepalive`` does nothing
-- pyatsunicon - uses ``is_connected`` method
+- pyats - uses ``is_connected`` method
 
 For other connection types ``HostsKeepalive`` logs warning message about connection
 type being unknown and keeps connection intact.

@@ -53,7 +53,7 @@ CONNECTION_NAME = "netmiko"
 
 def netmiko_send_commands(
     task: Task,
-    commands=[],
+    commands=None,
     interval=0.01,
     use_ps: bool = False,
     split_lines: bool = True,
@@ -95,6 +95,8 @@ def netmiko_send_commands(
             exception="No nornir_netmiko found, is it installed?",
         )
 
+    commands = commands or []
+    
     # run interval sanity check
     interval = interval if isinstance(interval, (int, float)) else 0.01
 

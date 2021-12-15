@@ -11,7 +11,6 @@ sys.path.insert(0, "..")
 try:
     from nornir import InitNornir
     from nornir.core.task import Result, Task
-    from nornir_netmiko import netmiko_send_command, netmiko_send_config
     from nornir.core.plugins.inventory import InventoryPluginRegister
 
     HAS_NORNIR = True

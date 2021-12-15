@@ -2,3 +2,10 @@ pre-commit==2.*
 black
 flake8==4.*
 bandit==1.7.0
+pyaml
+nornir==3.*
+nornir-netmiko==0.*
+jmespath==0.*
+ipdb
+lxml
+xmltodict==0.*

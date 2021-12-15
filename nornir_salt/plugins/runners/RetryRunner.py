@@ -487,7 +487,7 @@ class RetryRunner:
                 (task.copy(), host, {"connection_retry": 0, "task_retry": 0}, result)
             )
         # start connectors threads
-        for i in range(self.num_connectors):
+        for _ in range(self.num_connectors):
             t = threading.Thread(
                 target=connector,
                 args=(
@@ -503,7 +503,7 @@ class RetryRunner:
             t.start()
             connector_threads.append(t)
         # start worker threads
-        for i in range(self.num_workers):
+        for _ in range(self.num_workers):
             t = threading.Thread(
                 target=worker,
                 args=(

@@ -1,5 +1,5 @@
 """
-pyatsunicon_send_commands
+pyats_send_commands
 #########################
 
 This task plugin uses PyATS devices ``execute`` method
@@ -13,7 +13,7 @@ Pre-processing includes:
 - Iterate over commands list and remove empty strings
 - Iterate over commands and replace ``new_line_char`` with ``\\n`` new line
 
-Tere are several modes that ``pyatsunicon_send_commands`` task plugin can operate in:
+Tere are several modes that ``pyats_send_commands`` task plugin can operate in:
 
 1. If ``parse`` is true and device platform supports it, send commands one by one parsing
    their output waiting for ``interval`` in betwen commands if ``interval`` provided, if
@@ -41,7 +41,7 @@ Given this inventory::
 
     host-1:
       connection_options:
-        pyatsunicon:
+        pyats:
           extras:
             devices:
               host-1:
@@ -60,33 +60,33 @@ Given this inventory::
                     ip: 10.0.1.4
                     pool: 3
 
-Code to invoke ``pyatsunicon_send_commands`` task::
+Code to invoke ``pyats_send_commands`` task::
 
-    from nornir_salt import pyatsunicon_send_commands
+    from nornir_salt import pyats_send_commands
 
     # send via "default" connection
     output_via_default = nr.run(
-        task=pyatsunicon_send_commands,
+        task=pyats_send_commands,
         commands=["show run", "show clock"]
     )
 
     # send via vty_1 connection pool of 3 SSH connections
     output_via_pool = nr.run(
-        task=pyatsunicon_send_commands,
+        task=pyats_send_commands,
         commands=["show run", "show clock"],
         via="vty_1"
     )
 
     # send via "default" connection with 5s interval between commands
     output_with_interval = nr.run(
-        task=pyatsunicon_send_commands,
+        task=pyats_send_commands,
         commands=["show run", "show clock"],
         interval=5
     )
 
     # send commands and parse output
     output_parse = nr.run(
-        task=pyatsunicon_send_commands,
+        task=pyats_send_commands,
         commands=["show hostname", "show clock"],
         parse=True
     )
@@ -97,7 +97,7 @@ equal to commands sent to device.
 Reference
 =========
 
-.. autofunction:: nornir_salt.plugins.tasks.pyatsunicon_send_commands.pyatsunicon_send_commands
+.. autofunction:: nornir_salt.plugins.tasks.pyats_send_commands.pyats_send_commands
 """
 import time
 import logging
@@ -119,7 +119,7 @@ log = logging.getLogger(__name__)
 
 # define connection name for RetryRunner to properly detect it using:
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
-CONNECTION_NAME = "pyatsunicon"
+CONNECTION_NAME = "pyats"
 
 
 def _form_results(task, res, command):
@@ -140,9 +140,9 @@ def _form_results(task, res, command):
             task.results.append(Result(host=task.host, result=output, name=cmd.strip()))
 
 
-def pyatsunicon_send_commands(
+def pyats_send_commands(
     task: Task,
-    commands: list = [],
+    commands: list = None,
     interval: int = None,
     new_line_char: str = "_br_",
     via: str = "default",
@@ -179,7 +179,9 @@ def pyatsunicon_send_commands(
             failed=True,
             exception="Failed to import PyATS library, is it installed?",
         )
-
+    
+    commands = commands or []
+    
     # get per-host commands if any
     if "commands" in task.host.data.get("__task__", {}):
         if commands:
@@ -216,7 +218,7 @@ def pyatsunicon_send_commands(
     # check if nee to parse output
     if parse:
         log.debug(
-            "nornir-salt:pyatsunicon_send_commands sending commands one by one and parsing output"
+            "nornir-salt:pyats_send_commands sending commands one by one and parsing output"
         )
         for command in commands:
             try:
@@ -241,7 +243,7 @@ def pyatsunicon_send_commands(
     # send commands one by one with interval
     elif isinstance(interval, (int, float)):
         log.debug(
-            "nornir-salt:pyatsunicon_send_commands connection '{}', sending commands with '{}s' interval".format(
+            "nornir-salt:pyats_send_commands connection '{}', sending commands with '{}s' interval".format(
                 via, interval
             )
         )
@@ -252,7 +254,7 @@ def pyatsunicon_send_commands(
     elif isinstance(connection, ConnectionPool):
         size = connection._pool_size if hasattr(connection, "_pool_size") else 5
         log.debug(
-            "nornir-salt:pyatsunicon_send_commands connections pool '{}', size '{}', sending commands in parrallel".format(
+            "nornir-salt:pyats_send_commands connections pool '{}', size '{}', sending commands in parrallel".format(
                 via, size
             )
         )
@@ -267,7 +269,7 @@ def pyatsunicon_send_commands(
     # send all commands at once
     else:
         log.debug(
-            "nornir-salt:pyatsunicon_send_commands connection '{}', sending commands all at once".format(
+            "nornir-salt:pyats_send_commands connection '{}', sending commands all at once".format(
                 via
             )
         )

@@ -60,7 +60,7 @@ CONNECTION_NAME = "scrapli"
 
 
 def scrapli_send_commands(
-    task: Task, commands=[], interval=0.01, new_line_char="_br_", **kwargs
+    task: Task, commands=None, interval=0.01, new_line_char="_br_", **kwargs
 ):
     """
     Nornir Task function to send show commands to devices using
@@ -88,7 +88,9 @@ def scrapli_send_commands(
             failed=True,
             exception="No nornir_scrapli found, is it installed?",
         )
-
+    
+    commands = commands or []
+    
     # run interval sanity check
     interval = interval if isinstance(interval, (int, float)) else 0.01
 

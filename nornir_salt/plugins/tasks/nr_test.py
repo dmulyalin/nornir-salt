@@ -30,7 +30,7 @@ from nornir.core.task import Result
 
 def nr_test(
     task,
-    ret_data_per_host={},
+    ret_data_per_host=None,
     ret_data="__undefined_value__",
     excpt=None,
     excpt_msg="",
@@ -55,6 +55,8 @@ def nr_test(
     3. If ``ret_data`` present, it is included in results
     4. If ``**kwargs`` supplied, they are included in results
     """
+    ret_data_per_host = ret_data_per_host or {}
+    
     if ret_data_per_host:
         return Result(
             host=task.host, result=ret_data_per_host.get(task.host.name, None)

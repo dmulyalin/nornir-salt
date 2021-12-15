@@ -1147,7 +1147,7 @@ def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
 
 
 def parse_ttp(
-    result: Result, task: Task, host, template: str = None, ttp_kwargs={}, res_kwargs={}
+    result: Result, task: Task, host, template: str = None, ttp_kwargs=None, res_kwargs=None
 ):
     """
     Reference name ``parse_ttp``
@@ -1202,7 +1202,10 @@ def parse_ttp(
             )
         )
         return
-
+    
+    ttp_kwargs = ttp_kwargs or {}
+    res_kwargs = res_kwargs or {}
+    
     # do parsing
     if template:
         parser = ttp(result.result, template, **ttp_kwargs)
@@ -1225,8 +1228,8 @@ def parse_ttp(
 def run_ttp(
     data: MultiResult,
     template: str,
-    ttp_kwargs={},
-    res_kwargs={},
+    ttp_kwargs=None,
+    res_kwargs=None,
     task: Task = None,
     remove_tasks=True,
     **kwargs,
@@ -1317,7 +1320,10 @@ def run_ttp(
             )
         )
         return
-
+    
+    ttp_kwargs = ttp_kwargs or {}
+    res_kwargs = res_kwargs or {}
+    
     parser = ttp(template=template, **ttp_kwargs)
     ttp_inputs_load = parser.get_input_load()
 
@@ -1631,7 +1637,8 @@ class DataProcessor:
     * ``kN`` - Any additional key-word arguments to use with function
     """
 
-    def __init__(self, dp=[]):
+    def __init__(self, dp=None):
+        dp = dp or []
         self.dp = []
         if isinstance(dp, list):
             for i in dp:

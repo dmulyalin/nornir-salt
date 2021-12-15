@@ -28,7 +28,7 @@ try:
 except ImportError:
     HAS_GENIE = False
 
-CONNECTION_NAME = "pyatsunicon"
+CONNECTION_NAME = "pyats"
 
 log = logging.getLogger(__name__)
 
@@ -47,13 +47,13 @@ class PyATSUnicon:
           password: admin
           port: 22
           connection_options:
-            pyatsunicon:
+            pyats:
               platform: eos
               extras:
                 devices:
                   host-1: {}
 
-    ``connection_options:pyatsunicon:extras`` section used to load PyATS testbed object.
+    ``connection_options:pyats:extras`` section used to load PyATS testbed object.
 
     Above invetory reconstructed to this PyATS testbed data::
 
@@ -80,7 +80,7 @@ class PyATSUnicon:
           username: admin
           password: admin
           connection_options:
-            pyatsunicon:
+            pyats:
               extras:
                 testbed:
                   name: eos_testbed
@@ -100,13 +100,13 @@ class PyATSUnicon:
     In that case, because all mandatory parameters ``os``, ``connections`` and ``credentials`` provided,
     extras data used as is to load PyATS tesbed.
 
-    It is mandatory to specify exact device cli prompt under ``connection_options:pyatsunicon:extras:devices``
+    It is mandatory to specify exact device cli prompt under ``connection_options:pyats:extras:devices``
     as a dictionary key as well as for top level device key. In other words this will not work::
 
         host-1-foo:
           hostname: 192.168.16.20
           connection_options:
-            pyatsunicon:
+            pyats:
               extras:
                 devices:
                   host-1-bar: {}
@@ -124,7 +124,7 @@ class PyATSUnicon:
           username: admin
           password: admin
           connection_options:
-            pyatsunicon:
+            pyats:
               extras:
                 devices:
                   host-1:

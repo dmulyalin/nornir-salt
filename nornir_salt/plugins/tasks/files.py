@@ -191,7 +191,7 @@ def file_read(
 
 def file_list(
     task,
-    filegroup=[],
+    filegroup=None,
     base_url: str = "/var/nornir-salt/",
     index: str = "common",
     **kwargs
@@ -204,6 +204,7 @@ def file_list(
     :param index: (str) ``ToFileProcessor`` index filename to read files information from
     :return: Nornir Result object with files list
     """
+    filegroup = filegroup or []
     ret = []
 
     # load index data
@@ -318,7 +319,7 @@ def file_diff(
     filegroup,
     base_url: str = "/var/nornir-salt/",
     task_name: str = None,
-    last=[1, 2],
+    last=None,
     index: str = "common",
     **kwargs
 ):
@@ -335,6 +336,8 @@ def file_diff(
     :param index: (str) ``ToFileProcessor`` index filename to read files information from
     :return: Result object with files difference, if files are identical reslt is True
     """
+    last = last or [1, 2]
+    
     # load index data
     index_data = _load_index_data(base_url, index)
 

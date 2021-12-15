@@ -1,5 +1,5 @@
 """
-pyatsunicon_send_config
+pyats_send_config
 #######################
 
 This task plugin relies on Genie device conection ``config`` method
@@ -27,23 +27,23 @@ Dependencies:
 Sample Usage
 ============
 
-Code to invoke ``pyatsunicon_send_config`` task::
+Code to invoke ``pyats_send_config`` task::
 
-    from nornir_salt import pyatsunicon_send_config
+    from nornir_salt import pyats_send_config
 
     output = nr.run(
-        task=pyatsunicon_send_config,
+        task=pyats_send_config,
         commands=["sinterface loopback 0", "description 'configured by script'"]
     )
 
-``pyatsunicon_send_config`` returns Nornir results object with task name set
-to ``pyatsunicon_send_config`` and results containing configuration commands
+``pyats_send_config`` returns Nornir results object with task name set
+to ``pyats_send_config`` and results containing configuration commands
 applied to device.
 
 API Reference
 =============
 
-.. autofunction:: nornir_salt.plugins.tasks.pyatsunicon_send_config.pyatsunicon_send_config
+.. autofunction:: nornir_salt.plugins.tasks.pyats_send_config.pyats_send_config
 """
 import logging
 import traceback
@@ -53,13 +53,13 @@ log = logging.getLogger(__name__)
 
 # define connection name for RetryRunner to properly detect it using:
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
-CONNECTION_NAME = "pyatsunicon"
+CONNECTION_NAME = "pyats"
 
 
-def pyatsunicon_send_config(task: Task, config: str = None, **kwargs):
+def pyats_send_config(task: Task, config: str = None, **kwargs):
     """
     Salt-nornir Task function to send configuration to devices using
-    ``nornir_netmiko.tasks.pyatsunicon_send_config`` plugin.
+    ``nornir_netmiko.tasks.pyats_send_config`` plugin.
 
     Device ``configure`` method does not support specifying connection to use to
     send configuration via.
@@ -85,9 +85,9 @@ def pyatsunicon_send_config(task: Task, config: str = None, **kwargs):
     """
     # run sanity check
     if kwargs.get("dry_run"):
-        raise ValueError("pyatsunicon_send_config does not support dry_run")
+        raise ValueError("pyats_send_config does not support dry_run")
 
-    task.name = "pyatsunicon_send_config"
+    task.name = "pyats_send_config"
     task_result = Result(host=task.host, result=[], changed=True)
 
     # get PyATS testbed, device object
@@ -108,7 +108,7 @@ def pyatsunicon_send_config(task: Task, config: str = None, **kwargs):
     try:
         task_result.result = device.configure(config, **kwargs)
     except:
-        log.exception("nornir-salt:pyatsunicon_send_config configure error")
+        log.exception("nornir-salt:pyats_send_config configure error")
         task_result.failed = True
         task_result.exception = traceback.format_exc()
         task_result.changed = False

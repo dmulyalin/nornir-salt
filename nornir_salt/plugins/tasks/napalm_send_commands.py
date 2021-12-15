@@ -60,7 +60,7 @@ CONNECTION_NAME = "napalm"
 
 
 def napalm_send_commands(
-    task: Task, commands=[], interval=None, new_line_char: str = "_br_"
+    task: Task, commands=None, interval=None, new_line_char: str = "_br_"
 ):
     """
     Nornir Task function to send show commands to devices using ``napalm_cli`` task
@@ -90,7 +90,9 @@ def napalm_send_commands(
             failed=True,
             exception="No nornir-napalm found, is it installed?",
         )
-
+    
+    commands = commands or []
+    
     # get per-host commands if any
     if "commands" in task.host.data.get("__task__", {}):
         if commands:
