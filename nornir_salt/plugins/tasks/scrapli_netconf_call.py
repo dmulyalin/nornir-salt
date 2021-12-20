@@ -51,10 +51,10 @@ connected
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_connected
 
-locked
-------
+transaction
+-----------
 
-.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_locked
+.. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_transaction
 """
 import logging
 import traceback
@@ -72,7 +72,7 @@ def _call_dir(conn, *args, **kwargs):
     methods = [m for m in dir(conn) if not m.startswith("_")] + [
         "dir",
         "connected",
-        "locked",
+        "transaction",
     ]
     return sorted(methods), False
 
@@ -97,68 +97,101 @@ def _call_connected(conn, *args, **kwargs):
     return conn.isalive(), False
 
 
-def _call_locked(conn, *args, **kwargs):
+def _call_transaction(conn, *args, **kwargs):
     """
-    Helper function to run this edit-config flow:
-
-    1. Lock target configuration/datastore
-    2. Discard previous changes if any
-    3. Run edit config
-    4. Validate new confiugration if server supports it
-    5. Commit configuration
-    6. Unlock target configuration/datastore
-
-    If any of steps 3, 4, 5 fails, all changes discarded
-
-    :param target: (str) name of datastore to edit configuration for
-    :param config: (str) configuration to apply
+    Function to edit device configuration in a reliable fashion using
+    capabilities advertised by NETCONF server.
+    
+    :param target: (str) name of datastore to edit configuration for, if no
+        ``target`` argument provided and device supports candidate datastore uses 
+        ``candidate`` datastore, uses ``running`` datastore otherwise
+    :param config: (str) configuration to apply 
+    :param validate: (bool) if True (default) validates candidate configuration before commit
     :returns result: (list) list of steps performed with details
-    :returns failed: (bool) status indicator if change failed
+    
+    Function work flow:
+
+    1. Lock target configuration datastore
+    2. Discard previous changes if any
+    3. Edit configuration
+    4. If server supports it - validate configuration if ``validate`` argument is True
+    5. If server supports it - do commit operation 
+    6. Unlock target configuration datastore
+    7. If steps 3, 4 or 5 fails, discard all changes
+    8. Return results list of dictionaries keyed by step name
+    
+    Scrapli-netconf implementation lacks of support for commit confirmed operation
+    as of creating this module.
     """
     failed = False
     result = []
+    can_validate, can_commit_confirmed, has_candidate_datastore = False, False, False
+    
+    # get capabilities
+    for i in conn.server_capabilities:
+        if "urn:ietf:params:netconf:capability:validate" in i:
+            can_validate = True
+        elif "urn:ietf:params:netconf:capability:candidate" in i:
+            has_candidate_datastore = True
+        elif "urn:ietf:params:netconf:capability:confirmed-commit" in i:
+            can_commit_confirmed = True
+
+    # decide on target configuration datastore
+    kwargs["target"] = kwargs.get(
+        "target",
+        "candidate" if has_candidate_datastore else "running"
+    )
+    
+    # run transaction    
     try:
         # lock target config/datastore
         r = conn.lock(target=kwargs["target"])
-        result.append({"lock": r.result})
+        if r.failed:
+            raise RuntimeError(r.result)
         # discard previous changes if any
-        r = conn.discard()
-        result.append({"discard_changes": r.result})
+        if has_candidate_datastore and kwargs["target"] == "candidate":
+            r = conn.discard()
+            if r.failed:
+                raise RuntimeError(r.result)
+            result.append({"discard_changes": r.result})
         # apply configuration
-        r = conn.edit_config(config=kwargs["config"], target=kwargs["target"])
+        r = conn.edit_config(config=kwargs["config"], target=kwargs["target"])   
+        if r.failed:
+            raise RuntimeError(r.result)
         result.append({"edit_config": r.result})
         # validate configuration
-        try:
+        if can_validate and kwargs.get("validate", True):
             r = conn.validate(source=kwargs["target"])
+            if r.failed:
+                raise RuntimeError(r.result)
             result.append({"validate": r.result})
-        except Exception as e:
-            result.append({"validate": str(e)})
-            pass
-        # commit configuration
-        r = conn.commit()
-        result.append({"commit": r.result})
+        # run commit
+        if kwargs["target"] == "candidate" and has_candidate_datastore:
+            r = conn.commit()
+            if r.failed:
+                raise RuntimeError(r.result)
+            result.append({"commit": r.result})
         # unlock target config/datastore
         r = conn.unlock(target=kwargs["target"])
-        result.append({"unlock": r.result})
+        if r.failed:
+            raise RuntimeError(r.result)
     except:
-        # form error message
         tb = traceback.format_exc()
         log.error(
-            "nornir_salt:scrapli_netconf_call locked edit_config call error: {}".format(
+            "nornir_salt:scrapli_netconf_call transaction error: {}".format(
                 tb
             )
         )
         result.append({"error": tb})
-        failed = True
         # discard changes on failure
-        r = conn.discard()
-        result.append({"discard_changes": r.result})
+        if has_candidate_datastore and kwargs["target"] == "candidate":
+            r = conn.discard()
+            result.append({"discard_changes": r.result})
         # unlock target config/datastore
         r = conn.unlock(target=kwargs["target"])
-        result.append({"unlock": r.result})
+        failed = True
 
     return result, failed
-
 
 def _call_server_capabilities(conn, *args, **kwargs):
     """Helper function to return NETCONF server capabilities"""

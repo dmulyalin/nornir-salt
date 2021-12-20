@@ -7,7 +7,7 @@ Collection of task plugins to work with Nornir hosts' connections
 Sample usage
 ============
 
-Code to invoke ``onnections`` task plugins::
+Code to invoke ``connections`` task plugins::
 
     TBD
 

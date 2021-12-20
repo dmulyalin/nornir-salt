@@ -9,3 +9,7 @@ jmespath==0.*
 ipdb
 lxml
 xmltodict==0.*
+ttp==0.*
+cerberus
+ttp-templates==0.*
+tabulate==0.*

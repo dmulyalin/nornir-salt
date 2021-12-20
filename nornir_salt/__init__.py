@@ -16,6 +16,7 @@ from .plugins.functions import ResultSerializer
 from .plugins.functions import FFun
 from .plugins.functions import TabulateFormatter
 from .plugins.functions import DumpResults
+from .plugins.functions import InventoryFun
 
 # inventory plugins
 from .plugins.inventory import DictInventory
@@ -45,6 +46,7 @@ from .plugins.tasks import napalm_send_commands
 from .plugins.tasks import sleep
 from .plugins.tasks import pyats_send_commands
 from .plugins.tasks import pyats_send_config
+from .plugins.tasks import pyats_genie_api
 
 # connections plugins
 from .plugins.connections import NcclientPlugin
@@ -104,4 +106,6 @@ __all__ = (
     "PyATSUnicon",
     "pyats_send_commands",
     "pyats_send_config",
+    "InventoryFun",
+    "pyats_genie_api",
 )

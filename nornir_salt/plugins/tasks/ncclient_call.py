@@ -59,13 +59,14 @@ ncclient_call - connected
 
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_connected
 
-ncclient_call - locked
-----------------------
+ncclient_call - transaction
+---------------------------
 
-.. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_locked
+.. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_transaction
 """
 import traceback
 import logging
+import time
 
 from nornir.core.task import Result, Task
 from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
@@ -110,37 +111,56 @@ except ImportError:
                 ele = etree.fromstring(data.encode("UTF-8"))  # nosec
                 return self._request(ele)
 
-
-def _call_locked(manager, *args, **kwargs):
+def _call_transaction(manager, *args, **kwargs):
     """
-    Module: nornir_salt
-    Task plugin: ncclient_call
-    Plugin function: locked
-
-    Helper function to run this edit-config flow:
-
-    1. Lock target configuration/datastore
-    2. Discard previous changes if any
-    3. Run edit config
-    4. Validate new confiugration if server supports it
-    5. Run commit confirmed if server supports it
-    6. Run final commit
-    7. Unlock target configuration/datastore
-
-    If any of steps 3, 4, 5, 6 fails, all changes discarded
-
-    :param target: (str) name of datastore to edit configuration for
+    Function to edit device configuration in a reliable fashion using
+    capabilities advertised by NETCONF server.
+    
+    :param target: (str) name of datastore to edit configuration for, if no
+        ``target`` argument provided and device supports candidate datastore uses 
+        ``candidate`` datastore, uses ``running`` datastore otherwise
     :param config: (str) configuration to apply
-    :param format: (str) configuration format, default is xml
+    :param format: (str) configuration string format, default is xml
+    :param confirmed: (bool) if True (default) uses commit confirmed
+    :param commit_final_delay: (int) time to wait before doing final commit after 
+        commit confirmed, default is 1 second
+    :param confirm_delay: (int) device commit confirmed rollback delay, default 60 seconds
+    :param validate: (bool) if True (default) validates candidate configuration before commit
     :returns result: (list) list of steps performed with details
-    :returns failed: (bool) status indicator if change failed
+    
+    Function work flow:
+
+    1. Lock target configuration datastore
+    2. If server supports it - Discard previous changes if any
+    3. Edit configuration
+    4. If server supports it - validate configuration if ``validate`` argument is True
+    5. If server supports it - do commit confirmed if ``confirmed`` argument is True
+    6. If server supports it - do commit operation 
+    7. Unlock target configuration datastore
+    8. If server supports it - discard all changes if any of steps 3, 4, 5 or 6 fail
+    9. Return results list of dictionaries keyed by step name
     """
-    pid = "dob04041989"
     result = []
     failed = False
+    commit_final_delay = int(kwargs.get("commit_final_delay", 1))
+    confirm_delay = str(kwargs.get("confirm_delay", 60)) # ncclient expects timeout to be a string
+    
+    # get capabilities
+    can_validate = ":validate" in manager.server_capabilities
+    can_commit_confirmed = ":confirmed-commit" in manager.server_capabilities
+    has_candidate_datastore = ":candidate" in manager.server_capabilities
+
+    # decide on target configuration datastore
+    kwargs["target"] = kwargs.get(
+        "target",
+        "candidate" if has_candidate_datastore else "running"
+    )
+    
+    # execute transaction
     with manager.locked(target=kwargs["target"]):
-        r = manager.discard_changes()
-        result.append({"discard_changes": etree.tostring(r._root, pretty_print=True)})
+        if has_candidate_datastore and kwargs["target"] == "candidate":
+            r = manager.discard_changes()
+            result.append({"discard_changes": etree.tostring(r._root, pretty_print=True)})
         try:
             r = manager.edit_config(
                 config=kwargs["config"],
@@ -149,44 +169,39 @@ def _call_locked(manager, *args, **kwargs):
             )
             result.append({"edit_config": etree.tostring(r._root, pretty_print=True)})
             # validate configuration
-            try:
+            if can_validate and kwargs.get("validate", True):
                 r = manager.validate(source=kwargs["target"])
-                result.append({"validate": etree.tostring(r._root, pretty_print=True)})
-            except MissingCapabilityError:
-                result.append({"validate": "MissingCapabilityError"})
-                pass
-            # run commit confirmed
-            try:
-                if kwargs.get("confirmed", True):
+                result.append({"validate": etree.tostring(r._root, pretty_print=True)})  
+            if kwargs["target"] == "candidate" and has_candidate_datastore:             
+                # run commit confirmed
+                if can_commit_confirmed and kwargs.get("confirmed", True):
+                    pid = "dob04041989"
                     r = manager.commit(
-                        confirmed=True, timeout=kwargs.get("timeout", "60"), persist=pid
+                        confirmed=True, timeout=confirm_delay, persist=pid
                     )
                     result.append(
                         {"commit_confirmed": etree.tostring(r._root, pretty_print=True)}
                     )
-                    # Could cancel but have to think about rollback criteria
-                    # res = manager.cancel_commit(persist_id=pid)
-            except MissingCapabilityError:
-                result.append({"commit_confirmed": "MissingCapabilityError"})
-                pass
-            # do final commit
-            r = manager.commit()
-            result.append({"commit": etree.tostring(r._root, pretty_print=True)})
+                    # run final commit
+                    time.sleep(commit_final_delay)
+                    r = manager.commit(confirmed=True, persist_id=pid)
+                    result.append({"commit": etree.tostring(r._root, pretty_print=True)})
+                # run normal commit
+                else:
+                    r = manager.commit()
+                    result.append({"commit": etree.tostring(r._root, pretty_print=True)})
         except:
             tb = traceback.format_exc()
             log.error(
-                "nornir_salt:ncclient_call locked edit_config call error: {}".format(tb)
+                "nornir_salt:ncclient_call transaction error: {}".format(tb)
             )
             result.append({"error": tb})
-            failed = True
-            # discard changes
-            r = manager.discard_changes()
-            result.append(
-                {"discard_changes": etree.tostring(r._root, pretty_print=True)}
-            )
-
+            if has_candidate_datastore and kwargs["target"] == "candidate":
+                r = manager.discard_changes()
+                result.append({"discard_changes": etree.tostring(r._root, pretty_print=True)})
+            failed = True     
+            
     return result, failed
-
 
 def _call_server_capabilities(manager, *args, **kwargs):
     """Helper function to get server capabilities"""
@@ -204,6 +219,7 @@ def _call_dir(manager, *args, **kwargs):
         list(dir(manager))
         + list(manager._vendor_operations.keys())
         + list(OPERATIONS.keys())
+        + ["dir", "help", "transaction"]
     )
     result = sorted(
         [m for m in set(methods) if (not m.startswith("_") and not m.isupper())]
@@ -260,7 +276,7 @@ def ncclient_call(task: Task, call: str, *args, **kwargs) -> Result:
     manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
 
     # add generic RPC operation to Ncclient manager object to support RPC call
-    manager._vendor_operations.update(rpc=GenericRPC)
+    manager._vendor_operations.setdefault("rpc", GenericRPC)
 
     log.debug(
         "nornir_salt:ncclient_call calling '{}' with args: '{}'; kwargs: '{}'".format(

@@ -1120,35 +1120,27 @@ def test_custom_function_text_use_all_tasks():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(task=grouped_task_for_use_all_tasks_test)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # pprint.pprint(check_result, width=150)
-    assert check_result == {
-        "IOL1": {
-            "Test NTP and logging config": {
-                "changed": False,
-                "criteria": "",
-                "diff": "",
-                "exception": None,
-                "failed": False,
-                "result": "PASS",
-                "success": True,
-                "task": "",
-                "test": "custom",
-            }
-        },
-        "IOL2": {
-            "Test NTP and logging config": {
-                "changed": False,
-                "criteria": "",
-                "diff": "",
-                "exception": "Logging or NTP cfg incorrect",
-                "failed": True,
-                "result": "FAIL",
-                "success": False,
-                "task": "",
-                "test": "custom",
-            }
-        },
-    }
+    pprint.pprint(check_result, width=150)
+    assert check_result == {'IOL1': {'Test NTP and logging config': {'changed': False,
+                                          'criteria': '',
+                                          'diff': '',
+                                          'exception': None,
+                                          'failed': False,
+                                          'result': 'PASS',
+                                          'success': True,
+                                          'task': '',
+                                          'test': 'custom',
+                                          'use_all_tasks': True}},
+ 'IOL2': {'Test NTP and logging config': {'changed': False,
+                                          'criteria': '',
+                                          'diff': '',
+                                          'exception': 'Logging or NTP cfg incorrect',
+                                          'failed': True,
+                                          'result': 'FAIL',
+                                          'success': False,
+                                          'task': '',
+                                          'test': 'custom',
+                                          'use_all_tasks': True}}}
 
 
 # test_custom_function_text_use_all_tasks()
@@ -1266,7 +1258,7 @@ ntp server 7.7.7.7
     # pprint.pprint(check_result, width=150)
     for item in check_result:
         assert item["result"] == "ERROR"
-        assert "AssertionError" in item["exception"]
+        assert "RuntimeError" in item["exception"]
         assert item["success"] == False
         assert item["failed"] == True
 

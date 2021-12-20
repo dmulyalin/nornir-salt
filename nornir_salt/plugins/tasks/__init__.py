@@ -18,6 +18,7 @@ from .napalm_send_commands import napalm_send_commands
 from .sleep import sleep
 from .pyats_send_commands import pyats_send_commands
 from .pyats_send_config import pyats_send_config
+from .pyats_genie_api import pyats_genie_api
 
 __all__ = (
     "tcp_ping",
@@ -46,4 +47,5 @@ __all__ = (
     "sleep",
     "pyats_send_commands",
     "pyats_send_config",
+    "pyats_genie_api",
 )
