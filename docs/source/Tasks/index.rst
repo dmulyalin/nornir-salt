@@ -17,6 +17,7 @@ Task plugins define tasks to run against hosts. Reference `documentation <https:
    netmiko_send_config
    nr_test
    pygnmi_call
+   pyats_genie_api
    pyats_send_commands
    pyats_send_config
    salt_cfg_gen

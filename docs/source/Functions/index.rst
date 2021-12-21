@@ -10,6 +10,7 @@ and used accordingly.
 
    DumpResults
    FFun
+   InventoryFun
    HostsKeepalive
    ResultSerializer
    TabulateFormatter

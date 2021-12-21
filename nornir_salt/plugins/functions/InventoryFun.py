@@ -7,26 +7,114 @@ Function to interact with in memory Nornir Inventory data.
 InventoryFun Sample Usage
 ===========================
 
-Sample code to invoke ``InventoryFun`` function to create new host::
+Sample code to invoke ``InventoryFun`` function to ``create`` new host::
 
-    TBD
+    from nornir_salt import InventoryFun
     
-Sample code to invoke ``InventoryFun`` function to update existing host::
-
-    TBD
+    host_data = {
+        "name": "IOL3",
+        "hostname": "192.168.217.99",
+        "platform": "ios",
+        "groups": ["lab", "bma"],
+        "connection_options": {
+            "napalm": {
+                "port": 2022,
+                "extras": {
+                    "foo": "bar"
+                }
+            }
+        }
+    }
     
-Sample code to invoke ``InventoryFun`` function to delete existing host::
+    res = InventoryFun(nr, call="create_host", **host_data)
+    # or res = InventoryFun(nr, "create_host", **host_data)   
 
-    TBD
+Sample code to invoke ``InventoryFun`` function to ``update`` existing host::
+
+    from nornir_salt import InventoryFun
     
-Sample code to invoke ``InventoryFun`` function to bulk load from list::
+    host_data = {
+        "name": "IOL2",
+        "hostname": "192.168.217.99",
+        "platform": "ios_xe",
+        "username": "new_username",
+        "password": "new_password",
+        "port": 123,
+        "groups": ["lab", "bma"],
+        "data": {
+            "made_by": "humans",
+        },
+        "connection_options": {
+            "napalm": {
+                "port": 2022,
+                "extras": {
+                    "foo": "bar1"
+                }
+            }
+        }
+    }
+    
+    res = InventoryFun(nr, call="update_host", groups_action="append", **host_data)
+    # or res = InventoryFun(nr, "update_host", groups_action="append", **host_data)
+    
+Sample code to invoke ``InventoryFun`` function to ``delete`` existing host::
 
-    TBD
+    from nornir_salt import InventoryFun
+    
+    res = InventoryFun(nr, call="delete_host", name="IOL2")
+    # or res = InventoryFun(nr, "delete_host", name="IOL2")
+    
+Sample code to invoke ``InventoryFun`` function to bulk ``load`` from list::
 
-InventoryFun reference
-========================
+    from nornir_salt import InventoryFun
+    
+    data = [
+        {
+            "call": "create_host",
+            "name": "IOL3",
+            "hostname": "192.168.217.99",
+            "platform": "ios",
+            "groups": ["lab", "bma"],
+        },
+        {
+            "call": "delete_host",
+            "name": "IOL2",
+        },   
+        {
+            "call": "update_host",
+            "name": "IOL1",
+            "hostname": "1.2.3.4",
+            "platform": "ios_xe",
+            "groups": ["bma"],
+            "groups_action": "remove"
+        },
+        {
+            "call": "create",
+            "name": "IOL4",
+            "hostname": "192.168.217.4",
+            "platform": "iosxr",
+            "groups": ["lab"],
+        },        
+    ]
+    
+    res = InventoryFun(nr, call="load", data=data)
+    # or res = InventoryFun(nr, "load", data=data)
+
+InventoryFun Reference
+======================
 
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun.InventoryFun
+
+Call Functions Reference
+========================
+   
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._create_host
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._read_host
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._read_inventory
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._update_host
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._delete_host
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._load
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._list_hosts
 """
 import logging
 import traceback
@@ -47,9 +135,9 @@ def _create_host(nr, name, groups=None, connection_options=None, **kwargs):
     :param connection_options: (dict) connection options dictionary
     :param kwargs: (dict) host base attributes such as hostname, port, 
         username, password, platform, data
-     :return: True on success
+    :return: True on success
      
-     If group given in ``groups`` list does not exist, no error raised, it simply skipped.
+    If group given in ``groups`` list does not exist, no error raised, it simply skipped.
     """
     groups = groups or []
     connection_options = connection_options or {}
@@ -258,12 +346,12 @@ def InventoryFun(nr, call, **kwargs):
     
     Supported ``call`` function values:
     
-    - create_host or create - creates new host or replaces existing host object
-    - read_host or read - read host inventory content
-    - update_host or update - non recursively update host attributes
-    - delete_host or delete - deletes host objcet from Nornir Inventory
-    - load - to simplify calling multiple functions
-    - read_inventory - read inventory content for groups, default and hosts
-    - list_hosts - return a list of inventory's host names
+    - ``create_host`` or ``create`` - calls ``_create_host``, creates new host or replaces existing host object
+    - ``read_host`` or ``read`` - calls ``_read_host``, read host inventory content
+    - ``update_host`` or ``update`` - calls ``_update_host``, non recursively update host attributes
+    - ``delete_host`` or ``delete`` - calls ``_delete_host``, deletes host objcet from Nornir Inventory
+    - ``load`` - calls ``_load``, to simplify calling multiple functions
+    - ``read_inventory`` - calls ``_read_inventory``, read inventory content for groups, default and hosts
+    - ``list_hosts`` - calls ``_list_hosts``, return a list of inventory's host names
     """
     return fun_dispatcher[call](nr, **kwargs)
