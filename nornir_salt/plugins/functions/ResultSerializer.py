@@ -189,12 +189,7 @@ log = logging.getLogger(__name__)
 supported_types = [list, tuple, dict, str, int, bool, set, type(None)]
 
 
-def ResultSerializer(
-    nr_results,
-    add_details=False,
-    to_dict=True,
-    skip=None,
-):
+def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=None):
     """
     :param nr_results: ``nornir.core.task.AggregatedResult`` object
     :param add_details: boolean to indicate if results should contain more info, default

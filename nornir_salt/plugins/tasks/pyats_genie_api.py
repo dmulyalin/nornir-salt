@@ -4,7 +4,7 @@ pyats_genie_api
 
 This task can call one of Genie device ``api`` methods.
 
-Full list of api methods available for your device platform can be found 
+Full list of api methods available for your device platform can be found
 `in Genie docs <https://pubhub.devnetcloud.com/media/genie-feature-browser/docs/#/apis>`_
 
 Dependencies:
@@ -27,7 +27,7 @@ Code to invoke ``pyats_genie_api`` task::
         count=1,
     )
 
-``pyats_genie_api`` returns Nornir results object with results containing 
+``pyats_genie_api`` returns Nornir results object with results containing
 api call output.
 
 API Reference
@@ -54,11 +54,11 @@ def pyats_genie_api(task: Task, api: str, **kwargs):
     :return result: Nornir result object with task execution results
     """
     task.name = "pyats_genie_api"
-    
+
     # get PyATS testbed, device object
     testbed = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     device = testbed.devices[task.host.name]
-    
+
     # call api
     result = getattr(device.api, api)(**kwargs)
 

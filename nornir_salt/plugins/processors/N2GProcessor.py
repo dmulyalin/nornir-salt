@@ -2,7 +2,7 @@
 N2G Processor Plugin
 ####################
 
-Processor plugin that uses N2G library to produce diagrams out of 
+Processor plugin that uses N2G library to produce diagrams out of
 network devices output.
 
 N2GProcessor Sample Usage
@@ -11,7 +11,7 @@ N2GProcessor Sample Usage
 Code to demonstrate how to use ``N2GProcessor`` plugin::
 
     TBD
-    
+
 N2GProcessor reference
 =========================
 
@@ -33,6 +33,7 @@ class N2GProcessor:
 
     :param module: (str) name of diagramming module to use
     """
+
     def __init__(self):
         pass
 

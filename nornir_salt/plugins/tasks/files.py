@@ -337,7 +337,7 @@ def file_diff(
     :return: Result object with files difference, if files are identical reslt is True
     """
     last = last or [1, 2]
-    
+
     # load index data
     index_data = _load_index_data(base_url, index)
 

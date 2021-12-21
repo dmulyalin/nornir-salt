@@ -59,7 +59,7 @@ def tcp_ping(
     :returns: dictionary of port numbers as keys with True/False as values
     """
     ports = ports or []
-    
+
     if not ports:
         ports = [task.host.port if task.host.port else 22]
     elif isinstance(ports, int):

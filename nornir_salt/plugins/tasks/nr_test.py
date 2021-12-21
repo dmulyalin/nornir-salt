@@ -56,7 +56,7 @@ def nr_test(
     4. If ``**kwargs`` supplied, they are included in results
     """
     ret_data_per_host = ret_data_per_host or {}
-    
+
     if ret_data_per_host:
         return Result(
             host=task.host, result=ret_data_per_host.get(task.host.name, None)

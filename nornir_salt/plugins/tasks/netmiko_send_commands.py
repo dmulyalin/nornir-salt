@@ -96,7 +96,7 @@ def netmiko_send_commands(
         )
 
     commands = commands or []
-    
+
     # run interval sanity check
     interval = interval if isinstance(interval, (int, float)) else 0.01
 

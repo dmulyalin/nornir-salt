@@ -439,7 +439,7 @@ def _load_custom_fun_from_text(function_text, function_name, globals_dictionary=
                 function_name
             )
         )
-        
+
     globals_dictionary = globals_dictionary or {}
     data = {}
     glob_dict = {
@@ -552,7 +552,7 @@ def CustomFunctionTest(
     """
     function_kwargs = function_kwargs or {}
     globals_dictionary = globals_dictionary or {}
-    
+
     # form ret structure
     ret = test_result_template.copy()
     ret.update(kwargs)

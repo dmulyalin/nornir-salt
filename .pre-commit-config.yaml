@@ -1,3 +1,6 @@
+# to run pre-commit on demand using below configuration:
+# pre-commit run --all-files
+
 default_language_version:
     python: python3.7
 
@@ -7,8 +10,10 @@ repos:
     hooks:
       - id: check-ast
       - id: end-of-file-fixer
+        exclude: ^tests
       - id: requirements-txt-fixer
       - id: trailing-whitespace
+        exclude: ^tests
       - id: check-added-large-files
         args: ['--maxkb=1000']
   # black

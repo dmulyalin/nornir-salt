@@ -90,9 +90,9 @@ def napalm_send_commands(
             failed=True,
             exception="No nornir-napalm found, is it installed?",
         )
-    
+
     commands = commands or []
-    
+
     # get per-host commands if any
     if "commands" in task.host.data.get("__task__", {}):
         if commands:

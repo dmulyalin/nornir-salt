@@ -1147,7 +1147,12 @@ def find(data, path=None, use_jmespath=False, use_xpath=False, **kwargs):
 
 
 def parse_ttp(
-    result: Result, task: Task, host, template: str = None, ttp_kwargs=None, res_kwargs=None
+    result: Result,
+    task: Task,
+    host,
+    template: str = None,
+    ttp_kwargs=None,
+    res_kwargs=None,
 ):
     """
     Reference name ``parse_ttp``
@@ -1202,10 +1207,10 @@ def parse_ttp(
             )
         )
         return
-    
+
     ttp_kwargs = ttp_kwargs or {}
     res_kwargs = res_kwargs or {}
-    
+
     # do parsing
     if template:
         parser = ttp(result.result, template, **ttp_kwargs)
@@ -1320,10 +1325,10 @@ def run_ttp(
             )
         )
         return
-    
+
     ttp_kwargs = ttp_kwargs or {}
     res_kwargs = res_kwargs or {}
-    
+
     parser = ttp(template=template, **ttp_kwargs)
     ttp_inputs_load = parser.get_input_load()
 

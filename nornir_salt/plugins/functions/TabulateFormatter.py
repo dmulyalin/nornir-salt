@@ -91,9 +91,9 @@ def TabulateFormatter(
             "nornir-salt:TabulateFormatter failed import tabulate library, install: pip install tabulate"
         )
         return result
-    
+
     headers_exclude = headers_exclude or []
-    
+
     # decide on results to tabulate
     if isinstance(result, AggregatedResult):
         result_to_tabulate = ResultSerializer(result, add_details=True, to_dict=False)

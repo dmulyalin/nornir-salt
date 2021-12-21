@@ -111,23 +111,24 @@ except ImportError:
                 ele = etree.fromstring(data.encode("UTF-8"))  # nosec
                 return self._request(ele)
 
+
 def _call_transaction(manager, *args, **kwargs):
     """
     Function to edit device configuration in a reliable fashion using
     capabilities advertised by NETCONF server.
-    
+
     :param target: (str) name of datastore to edit configuration for, if no
-        ``target`` argument provided and device supports candidate datastore uses 
+        ``target`` argument provided and device supports candidate datastore uses
         ``candidate`` datastore, uses ``running`` datastore otherwise
     :param config: (str) configuration to apply
     :param format: (str) configuration string format, default is xml
     :param confirmed: (bool) if True (default) uses commit confirmed
-    :param commit_final_delay: (int) time to wait before doing final commit after 
+    :param commit_final_delay: (int) time to wait before doing final commit after
         commit confirmed, default is 1 second
     :param confirm_delay: (int) device commit confirmed rollback delay, default 60 seconds
     :param validate: (bool) if True (default) validates candidate configuration before commit
     :returns result: (list) list of steps performed with details
-    
+
     Function work flow:
 
     1. Lock target configuration datastore
@@ -135,7 +136,7 @@ def _call_transaction(manager, *args, **kwargs):
     3. Edit configuration
     4. If server supports it - validate configuration if ``validate`` argument is True
     5. If server supports it - do commit confirmed if ``confirmed`` argument is True
-    6. If server supports it - do commit operation 
+    6. If server supports it - do commit operation
     7. Unlock target configuration datastore
     8. If server supports it - discard all changes if any of steps 3, 4, 5 or 6 fail
     9. Return results list of dictionaries keyed by step name
@@ -143,8 +144,10 @@ def _call_transaction(manager, *args, **kwargs):
     result = []
     failed = False
     commit_final_delay = int(kwargs.get("commit_final_delay", 1))
-    confirm_delay = str(kwargs.get("confirm_delay", 60)) # ncclient expects timeout to be a string
-    
+    confirm_delay = str(
+        kwargs.get("confirm_delay", 60)
+    )  # ncclient expects timeout to be a string
+
     # get capabilities
     can_validate = ":validate" in manager.server_capabilities
     can_commit_confirmed = ":confirmed-commit" in manager.server_capabilities
@@ -152,15 +155,16 @@ def _call_transaction(manager, *args, **kwargs):
 
     # decide on target configuration datastore
     kwargs["target"] = kwargs.get(
-        "target",
-        "candidate" if has_candidate_datastore else "running"
+        "target", "candidate" if has_candidate_datastore else "running"
     )
-    
+
     # execute transaction
     with manager.locked(target=kwargs["target"]):
         if has_candidate_datastore and kwargs["target"] == "candidate":
             r = manager.discard_changes()
-            result.append({"discard_changes": etree.tostring(r._root, pretty_print=True)})
+            result.append(
+                {"discard_changes": etree.tostring(r._root, pretty_print=True)}
+            )
         try:
             r = manager.edit_config(
                 config=kwargs["config"],
@@ -171,8 +175,8 @@ def _call_transaction(manager, *args, **kwargs):
             # validate configuration
             if can_validate and kwargs.get("validate", True):
                 r = manager.validate(source=kwargs["target"])
-                result.append({"validate": etree.tostring(r._root, pretty_print=True)})  
-            if kwargs["target"] == "candidate" and has_candidate_datastore:             
+                result.append({"validate": etree.tostring(r._root, pretty_print=True)})
+            if kwargs["target"] == "candidate" and has_candidate_datastore:
                 # run commit confirmed
                 if can_commit_confirmed and kwargs.get("confirmed", True):
                     pid = "dob04041989"
@@ -185,23 +189,28 @@ def _call_transaction(manager, *args, **kwargs):
                     # run final commit
                     time.sleep(commit_final_delay)
                     r = manager.commit(confirmed=True, persist_id=pid)
-                    result.append({"commit": etree.tostring(r._root, pretty_print=True)})
+                    result.append(
+                        {"commit": etree.tostring(r._root, pretty_print=True)}
+                    )
                 # run normal commit
                 else:
                     r = manager.commit()
-                    result.append({"commit": etree.tostring(r._root, pretty_print=True)})
+                    result.append(
+                        {"commit": etree.tostring(r._root, pretty_print=True)}
+                    )
         except:
             tb = traceback.format_exc()
-            log.error(
-                "nornir_salt:ncclient_call transaction error: {}".format(tb)
-            )
+            log.error("nornir_salt:ncclient_call transaction error: {}".format(tb))
             result.append({"error": tb})
             if has_candidate_datastore and kwargs["target"] == "candidate":
                 r = manager.discard_changes()
-                result.append({"discard_changes": etree.tostring(r._root, pretty_print=True)})
-            failed = True     
-            
+                result.append(
+                    {"discard_changes": etree.tostring(r._root, pretty_print=True)}
+                )
+            failed = True
+
     return result, failed
+
 
 def _call_server_capabilities(manager, *args, **kwargs):
     """Helper function to get server capabilities"""

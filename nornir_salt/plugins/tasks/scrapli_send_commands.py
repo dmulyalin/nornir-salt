@@ -88,9 +88,9 @@ def scrapli_send_commands(
             failed=True,
             exception="No nornir_scrapli found, is it installed?",
         )
-    
+
     commands = commands or []
-    
+
     # run interval sanity check
     interval = interval if isinstance(interval, (int, float)) else 0.01
 
