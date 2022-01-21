@@ -462,21 +462,93 @@ def flatten(data, parent_key="", separator=".", **kwargs):
     Another usecase is filtering of the keys in resulted dictionary, as
     they are the strings, glob or regex matching can be applied on them.
 
-    :param data: nested data to flatten
-    :param parent_key: string to prepend to dictionary's keys, used by recursion
-    :param separator: string to separate flattened keys
-    :return: flattened structure
+    :param data: (dict or list) nested data to flatten
+    :param parent_key: (str) string to prepend to dictionary's keys, used by recursion
+    :param separator: (str) string to separate flattened keys
+    :param kwargs: (dict) not in use
+    :return: ()dict flattened dictionary structure
 
     Based on Stackoverflow answer:
     https://stackoverflow.com/a/62186053/12300761
 
     All credits for the idea to https://github.com/ScriptSmith
 
-    Sample usage::
+    Example how to invoke ``flatten`` function directly::
 
-        flatten({'a': 1, 'c': {'a': 2, 'b': {'x': 5, 'y' : 10}}, 'd': [1, 2, 3] })
-
-        >> {'a': 1, 'c.a': 2, 'c.b.x': 5, 'c.b.y': 10, 'd.0': 1, 'd.1': 2, 'd.2': 3}
+        import pprint
+        from nornir_salt.plugins.processors.DataProcessor import flatten
+        
+        nested_data = {'bgp_cfg': {'ASN': '12.34',
+                      'ipv4_afi': {'bgp_rid': '1.1.1.1'},
+                      'vrfs': [{'neighbors': [{'ipv4_afi': {'RPL_IN': 'vCE102-link1.102',
+                                                            'RPL_OUT': 'vCE102-link1.102',
+                                                            'send_community_ebgp': 'Enabled'},
+                                               'neighbor': '10.1.102.102',
+                                               'neighbor_asn': '102.103'},
+                                              {'ipv4_afi': {'RPL_IN': 'vCE102-link2.102',
+                                                            'RPL_OUT': 'vCE102-link2.102'},
+                                               'neighbor': '10.2.102.102',
+                                               'neighbor_asn': '102.103'}],
+                                'rd': '102:103',
+                                'vrf': 'CT2S2'},
+                               {'neighbors': [{'ipv4_afi': {'RPL_IN': 'PASS-ALL',
+                                                            'RPL_OUT': 'PASS-ALL'}},
+                                              {'neighbor': '10.1.37.7',
+                                               'neighbor_asn': '65000'}],
+                                'rd': '102:104',
+                                'vrf': 'AS65000'}]}}
+                                
+        flat_data = flatten(nested_data)
+        
+        pprint.pprint(flat_data)
+        
+        # prints:
+        # {'bgp_cfg.ASN': '12.34',
+        #  'bgp_cfg.ipv4_afi.bgp_rid': '1.1.1.1',
+        #  'bgp_cfg.vrfs.0.neighbors.0.ipv4_afi.RPL_IN': 'vCE102-link1.102',
+        #  'bgp_cfg.vrfs.0.neighbors.0.ipv4_afi.RPL_OUT': 'vCE102-link1.102',
+        #  'bgp_cfg.vrfs.0.neighbors.0.ipv4_afi.send_community_ebgp': 'Enabled',
+        #  'bgp_cfg.vrfs.0.neighbors.0.neighbor': '10.1.102.102',
+        #  'bgp_cfg.vrfs.0.neighbors.0.neighbor_asn': '102.103',
+        #  'bgp_cfg.vrfs.0.neighbors.1.ipv4_afi.RPL_IN': 'vCE102-link2.102',
+        #  'bgp_cfg.vrfs.0.neighbors.1.ipv4_afi.RPL_OUT': 'vCE102-link2.102',
+        #  'bgp_cfg.vrfs.0.neighbors.1.neighbor': '10.2.102.102',
+        #  'bgp_cfg.vrfs.0.neighbors.1.neighbor_asn': '102.103',
+        #  'bgp_cfg.vrfs.0.rd': '102:103',
+        #  'bgp_cfg.vrfs.0.vrf': 'CT2S2',
+        #  'bgp_cfg.vrfs.1.neighbors.0.ipv4_afi.RPL_IN': 'PASS-ALL',
+        #  'bgp_cfg.vrfs.1.neighbors.0.ipv4_afi.RPL_OUT': 'PASS-ALL',
+        #  'bgp_cfg.vrfs.1.neighbors.1.neighbor': '10.1.37.7',
+        #  'bgp_cfg.vrfs.1.neighbors.1.neighbor_asn': '65000',
+        #  'bgp_cfg.vrfs.1.rd': '102:104',
+        #  'bgp_cfg.vrfs.1.vrf': 'AS65000'}
+        
+    To invoke flatten function as part of Nornir task run, need to make sure that task returns 
+    list or dictionary structure, alternatively, if YAML/XML/JSON string returned, need to load it
+    first. For example, to flatten XML structure, first need to use `load_xml`_ function, next 
+    pass dictionary produced by ``load_xml`` through ``flatten`` function::
+    
+        from nornir import InitNornir
+        from nornir_salt import ncclient_call, DataProcessor
+        
+        nr = InitNornir(config_file="config.yaml")
+        
+        nr_with_processor = nr.with_processors([
+            DataProcessor(
+                [
+                    {"fun": "load_xml"},
+                    {"fun": "flatten"},                    
+                ]
+            )
+        ])
+        
+        nr_with_processor.run(
+            task=ncclient_call,
+            call="get_config",
+            source="running"
+        )
+        
+    Above example produces same result as to calling `xml_flatten`_ function.
     """
     items = []
     if isinstance(data, dict):
