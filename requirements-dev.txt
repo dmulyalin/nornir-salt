@@ -10,6 +10,7 @@ nornir-netmiko==0.*
 pre-commit==2.*
 pyaml
 pytest
+requests
 tabulate==0.*
 ttp==0.*
 ttp-templates==0.*
