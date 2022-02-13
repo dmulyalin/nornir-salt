@@ -29,7 +29,9 @@ def salt_cfg_gen(task, config=None, **kwargs):
     task.name = "salt_cfg_gen"
 
     # get configuration
-    if "commands" in task.host.data.get("__task__", {}):
+    if "config" in task.host.data.get("__task__", {}):
+        config = task.host.data["__task__"]["config"]
+    elif "commands" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["filename"]

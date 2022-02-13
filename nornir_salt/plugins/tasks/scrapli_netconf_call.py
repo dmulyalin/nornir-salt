@@ -125,7 +125,9 @@ def _call_transaction(conn, *args, **kwargs):
     """
     failed = False
     result = []
-    can_validate, can_commit_confirmed, has_candidate_datastore = False, False, False
+    can_validate = False
+    can_commit_confirmed = False  # noqa: F841
+    has_candidate_datastore = False
 
     # get capabilities
     for i in conn.server_capabilities:
@@ -134,7 +136,7 @@ def _call_transaction(conn, *args, **kwargs):
         elif "urn:ietf:params:netconf:capability:candidate" in i:
             has_candidate_datastore = True
         elif "urn:ietf:params:netconf:capability:confirmed-commit" in i:
-            can_commit_confirmed = True
+            can_commit_confirmed = True  # noqa: F841
 
     # decide on target configuration datastore
     kwargs["target"] = kwargs.get(

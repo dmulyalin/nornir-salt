@@ -70,7 +70,9 @@ def napalm_configure(task: Task, config=None, **kwargs):
         )
 
     # get configuration
-    if "commands" in task.host.data.get("__task__", {}):
+    if "config" in task.host.data.get("__task__", {}):
+        config = task.host.data["__task__"]["config"]
+    elif "commands" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["filename"]

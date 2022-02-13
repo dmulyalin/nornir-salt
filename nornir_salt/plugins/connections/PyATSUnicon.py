@@ -117,7 +117,7 @@ class PyATSUnicon:
     This plugin establishes all connections to device on startup.
 
     To use connections pool instead of single connection, need to provide ``pool`` argument integer
-    of value more or equal to 2 in connection's parametre, otherwise connection ignored::
+    of value more or equal to 2 in connection's parameters, otherwise connection ignored::
 
         host-1:
           hostname: 192.168.16.20
@@ -162,6 +162,8 @@ class PyATSUnicon:
                 device_data["connections"] = {
                     "default": {"protocol": "ssh", "ip": hostname, "port": port or 22}
                 }
+            if "telnet" in platform:
+                device_data["connections"]["default"]["protocol"] = "telnet"
             if "os" not in device_data and platform:
                 device_data["os"] = platform
 

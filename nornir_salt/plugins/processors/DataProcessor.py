@@ -477,7 +477,7 @@ def flatten(data, parent_key="", separator=".", **kwargs):
 
         import pprint
         from nornir_salt.plugins.processors.DataProcessor import flatten
-        
+
         nested_data = {'bgp_cfg': {'ASN': '12.34',
                       'ipv4_afi': {'bgp_rid': '1.1.1.1'},
                       'vrfs': [{'neighbors': [{'ipv4_afi': {'RPL_IN': 'vCE102-link1.102',
@@ -497,11 +497,11 @@ def flatten(data, parent_key="", separator=".", **kwargs):
                                                'neighbor_asn': '65000'}],
                                 'rd': '102:104',
                                 'vrf': 'AS65000'}]}}
-                                
+
         flat_data = flatten(nested_data)
-        
+
         pprint.pprint(flat_data)
-        
+
         # prints:
         # {'bgp_cfg.ASN': '12.34',
         #  'bgp_cfg.ipv4_afi.bgp_rid': '1.1.1.1',
@@ -522,32 +522,32 @@ def flatten(data, parent_key="", separator=".", **kwargs):
         #  'bgp_cfg.vrfs.1.neighbors.1.neighbor_asn': '65000',
         #  'bgp_cfg.vrfs.1.rd': '102:104',
         #  'bgp_cfg.vrfs.1.vrf': 'AS65000'}
-        
-    To invoke flatten function as part of Nornir task run, need to make sure that task returns 
+
+    To invoke flatten function as part of Nornir task run, need to make sure that task returns
     list or dictionary structure, alternatively, if YAML/XML/JSON string returned, need to load it
-    first. For example, to flatten XML structure, first need to use `load_xml`_ function, next 
+    first. For example, to flatten XML structure, first need to use `load_xml`_ function, next
     pass dictionary produced by ``load_xml`` through ``flatten`` function::
-    
+
         from nornir import InitNornir
         from nornir_salt import ncclient_call, DataProcessor
-        
+
         nr = InitNornir(config_file="config.yaml")
-        
+
         nr_with_processor = nr.with_processors([
             DataProcessor(
                 [
                     {"fun": "load_xml"},
-                    {"fun": "flatten"},                    
+                    {"fun": "flatten"},
                 ]
             )
         ])
-        
+
         nr_with_processor.run(
             task=ncclient_call,
             call="get_config",
             source="running"
         )
-        
+
     Above example produces same result as to calling `xml_flatten`_ function.
     """
     items = []
@@ -650,7 +650,10 @@ def xml_flatten(data, **kwargs):
     """
     Reference name ``xml_flatten``
 
-    Dependencies: requires LXML library - ``pip install lxml``
+    Dependencies:
+
+    - requires LXML library - ``pip install lxml``
+    - requires xmltodict library - ``pip install xmltodict``
 
     Function to transform XML in a flattened python dictionary representation
 

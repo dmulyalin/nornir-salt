@@ -82,7 +82,6 @@ except ImportError:
 
 try:
     from ncclient.manager import OPERATIONS
-    from ncclient.operations.errors import MissingCapabilityError
 
     HAS_NCCLIENT = True
 except ImportError:

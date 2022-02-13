@@ -13,7 +13,7 @@ that many of the plugins developed can be useful outside of salt-nornir proxy mo
 """
 # misc functions
 from .plugins.functions import ResultSerializer
-from .plugins.functions import FFun
+from .plugins.functions import FFun, FFun_functions
 from .plugins.functions import TabulateFormatter
 from .plugins.functions import DumpResults
 from .plugins.functions import InventoryFun
@@ -65,6 +65,7 @@ from .plugins.processors import SaltEventProcessor
 __all__ = (
     "ResultSerializer",
     "FFun",
+    "FFun_functions",
     "DictInventory",
     "QueueRunner",
     "RetryRunner",

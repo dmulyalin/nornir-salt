@@ -468,6 +468,7 @@ def CustomFunctionTest(
     function_name="run",
     function_kwargs=None,
     globals_dictionary=None,
+    add_host=False,
     **kwargs
 ):
     """
@@ -482,6 +483,8 @@ def CustomFunctionTest(
     :param globals_dictionary: (dict) dictionary to merge with global space of the custom function,
       used only if ``function_file`` or ``function_text`` arguments provided.
     :param function_kwargs: (dict) ``**function_kwargs`` to pass on to custom function
+    :param add_host: (bool) default is False, if True adds ``host`` argument to ``function_kwargs``
+      as a reference to Nornir Host object that this function executing for
     :param kwargs: (dict) any additional key word arguments to include in results
 
     .. warning:: ``function_file`` and ``function_text`` use ``exec`` function
@@ -552,6 +555,9 @@ def CustomFunctionTest(
     """
     function_kwargs = function_kwargs or {}
     globals_dictionary = globals_dictionary or {}
+
+    if add_host:
+        function_kwargs["host"] = host
 
     # form ret structure
     ret = test_result_template.copy()
@@ -714,6 +720,8 @@ def ContainsTest(
     pattern,
     use_re=False,
     count=None,
+    count_ge=None,
+    count_le=None,
     revert=False,
     err_msg=None,
     **kwargs
@@ -726,11 +734,14 @@ def ContainsTest(
     :param pattern: (str) pattern to check containment for
     :param use_re: (bool) if True uses re.search to check for pattern in output
     :param count: (int) check exact number of pattern occurrences in the output
+    :param count_ge: (int) check number of pattern occurrences in the output is greater or equal to given value
+    :param count_le: (int) check number of pattern occurrences in the output is lower or equal to given value
     :param revert: (bool) if True, changes results to opposite - check lack of containment
     :param err_msg: (str) exception message to use on test failure
     :param kwargs: (dict) any additional ``**kwargs`` keyword arguments to include in return Result object
     :return result: ``nornir.core.task.Result`` object with test results
     """
+    pattern = str(pattern)
     # form ret structure
     ret = test_result_template.copy()
     ret.update(kwargs)
@@ -743,6 +754,11 @@ def ContainsTest(
     # add count to return results
     if count:
         ret["count"] = count
+    if count_ge:
+        ret["count_ge"] = count_ge
+    if count_le:
+        ret["count_le"] = count_le
+
     # run the check
     if use_re:
         if not re.search(pattern, result.result):
@@ -752,6 +768,20 @@ def ContainsTest(
         ret.update({"result": "FAIL", "success": False})
         ret["exception"] = (
             err_msg if err_msg else "Pattern not in output {} times".format(count)
+        )
+    elif count_ge and result.result.count(pattern) < count_ge:
+        ret.update({"result": "FAIL", "success": False})
+        ret["exception"] = (
+            err_msg
+            if err_msg
+            else "Pattern not in output greater or equal {} times".format(count_ge)
+        )
+    elif count_le and result.result.count(pattern) > count_le:
+        ret.update({"result": "FAIL", "success": False})
+        ret["exception"] = (
+            err_msg
+            if err_msg
+            else "Pattern not in output lower or equal {} times".format(count_le)
         )
     elif pattern not in result.result:
         ret.update({"result": "FAIL", "success": False})
@@ -768,6 +798,18 @@ def ContainsTest(
             elif count:
                 ret["exception"] = (
                     err_msg if err_msg else "Pattern in output {} times".format(count)
+                )
+            elif count_ge:
+                ret["exception"] = (
+                    err_msg
+                    if err_msg
+                    else "Pattern in output greater or equal {} times".format(count_ge)
+                )
+            elif count_le:
+                ret["exception"] = (
+                    err_msg
+                    if err_msg
+                    else "Pattern in output lower or equal {} times".format(count_le)
                 )
             else:
                 ret["exception"] = err_msg if err_msg else "Pattern in output"
@@ -817,7 +859,7 @@ class TestsProcessor:
     def __init__(self, tests=None, remove_tasks=True, failed_only=False, **kwargs):
         self.tests = tests if tests else [kwargs]
         self.remove_tasks = remove_tasks
-        self.len_tasks = None
+        self.len_tasks = 0
         self.failed_only = failed_only
 
     def task_started(self, task: Task) -> None:
@@ -832,12 +874,18 @@ class TestsProcessor:
         """
         Method to iterate over individual hosts's result after task/sub-tasks completion.
         """
+        # check if has failed tasks, do nothing in such a case
+        if result.failed:
+            log.error("nornir_salt:TestsProcessor has failed tasks, do nothing, return")
+            return
+
         try:
             # record the len of tasks to clean them up if required
             if self.remove_tasks:
                 self.len_tasks = len(result)
             # do the tests
             for test in self.tests:
+                # make a copy of test item to not iterfere with other hosts' testing
                 test = test.copy()
 
                 # if test item is a list, transform it to dictionary
@@ -851,10 +899,13 @@ class TestsProcessor:
                     if test["test"] in ["eval", "EvalTest"]:
                         test["expr"] = test.pop("pattern")
 
+                # make sure has result item in a test
+                test["result"] = None
+
                 # make sure we have test name defined
                 if not test.get("name"):
                     test["name"] = "{} {} {}..".format(
-                        test["task"], test["test"], test.get("pattern", "")[:9]
+                        test["task"], test["test"], str(test.get("pattern", ""))[:9]
                     )
 
                 # get task results to use; use all results
@@ -863,28 +914,39 @@ class TestsProcessor:
                 # use subset of task results
                 elif isinstance(test["task"], list):
                     test["result"] = []
-                    for task_result in result:
-                        if task_result.name in test["task"]:
-                            test["result"].append(task_result)
+                    for i in result:
+                        # check if need to skip this task
+                        if hasattr(i, "skip_results") and i.skip_results is True:
+                            continue
+                        if i.name in test["task"]:
+                            test["result"].append(i)
                 # use results for single task only
                 else:
                     # try to find task by matching it's name
-                    for task_result in result:
-                        if task_result.name == test["task"]:
-                            test["result"] = task_result
+                    for i in result:
+                        # check if need to skip this task
+                        if hasattr(i, "skip_results") and i.skip_results is True:
+                            continue
+                        if i.name == test["task"]:
+                            test["result"] = i
                             break
                     else:
                         # use first task if only one test and one task given
                         tasks = [t for t in result if not hasattr(t, "skip_results")]
                         if len(self.tests) == 1 and len(tasks) == 1:
                             test["result"] = tasks[0]
-                        else:
-                            log.warning(
-                                "nornir-salt:TestsProcessor: no results for task '{}'".format(
-                                    test["task"]
-                                )
-                            )
-                            continue
+
+                # check if found no task results for this test item
+                if test["result"] is None or test["result"] == []:
+                    test[
+                        "exception"
+                    ] = "Found no results to test - all tasks failed or test name does not match any of task names"
+                    test["result"] = "ERROR"
+                    test["success"] = False
+                    ret = {**test_result_template.copy(), **test}
+                    _ = ret.pop("expr", None)
+                    result.append(Result(host=host, **ret))
+                    continue
 
                 # get test function and function kwargs
                 if test["test"] in test_functions_dispatcher:
@@ -900,6 +962,9 @@ class TestsProcessor:
                     )
 
                 # run the test
+                log.debug(
+                    "nornir-salt:TestsProcessor running test '{}'".format(test["name"])
+                )
                 try:
                     # run test for data at given path
                     if test.get("path"):

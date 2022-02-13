@@ -1,5 +1,5 @@
 from .ResultSerializer import ResultSerializer
-from .FFun import FFun
+from .FFun import FFun, FFun_functions
 from .HostsKeepalive import HostsKeepalive
 from .TabulateFormatter import TabulateFormatter
 from .DumpResults import DumpResults
@@ -12,4 +12,5 @@ __all__ = (
     "TabulateFormatter",
     "DumpResults",
     "InventoryFun",
+    "FFun_functions",
 )

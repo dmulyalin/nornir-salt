@@ -51,6 +51,7 @@ class ToFileProcessor:
     :param base_url: (str) OS path to folder where to save files, default "/var/nornir-salt/"
     :param max_files: (int) default is 5, maximum number of file for given ``tf`` file group
     :param index: (str) index filename to read and store files data into
+    :param skip_failed: (bool) if True, do not save failed task results, default is False
 
     Files saved under ``base_url`` location, where individual filename formed using string::
 
@@ -89,11 +90,19 @@ class ToFileProcessor:
     it could be considered as a simplified index database.
     """
 
-    def __init__(self, tf, base_url="/var/nornir-salt/", max_files=5, index=None):
+    def __init__(
+        self,
+        tf,
+        base_url="/var/nornir-salt/",
+        max_files=5,
+        index=None,
+        skip_failed=False,
+    ):
         self.tf = tf
         self.base_url = base_url
         self.max_files = max(1, max_files)
         self.index = index or "common"
+        self.skip_failed = skip_failed
 
         self.aliases_file = os.path.join(
             base_url, "tf_index_{}.json".format(self.index)
@@ -132,6 +141,13 @@ class ToFileProcessor:
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
         """save to file on a per-host basis"""
+        if result.failed and self.skip_failed:
+            log.warning(
+                "nornir_salt:ToFileProcessor '{}' has failed tasks and skip_failed is True, do nothing, return".format(
+                    host.name
+                )
+            )
+            return
 
         host_filename = "{tf}__{timestamp}__{rand}__{hostname}.txt".format(
             timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"),
@@ -159,18 +175,17 @@ class ToFileProcessor:
             span_start = 0
 
             for i in result:
-                # check if need to skip this task results
-                exception = (
-                    str(i.exception)
-                    if i.exception is not None
-                    else i.host.get("exception", None)
-                )
+                # skip if has skip_results and no exception
                 if (
                     hasattr(i, "skip_results")
                     and i.skip_results is True
-                    and not exception
+                    and not i.exception
                 ):
                     continue
+                # skip if has exception but skip_failed is True
+                if i.exception and self.skip_failed:
+                    continue
+
                 # save results to file
                 if isinstance(i.result, (str, int, float, bool)):
                     result_to_save = str(i.result)

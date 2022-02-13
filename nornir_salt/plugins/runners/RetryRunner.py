@@ -10,8 +10,29 @@ RetryRunner plugin implements retry logic to improve task execution reliability.
     connection retry logic and connections to all hosts initiated simultaneously up to the
     number of `num_workers`
 
+Primary motivation for RetryRunner is to make Nornir task execution as reliable as possible
+through retry mechanisms.
+
 RetryRunner Architecture
 ========================
+
+RetryRunner helps to control the rate of connections establishment by limiting the number of
+connector workers.
+
+For example, if ``num_connectors`` is 5, it means there are only 5 workers
+to establish connections to devices, even if there are 100 devices, RetryRunner will connect
+only with 5 of them at a time. This is very helpful when connections rate need to be limited
+due to operations restrictions like AAA (TACACS, RADIUS) servers load.
+
+When new task started and if no connection exist to device that this task makes the use of,
+RetryRunner attempts to connect to device retrying up to ``connect_retry`` times.
+
+Once connection established, task handed over to worker threads for execution, workers
+will retry up to ``task_retry`` if task fails.
+
+Connection parameters such as timeouts or usage of SSH keys handled by Nornir Connection plugins.
+RetryRunner calls Nornir to start the connection, further connection establishment details
+controlled by Connection plugin itself.
 
 .. image:: ../_images/RetryRunner_v0.png
 
@@ -155,7 +176,7 @@ To connect to devices behind jumphost, need to define jumphost parameters in hos
             password: jump_host_password
             username: jump_host_user
 
-.. note:: Only Netmiko `connection_name="netmiko"` and Ncclient `connection_name="ncclient"`
+.. note:: Only Netmiko ``connection_name="netmiko"`` and Ncclient ``connection_name="ncclient"``
     tasks, support connecting to hosts behind Jumphosts using above inventory data.
 
 RetryRunner Reference
@@ -169,7 +190,7 @@ import logging
 import time
 import random
 from typing import List
-from nornir.core.task import AggregatedResult, Task
+from nornir.core.task import AggregatedResult, Task, MultiResult, Result
 from nornir.core.inventory import Host
 
 try:
@@ -199,21 +220,35 @@ def worker(
         except queue.Empty:
             continue
         task, host, params, result = work
-        # check if need backoff task retry for this host
-        if params["task_retry"] > 0:
-            elapsed = time.time() - params["timestamp"]
-            should_wait = (params["task_retry"] * task_backoff) / 1000
-            if elapsed < should_wait:
-                work_q.put(work)
-                work_q.task_done()
-                continue
-        log.info(
-            "nornir_salt:RetryRunner {} - running task '{}'".format(
-                host.name, task.name
+        # check if has exception recorded in params by connector thread
+        if params.get("connect_exception"):
+            work_result = MultiResult(task.name)
+            work_result.append(
+                Result(
+                    host,
+                    result=params["connect_exception"],
+                    failed=True,
+                    exception=params["connect_exception"],
+                    name=task.name,
+                )
             )
-        )
-        time.sleep(random.randrange(0, task_splay) / 1000)  # nosec
-        work_result = task.start(host)
+        else:
+            # check if need backoff task retry for this host
+            if params["task_retry"] > 0:
+                elapsed = time.time() - params["timestamp"]
+                should_wait = (params["task_retry"] * task_backoff) / 1000
+                if elapsed < should_wait:
+                    work_q.put(work)
+                    work_q.task_done()
+                    continue
+            log.info(
+                "nornir_salt:RetryRunner {} - running task '{}'".format(
+                    host.name, task.name
+                )
+            )
+            time.sleep(random.randrange(0, task_splay) / 1000)  # nosec
+            work_result = task.start(host)
+        # check if need to run task retry logic
         if task.results.failed:
             log.error(
                 "nornir_salt:RetryRunner {} - task execution retry attempt {} failed: '{}'".format(
@@ -309,17 +344,19 @@ def connector(
             except Exception as e:
                 # close host connections to retry them
                 close_host_connection(host, connection_name)
-                log.error(
-                    "nornir_salt:RetryRunner {} - connection retry attempt {}, error: '{}'".format(
-                        host.name, params["connection_retry"], e
-                    )
+                err_msg = "nornir_salt:RetryRunner {} - connection retry attempt {}, error: '{}'".format(
+                    host.name, params["connection_retry"], e
                 )
+                log.error(err_msg)
                 if params["connection_retry"] < connect_retry:
                     params["connection_retry"] += 1
                     params["timestamp"] = time.time()
                     connectors_q.put(connection)
                     connectors_q.task_done()
                     continue
+                else:
+                    # record exception in params for worker thread to react on it
+                    params["connect_exception"] = err_msg
         connectors_q.task_done()
         work_q.put((task, host, params, result))
 
@@ -388,9 +425,9 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
             error_msg = "nornir_salt:RetryRunner failed connection to jumphost '{}', error - {}".format(
                 host["jumphost"]["hostname"], e
             )
-            host["exception"] = error_msg
+            # host["exception"] = error_msg
             log.error(error_msg)
-            return
+            raise RuntimeError(error_msg)
     else:
         # sleep random time waiting for connection to jumphost to establish
         while jumphosts_connections[jumphost["hostname"]] == "__connecting__":
@@ -400,27 +437,33 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
             error_msg = "nornir_salt:RetryRunner failed connection to jumphost '{}' in another thread".format(
                 host["jumphost"]["hostname"]
             )
-            host["exception"] = error_msg
+            # host["exception"] = error_msg
             log.error(error_msg)
-            return
+            raise RuntimeError(error_msg)
     # connect to host
     channel_name = "jumphost_{}_channel".format(jumphost["hostname"])
+    jconn = jumphosts_connections[jumphost["hostname"]]
+    # check if connection to jumphost was closed, reconnect if so
+    if not jconn["jumphost_ssh_transport"].is_active():
+        log.debug(
+            "nornir_salt:RetryRunner jumphost '{}' disconnected, reconnecting".format(
+                jumphost["hostname"]
+            )
+        )
+        jconn["jumphost_ssh_client"].close()
+        jumphosts_connections.pop(jumphost["hostname"])
+        return connect_to_device_behind_jumphost(host, jumphosts_connections)
+    # proceed with openning new channel via jumphost
     if not host.connections.get(channel_name):
-        dest_addr = (host.hostname, host.port or 22)
-        channel = jumphosts_connections[jumphost["hostname"]][
-            "jumphost_ssh_transport"
-        ].open_channel(
+        host.connections[channel_name] = jconn["jumphost_ssh_transport"].open_channel(
             kind="direct-tcpip",
-            dest_addr=dest_addr,
+            dest_addr=(host.hostname, host.port or 22),
             src_addr=("localhost", 7777),
             timeout=3,
         )
-        host.connections[channel_name] = channel
         log.info(
             "nornir_salt:RetryRunner {} - started new channel via jumphost '{}' - '{}'".format(
-                host.name,
-                jumphost["hostname"],
-                jumphosts_connections[jumphost["hostname"]]["jumphost_ssh_client"],
+                host.name, jumphost["hostname"], jconn["jumphost_ssh_client"]
             )
         )
     return host.connections[channel_name]

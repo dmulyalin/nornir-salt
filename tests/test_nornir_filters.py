@@ -13,11 +13,11 @@ sys.path.insert(0, "..")
 
 from nornir import InitNornir
 from nornir.core.plugins.inventory import InventoryPluginRegister
-	
+    
 # these libs imported from nornir_salt dir
-from nornir_salt.plugins.functions import FFun
+from nornir_salt.plugins.functions import FFun, FFun_functions
 from nornir_salt import DictInventory
-	
+    
 inventory_data = """
 hosts:
   R1:
@@ -608,3 +608,56 @@ def test_FL_with_FN():
 
 
 # test_FL_with_FN()
+
+def test_FM_with_single_pattern():
+    res = FFun(NornirObj, FM="ios")
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert len(hosts_dict) == 3
+    assert "R1" in hosts_dict
+    assert "R2" in hosts_dict
+    assert "R3" in hosts_dict
+
+# test_FM_with_single_pattern()
+
+def test_FM_with_comma_separated_patterns():
+    res = FFun(NornirObj, FM="io*, nxos*")
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert len(hosts_dict) == 4
+    assert "R1" in hosts_dict
+    assert "R2" in hosts_dict
+    assert "R3" in hosts_dict
+    assert "SW1" in hosts_dict
+    
+# test_FM_with_comma_separated_patterns()
+
+def test_FM_with_patterns_list():
+    res = FFun(NornirObj, FM=["io*", "nxos*"])
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert len(hosts_dict) == 4
+    assert "R1" in hosts_dict
+    assert "R2" in hosts_dict
+    assert "R3" in hosts_dict
+    assert "SW1" in hosts_dict
+    
+# test_FM_with_patterns_list()
+
+def test_FM_matches_nothing():
+    res = FFun(NornirObj, FM=["foobar"])
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert len(hosts_dict) == 0
+    
+# test_FM_matches_nothing()
+
+def test_FFun_functions_imported():
+    assert len(FFun_functions) > 0
+    assert isinstance(FFun_functions, list)
+
+# test_FFun_functions_imported()

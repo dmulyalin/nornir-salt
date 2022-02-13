@@ -209,11 +209,7 @@ def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=None):
         ret = {}
         for hostname, results in nr_results.items():
             for i in results:
-                exception = (
-                    str(i.exception)
-                    if i.exception is not None
-                    else i.host.get("exception", None)
-                )
+                exception = str(i.exception) if i.exception is not None else None
                 # skip tasks such as _task_foo_bar unless exception
                 if i.name and i.name.startswith("_") and not exception:
                     continue
@@ -248,11 +244,7 @@ def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=None):
         ret = []
         for hostname, results in nr_results.items():
             for i in results:
-                exception = (
-                    str(i.exception)
-                    if i.exception is not None
-                    else i.host.get("exception", None)
-                )
+                exception = str(i.exception) if i.exception is not None else None
                 # skip group tasks such as _task_foo_bar unless exception
                 if i.name and i.name.startswith("_") and not exception:
                     continue

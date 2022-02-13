@@ -115,6 +115,8 @@ def send_command_ps(
     :param strip_prompt: (bool) Remove the trailing router prompt from the output (default: True).
     :param strip_command: (bool) Remove the echo of the command from the output (default: True).
     :param normalize: (bool) Ensure the proper enter is sent at end of command (default: True).
+    :param cutoff: (int) used as difflib get_close_matches cutoff argument to check if last line
+        looks similar to any previously seen prompts, default is 0.6
     :param nowait: (bool) Default is False, if True sends command and returns immediately without
         waiting for prompt right after ``initial_sleep`` timer elapsed.
     """

@@ -8,7 +8,7 @@ to certain hosts/devices.
 
 Filtering order::
 
-    FO -> FB -> FC -> FR -> FG -> FP -> FL -> FN
+    FO -> FB -> FC -> FR -> FG -> FP -> FL -> FM -> FN
 
 .. note:: If multiple filters provided, hosts must pass all checks - ``AND`` logic - to succeed.
 
@@ -107,6 +107,17 @@ Match only hosts with names in provided list::
 
     filtered_hosts = FFun(NornirObj, FL="R1, R2")
 
+FM - Filter platforM
+--------------------
+
+Match only hosts with given platform name patterns::
+
+    filtered_hosts = FFun(NornirObj, FM="cisco*, huawei*")
+    filtered_hosts = FFun(NornirObj, FM="cisco*")
+    filtered_hosts = FFun(NornirObj, FM=["cisco*", "huawei*"])
+
+If list of patterns provided, host with platform matching at least one pattern passes this check.
+
 FN - Filter Negate
 ------------------
 
@@ -198,6 +209,9 @@ from nornir.core.filter import F
 
 log = logging.getLogger(__name__)
 
+# list that enumerates all available FFun functions, useful for arguments filtering
+FFun_functions = ["FO", "FB", "FC", "FR", "FG", "FP", "FL", "FM", "FN"]
+
 
 def FFun(nr, check_if_has_filter=False, **kwargs):
     """
@@ -244,6 +258,9 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
         has_filter = True
     if "FL" in kwargs:
         ret = _filter_FL(ret, kwargs.pop("FL"))
+        has_filter = True
+    if "FM" in kwargs:
+        ret = _filter_FM(ret, kwargs.pop("FM"))
         has_filter = True
     if "FN" in kwargs:
         ret = _filter_FN(ret, nr, kwargs.pop("FN"))
@@ -375,6 +392,24 @@ def _filter_FL(ret, names_list):
         return ret
     else:
         return ret.filter(filter_func=lambda h: h.name in names_list)
+
+
+def _filter_FM(ret, pattern):
+    """
+    Function to filter hosts by platform glob patterns
+    """
+    # check if comma separated list of patterns given
+    if isinstance(pattern, str) and "," in pattern:
+        pattern = [i.strip() for i in pattern.split(",")]
+    # run filtering
+    if isinstance(pattern, list):
+        return ret.filter(
+            filter_func=lambda h: any(
+                [fnmatchcase(h.platform, str(p)) for p in pattern]
+            )
+        )
+    else:
+        return ret.filter(filter_func=lambda h: fnmatchcase(h.platform, str(pattern)))
 
 
 def _filter_FN(ret, nr, FN):

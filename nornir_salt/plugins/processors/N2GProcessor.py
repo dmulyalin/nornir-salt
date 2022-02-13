@@ -18,7 +18,6 @@ N2GProcessor reference
 .. autofunction:: nornir_salt.plugins.processors.N2GProcessor.N2GProcessor
 """
 import logging
-import traceback
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task

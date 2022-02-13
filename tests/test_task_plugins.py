@@ -18,6 +18,7 @@ from nornir_salt import ResultSerializer
 from nornir_salt import DictInventory
 from nornir_salt import tcp_ping
 from nornir_salt import nr_test
+from nornir_salt import sleep
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -170,3 +171,31 @@ ntp server 7.7.7.7
 
 
 # test_nr_test_ret_data_per_host()
+
+
+@skip_if_no_nornir
+def test_task_sleep_random_two_digits():
+    output = nr.run(
+        task=sleep,
+        sleep_random=[0, 2],
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result)
+    assert "Slept for" in result["IOL1"]["sleep"]
+    assert "Slept for" in result["IOL2"]["sleep"]
+
+# test_task_sleep_random_two_digits()
+
+
+@skip_if_no_nornir
+def test_task_sleep_random_digit():
+    output = nr.run(
+        task=sleep,
+        sleep_random=2,
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result)
+    assert "Slept for" in result["IOL1"]["sleep"]
+    assert "Slept for" in result["IOL2"]["sleep"]
+
+# test_task_sleep_random_digit()

@@ -117,7 +117,6 @@ Call Functions Reference
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._list_hosts
 """
 import logging
-import traceback
 
 from .FFun import FFun
 from nornir.core.inventory import Host, ConnectionOptions

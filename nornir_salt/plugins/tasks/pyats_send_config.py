@@ -95,7 +95,9 @@ def pyats_send_config(task: Task, config: str = None, **kwargs):
     device = testbed.devices[task.host.name]
 
     # get configuration from host data if any
-    if "commands" in task.host.data.get("__task__", {}):
+    if "config" in task.host.data.get("__task__", {}):
+        config = task.host.data["__task__"]["config"]
+    elif "commands" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["commands"]
     elif "filename" in task.host.data.get("__task__", {}):
         config = task.host.data["__task__"]["filename"]
