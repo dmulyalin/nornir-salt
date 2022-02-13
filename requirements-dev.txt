@@ -9,6 +9,7 @@ nornir==3.*
 nornir-netmiko==0.*
 pre-commit==2.*
 pyaml
+pytest
 tabulate==0.*
 ttp==0.*
 ttp-templates==0.*
