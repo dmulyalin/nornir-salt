@@ -75,6 +75,8 @@ class QueueRunner:
             if work_to_do is None:
                 break
             task, host, result = work_to_do
+            # add backward compatibility with RetryRunner
+            _ = task.params.pop("connection_name", None)
             work_result = task.copy().start(host)
             with LOCK:
                 result[host.name] = work_result

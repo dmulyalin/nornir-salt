@@ -498,6 +498,9 @@ def CustomFunctionTest(
       of corresponding tasks
     * if ``use_all_tasks`` set to True result is ``nornir.core.task.MultiResult`` object
 
+    If ``add_host`` set to True, custom function must accept ``host`` argument as a reference
+    to Nornir host object this task results are being tested for.
+
     Any additional parameters can be passed to custom test function using ``function_kwargs``
     arguments.
 

@@ -13,8 +13,8 @@ SaltEventProcessor reference
 .. autofunction:: nornir_salt.plugins.processors.SaltEventProcessor.SaltEventProcessor
 """
 import logging
-import time
 
+from datetime import datetime
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
 
@@ -49,13 +49,22 @@ class SaltEventProcessor:
     :param identity: (dict) task identity dictionary of uuid4, jid, function_name keys
     """
 
-    def __init__(self, __salt__, loader, proxy_id, identity, tftr="%d-%b-%Y %H:%M:%S"):
+    def __init__(
+        self,
+        __salt__,
+        loader,
+        proxy_id,
+        identity,
+        tftr="%d-%b-%Y %H:%M:%S.%f",
+        worker_id=None,
+    ):
         self.__salt__ = __salt__
         self.loader = loader
         self.proxy_id = proxy_id
         self.tftr = tftr
         self.jid = identity["jid"]
         self.function = identity["function_name"]
+        self.worker_id = worker_id
 
     def _emit_event(self, tag, data):
         """
@@ -74,7 +83,7 @@ class SaltEventProcessor:
         """
         Helper function to produce event data timestamp.
         """
-        return time.strftime(self.tftr)
+        return datetime.now().strftime(self.tftr)[:-3]
 
     def task_started(self, task: Task) -> None:
         tag = "nornir-proxy/{jid}/{proxy_id}/task/started/{task_name}".format(
@@ -90,6 +99,7 @@ class SaltEventProcessor:
             "hosts": list(task.nornir.inventory.hosts.keys()),
             "status": "RUNNING",
             "function": self.function,
+            "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
 
@@ -107,6 +117,7 @@ class SaltEventProcessor:
             "hosts": list(task.nornir.inventory.hosts.keys()),
             "status": "FAILED" if task.results.failed else "PASSED",
             "function": self.function,
+            "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
 
@@ -124,6 +135,7 @@ class SaltEventProcessor:
             "task_type": "task_instance",
             "status": "RUNNING",
             "function": self.function,
+            "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
 
@@ -143,6 +155,7 @@ class SaltEventProcessor:
             "task_type": "task_instance",
             "status": "FAILED" if task.results.failed else "PASSED",
             "function": self.function,
+            "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
 
@@ -160,6 +173,7 @@ class SaltEventProcessor:
             "task_type": "subtask",
             "status": "RUNNING",
             "function": self.function,
+            "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
 
@@ -179,5 +193,6 @@ class SaltEventProcessor:
             "task_type": "subtask",
             "status": "FAILED" if task.results.failed else "PASSED",
             "function": self.function,
+            "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
