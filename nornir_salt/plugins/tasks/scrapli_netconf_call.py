@@ -58,6 +58,7 @@ transaction
 """
 import logging
 import traceback
+from fnmatch import fnmatchcase
 from nornir.core.task import Result, Task
 
 log = logging.getLogger(__name__)
@@ -191,8 +192,17 @@ def _call_transaction(conn, *args, **kwargs):
     return result, failed
 
 
-def _call_server_capabilities(conn, *args, **kwargs):
-    """Helper function to return NETCONF server capabilities"""
+def _call_server_capabilities(conn, capab_filter=None, *args, **kwargs):
+    """
+    Helper function to return NETCONF server capabilities
+
+    :param capa_filter: (str) glob filter to filter capabilities
+    """
+    if capab_filter:
+        return (
+            [c for c in conn.server_capabilities if fnmatchcase(c, str(capab_filter))],
+            False,
+        )
     return conn.server_capabilities, False
 
 

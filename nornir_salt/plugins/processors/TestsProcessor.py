@@ -95,7 +95,7 @@ Sample code to run tests::
         },
         {
             "name": "Test BGP peers state",
-            "task": "show bgp ipv4 un summary",
+            "task": "show bgp ipv4 unicast summary",
             "test": "!contains_lines",
             "pattern": ["Idle", "Active", "Connect"]
         },
@@ -117,7 +117,7 @@ Sample code to run tests::
         commands=[
             "show run | inc ntp",
             "show run | inc logging",
-            "show bgp ipv4 un summary"
+            "show bgp ipv4 unicast summary"
         ]
     )
 
@@ -875,7 +875,7 @@ class TestsProcessor:
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
         """
-        Method to iterate over individual hosts's result after task/sub-tasks completion.
+        Method to iterate over individual hosts' result after task/sub-tasks completion.
         """
         # check if has failed tasks, do nothing in such a case
         if result.failed:

@@ -141,12 +141,12 @@ def _call_help(connection, method_name: str, **kwargs):
 
 def _call_update(connection, path: list, **kwargs):
     """
-    Udate function helps to update configuration for elements matched by
+    Update function helps to update configuration for elements matched by
     single path string.
 
     This function effectively takes arguments provided and uses ``gNMIclient``
     ``set`` method supplying it with ``update`` argument list that consists of
-    single tuple element, this tuple's first item is a provided path string with
+    single tuple element, first item in this tuple is a provided path string with
     second item being a dictionary of provided ``**kwargs`` containing configuration
     to be updated.
 
@@ -178,7 +178,7 @@ def _call_replace(connection, path: list, **kwargs):
 
     This function effectively takes arguments provided and uses ``gNMIclient``
     ``set`` method supplying it with ``replace`` argument list that consists of
-    single tuple element, this tuple's first item is a provided path string with
+    single tuple element, first item in this tuple is a provided path string with
     second item being a dictionary of provided ``**kwargs`` containing configuration
     to be replaced.
 

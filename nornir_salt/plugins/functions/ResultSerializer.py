@@ -62,9 +62,9 @@ If ``add_details`` is False and ``to_dict`` is True returns dictionary::
 
 For instance::
 
-    {'IOL1': {'show clock': '*00:55:21.236 EET Tue Feb 9 2021',
+    {'IOL1': {'show clock': '*00:55:21.236 Tue Feb 9 2021',
                'show run | inc hostname': 'hostname IOL1'},
-     'IOL2': {'show clock': '*00:55:21.234 EET Tue Feb 9 2021',
+     'IOL2': {'show clock': '*00:55:21.234 Tue Feb 9 2021',
                'show run | inc hostname': 'hostname IOL2'}}
 
 If ``add_details`` is True and ``to_dict`` is True returns dictionary
@@ -104,7 +104,7 @@ For example::
                              'diff': '',
                              'exception': 'None',
                              'failed': False,
-                             'result': '*00:57:45.398 EET Tue Feb 9 2021'},
+                             'result': '*00:57:45.398 Tue Feb 9 2021'},
               'show run | inc hostname': {'changed': False,
                                           'diff': '',
                                           'exception': 'None',
@@ -114,7 +114,7 @@ For example::
                              'diff': '',
                              'exception': 'None',
                              'failed': False,
-                             'result': '*00:57:45.489 EET Tue Feb 9 2021'},
+                             'result': '*00:57:45.489 Tue Feb 9 2021'},
               'show run | inc hostname': {'changed': False,
                                           'diff': '',
                                           'exception': 'None',

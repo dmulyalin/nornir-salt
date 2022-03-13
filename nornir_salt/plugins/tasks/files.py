@@ -334,7 +334,7 @@ def file_diff(
     :param task_name: (str) name of task to read previous results for, diffs all results
         if ``task_name`` is empty.
     :param index: (str) ``ToFileProcessor`` index filename to read files information from
-    :return: Result object with files difference, if files are identical reslt is True
+    :return: Result object with files difference, if files are identical result is True
     """
     last = last or [1, 2]
 

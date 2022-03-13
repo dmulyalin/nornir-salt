@@ -24,7 +24,7 @@ Code to invoke ``napalm_configure`` task::
 
     output = nr.run(
         task=napalm_configure,
-        commands=["sinterface loopback 0", "description 'configured by script'"]
+        commands=["interface loopback 0", "description 'configured by script'"]
     )
 
 napalm_configure returns
@@ -40,6 +40,7 @@ napalm_configure reference
 """
 import logging
 from nornir.core.task import Result, Task
+from nornir_salt.utils import cfg_form_commands
 
 try:
     from nornir_napalm.plugins.tasks import napalm_configure as nornir_napalm_configure
@@ -53,7 +54,7 @@ log = logging.getLogger(__name__)
 
 def napalm_configure(task: Task, config=None, **kwargs):
     """
-    Nornir Task function to send confgiuration to devices using
+    Nornir Task function to send configuration to devices using
     ``nornir_napalm.plugins.tasks.napalm_configure`` plugin.
 
     :param kwargs: any additional arguments to use with
@@ -69,17 +70,7 @@ def napalm_configure(task: Task, config=None, **kwargs):
             exception="No nornir_napalm found, is it installed?",
         )
 
-    # get configuration
-    if "config" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["config"]
-    elif "commands" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["commands"]
-    elif "filename" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["filename"]
-
-    # transform configuration to string if list/tuple given
-    if isinstance(config, (list, tuple)):
-        config = "\n".join(config)
+    config = cfg_form_commands(task=task, config=config, multiline=True)
 
     # push config to device
     task.run(

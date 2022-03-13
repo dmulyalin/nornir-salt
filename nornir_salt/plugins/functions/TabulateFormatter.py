@@ -118,7 +118,9 @@ def TabulateFormatter(
         tabulate = {
             "tablefmt": "grid" if tabulate == "brief" else "simple",
             "showindex": True,
-            "headers": ["host", "name", "result", "exception"],
+            "headers": ["host", "name", "result", "exception"]
+            if headers == "keys"
+            else headers,
         }
     elif tabulate is True:
         tabulate = {"headers": headers}

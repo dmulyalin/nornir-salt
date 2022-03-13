@@ -44,6 +44,7 @@ API Reference
 import time
 import logging
 from nornir.core.task import Result, Task
+from nornir_salt.utils import cli_form_commands
 
 try:
     from nornir_napalm.plugins.tasks import napalm_cli
@@ -60,7 +61,11 @@ CONNECTION_NAME = "napalm"
 
 
 def napalm_send_commands(
-    task: Task, commands=None, interval=None, new_line_char: str = "_br_"
+    task: Task,
+    commands=None,
+    interval=None,
+    new_line_char: str = "_br_",
+    split_lines: bool = True,
 ):
     """
     Nornir Task function to send show commands to devices using ``napalm_cli`` task
@@ -81,6 +86,8 @@ def napalm_send_commands(
     :param interval: (int) interval between sending commands, default None
     :param new_line_char: (str) characters to replace in commands with new line ``\\n``
         before sending command to device, default is ``_br_``, useful to simulate enter key
+    :param split_lines: (bool) if True split multiline string to commands, send multiline
+        string to device as is otherwise
     :return result: Nornir result object with task results named after commands
     """
     # run sanity check
@@ -91,30 +98,12 @@ def napalm_send_commands(
             exception="No nornir-napalm found, is it installed?",
         )
 
-    commands = commands or []
-
-    # get per-host commands if any
-    if "commands" in task.host.data.get("__task__", {}):
-        if commands:
-            for c in task.host.data["__task__"]["commands"]:
-                if c not in commands:
-                    commands.append(c)
-        else:
-            commands = task.host.data["__task__"]["commands"]
-    elif "filename" in task.host.data.get("__task__", {}):
-        commands = task.host.data["__task__"]["filename"]
-
-    # normalize commands to a list
-    if isinstance(commands, str):
-        commands = commands.splitlines()
-
-    # remove empty lines/commands that can left after rendering
-    commands = [c for c in commands if c.strip()]
-
-    # iterate over commands and see if need to add empty line - hit enter
-    commands = [
-        c.replace(new_line_char, "\n") if new_line_char in c else c for c in commands
-    ]
+    commands = cli_form_commands(
+        task=task,
+        commands=commands,
+        split_lines=split_lines,
+        new_line_char=new_line_char,
+    )
 
     # send commands one by one
     if isinstance(interval, (int, float)):

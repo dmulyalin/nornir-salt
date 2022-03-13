@@ -1,6 +1,6 @@
 """
 pyats_send_commands
-#########################
+###################
 
 This task plugin uses PyATS devices ``execute`` method
 to send multiple commands to devices pre-processing commands accordingly.
@@ -13,16 +13,16 @@ Pre-processing includes:
 - Iterate over commands list and remove empty strings
 - Iterate over commands and replace ``new_line_char`` with ``\\n`` new line
 
-Tere are several modes that ``pyats_send_commands`` task plugin can operate in:
+There are several modes that ``pyats_send_commands`` task plugin can operate in:
 
 1. If ``parse`` is true and device platform supports it, send commands one by one parsing
-   their output waiting for ``interval`` in betwen commands if ``interval`` provided, if
-   no parser available for this platofrm to parse command output, exception message returned
+   their output waiting for ``interval`` in between commands if ``interval`` provided, if
+   no parser available for this platform to parse command output, exception message returned
    for such a command
 2. If ``interval`` argument provided, commands send one by one to device using
    ``execute`` method sleeping for given ``interval`` between commands
 3. If ``via`` argument refers to connections pool object, send commands in parallel,
-   commands excution order not guaranteed
+   commands execution order not guaranteed
 4. By default, all commands supplied to device's connection ``execute`` method as is
 
 Dependencies:
@@ -104,6 +104,7 @@ import logging
 import traceback
 
 from nornir.core.task import Result, Task
+from nornir_salt.utils import cli_form_commands
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
@@ -147,6 +148,7 @@ def pyats_send_commands(
     new_line_char: str = "_br_",
     via: str = "default",
     parse: bool = False,
+    split_lines: bool = True,
     **kwargs
 ):
     """
@@ -165,11 +167,13 @@ def pyats_send_commands(
 
     :param kwargs: (dict) used with connection's ``execute`` or testbed's ``parse`` method as ``**kwargs``
     :param commands: (list or str) list or multiline string of commands to send to device
-    :param interval: (int) interval between sending commands, default is None - commands send simelteniously
+    :param interval: (int) interval between sending commands, default is None - commands send simultaneously
     :param new_line_char: (str) characters to replace in commands with new line ``\\n``
         before sending command to device, default is ``_br_``, useful to simulate enter key
     :param via: (str) testbed inventory connection name, default is ``default``
     :param parse: (bool) if True, parses command output and returns structured data
+    :param split_lines: (bool) if True split multiline string to commands, send multiline
+        string to device as is otherwise
     :return result: Nornir result object with task results named after commands
     """
     # run sanity check
@@ -180,32 +184,12 @@ def pyats_send_commands(
             exception="Failed to import PyATS library, is it installed?",
         )
 
-    commands = commands or []
-
-    # get per-host commands if any
-    if "commands" in task.host.data.get("__task__", {}):
-        if commands:
-            for c in task.host.data["__task__"]["commands"]:
-                if c not in commands:
-                    commands.append(c)
-        else:
-            commands = task.host.data["__task__"]["commands"]
-    elif "filename" in task.host.data.get("__task__", {}):
-        commands = task.host.data["__task__"]["filename"]
-
-    # normalize commands to a list
-    if isinstance(commands, str):
-        commands = commands.splitlines()
-    elif isinstance(commands, str):
-        commands = [commands]
-
-    # remove empty lines/commands that can left after rendering
-    commands = [c for c in commands if c.strip()]
-
-    # iterate over commands and see if need to add empty line - hit enter
-    commands = [
-        c.replace(new_line_char, "\n") if new_line_char in c else c for c in commands
-    ]
+    commands = cli_form_commands(
+        task=task,
+        commands=commands,
+        split_lines=split_lines,
+        new_line_char=new_line_char,
+    )
 
     # get PyATS testbed, device and connection objects
     testbed = task.host.get_connection(CONNECTION_NAME, task.nornir.config)

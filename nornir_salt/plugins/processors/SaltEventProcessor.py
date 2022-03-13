@@ -45,7 +45,7 @@ class SaltEventProcessor:
         for SaltStack version above 3003.
     :param loader_context: (obj) salt loader context
     :param proxy_id: (str) Proxy Minion ID to form event tags
-    :param tftr: (str) timestamp formatter string, default is "%d-%b-%Y %H:%M:%S"
+    :param tmstp_ftr: (str) timestamp formatter string, default is "%d-%b-%Y %H:%M:%S"
     :param identity: (dict) task identity dictionary of uuid4, jid, function_name keys
     """
 
@@ -55,13 +55,13 @@ class SaltEventProcessor:
         loader,
         proxy_id,
         identity,
-        tftr="%d-%b-%Y %H:%M:%S.%f",
+        tmstp_ftr="%d-%b-%Y %H:%M:%S.%f",
         worker_id=None,
     ):
         self.__salt__ = __salt__
         self.loader = loader
         self.proxy_id = proxy_id
-        self.tftr = tftr
+        self.tmstp_ftr = tmstp_ftr
         self.jid = identity["jid"]
         self.function = identity["function_name"]
         self.worker_id = worker_id
@@ -83,7 +83,7 @@ class SaltEventProcessor:
         """
         Helper function to produce event data timestamp.
         """
-        return datetime.now().strftime(self.tftr)[:-3]
+        return datetime.now().strftime(self.tmstp_ftr)[:-3]
 
     def task_started(self, task: Task) -> None:
         tag = "nornir-proxy/{jid}/{proxy_id}/task/started/{task_name}".format(

@@ -50,6 +50,7 @@ import logging
 import traceback
 import time
 from nornir.core.task import Result, Task
+from nornir_salt.utils import cfg_form_commands
 
 try:
     from nornir_netmiko.tasks import (  # noqa
@@ -98,7 +99,7 @@ def netmiko_send_config(
         exit_config_mode: False if batch provided else unmodified
 
     Batch mode controlled by ``batch`` parameter, by default all configuration commands send
-    at once, but that approach might lead to Netmio timeout errors if device takes too long
+    at once, but that approach might lead to Netmiko timeout errors if device takes too long
     to respond, sending commands in batches helps to overcome that problem.
     """
     # run sanity check
@@ -117,18 +118,7 @@ def netmiko_send_config(
     batch = max(0, int(batch))
     task_result = Result(host=task.host, result=[], changed=True)
     conn = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
-
-    # get configuration from host data if any
-    if "config" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["config"]
-    elif "commands" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["commands"]
-    elif "filename" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["filename"]
-
-    # transform configuration to a list if string given
-    if isinstance(config, str):
-        config = config.splitlines()
+    config = cfg_form_commands(task=task, config=config)
 
     # enter enable mode
     if enable and conn.check_enable_mode() is False:

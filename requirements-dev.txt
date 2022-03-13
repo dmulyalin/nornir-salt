@@ -3,4 +3,6 @@ black
 flake8
 ipdb
 pre-commit
+pyenchant
+pylint
 pytest

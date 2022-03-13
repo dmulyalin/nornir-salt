@@ -350,7 +350,7 @@ def InventoryFun(nr, call, **kwargs):
     - ``create_host`` or ``create`` - calls ``_create_host``, creates new host or replaces existing host object
     - ``read_host`` or ``read`` - calls ``_read_host``, read host inventory content
     - ``update_host`` or ``update`` - calls ``_update_host``, non recursively update host attributes
-    - ``delete_host`` or ``delete`` - calls ``_delete_host``, deletes host objcet from Nornir Inventory
+    - ``delete_host`` or ``delete`` - calls ``_delete_host``, deletes host object from Nornir Inventory
     - ``load`` - calls ``_load``, to simplify calling multiple functions
     - ``read_inventory`` - calls ``_read_inventory``, read inventory content for groups, default and hosts
     - ``list_hosts`` - calls ``_list_hosts``, return a list of inventory's host names

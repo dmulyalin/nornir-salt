@@ -68,6 +68,7 @@ import traceback
 import logging
 import time
 
+from fnmatch import fnmatchcase
 from nornir.core.task import Result, Task
 from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
 
@@ -105,7 +106,7 @@ except ImportError:
                 Testing:
 
                 * Arista cEOS - not working, transport session closed error
-                * Cisco IOS XR - working
+                * Cisco IOS-XR - working
                 """
                 ele = etree.fromstring(data.encode("UTF-8"))  # nosec
                 return self._request(ele)
@@ -211,8 +212,21 @@ def _call_transaction(manager, *args, **kwargs):
     return result, failed
 
 
-def _call_server_capabilities(manager, *args, **kwargs):
-    """Helper function to get server capabilities"""
+def _call_server_capabilities(manager, capab_filter=None, *args, **kwargs):
+    """
+    Helper function to get server capabilities
+
+    :param capa_filter: (str) glob filter to filter capabilities
+    """
+    if capab_filter:
+        return (
+            [
+                c
+                for c in manager.server_capabilities
+                if fnmatchcase(c, str(capab_filter))
+            ],
+            False,
+        )
     return [c for c in manager.server_capabilities], False
 
 
@@ -222,7 +236,7 @@ def _call_connected(manager, *args, **kwargs):
 
 
 def _call_dir(manager, *args, **kwargs):
-    """Function to return alist of available methods/operations"""
+    """Function to return a list of available methods/operations"""
     methods = (
         list(dir(manager))
         + list(manager._vendor_operations.keys())

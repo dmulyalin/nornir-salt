@@ -96,7 +96,7 @@ DataProcessor Functions help to process results after task completed.
    * - `match`_
      - Search for regex pattern in devices output
    * - `ntfsm`_
-     - Pase show commands output using TextFSM ntc-templates
+     - Pase show commands output using TextFSM NTC-templates
    * - `parse_ttp`_
      - Parses text output from device into structured data
    * - `path`_
@@ -468,7 +468,7 @@ def flatten(data, parent_key="", separator=".", **kwargs):
     :param kwargs: (dict) not in use
     :return: ()dict flattened dictionary structure
 
-    Based on Stackoverflow answer:
+    Based on StackOverflow answer:
     https://stackoverflow.com/a/62186053/12300761
 
     All credits for the idea to https://github.com/ScriptSmith
@@ -1246,7 +1246,7 @@ def parse_ttp(
         or to source ``structure`` argument for ``ttp_templates parse_output`` method
     :return: parsed structure
 
-    If no template provided uses ``ttp_templates`` rpeository to source the template
+    If no template provided uses ``ttp_templates`` repository to source the template
     based on host platform and CLI command string. In such a case to determine cli
     command to properly form TTP template name, task/subtask that produced Result
     object must use CLI command string as a name. For example::
@@ -1460,7 +1460,7 @@ def ntfsm(result: Result, task: Task, host, **kwargs):
     """
     Reference name ``ntfsm``
 
-    This function performs CLI show comamnds output parsing using
+    This function performs CLI show commands output parsing using
     `TextFSM ntc-templates <https://github.com/networktocode/ntc-templates>`_.
 
     :param result: (obj) Nornir Result object
@@ -1468,7 +1468,7 @@ def ntfsm(result: Result, task: Task, host, **kwargs):
     :param host: (obj) Nornir Host object
     :returns: Nothing, modifies provided Result object to save parsing results
 
-    If no such a template available to parse show command output, ntc-templates
+    If no such a template available to parse show command output, NTC-templates
     ``parse_output`` method return empty list.
 
     For this function to determine cli command to properly form TextFSM template

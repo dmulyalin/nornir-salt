@@ -24,7 +24,7 @@ Code to invoke ``scrapli_send_config`` task::
 
     output = nr.run(
         task=scrapli_send_config,
-        commands=["sinterface loopback 0", "description 'configured by script'"]
+        commands=["interface loopback 0", "description 'configured by script'"]
     )
 
 scrapli_send_config returns
@@ -40,6 +40,7 @@ scrapli_send_config reference
 """
 import logging
 from nornir.core.task import Result, Task
+from nornir_salt.utils import cfg_form_commands
 
 try:
     from nornir_scrapli.tasks import send_config as nornir_scrapli_send_config
@@ -53,7 +54,7 @@ log = logging.getLogger(__name__)
 
 def scrapli_send_config(task: Task, config=None, **kwargs):
     """
-    Nornir Task function to send confgiuration to devices using
+    Nornir Task function to send configuration to devices using
     ``nornir_scrapli.tasks.send_config`` plugin
 
     :param kwargs: arguments for ``file.apply_template_on_contents`` salt function
@@ -70,17 +71,7 @@ def scrapli_send_config(task: Task, config=None, **kwargs):
             exception="No nornir_scrapli found, is it installed?",
         )
 
-    # get configuration
-    if "config" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["config"]
-    elif "commands" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["commands"]
-    elif "filename" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["filename"]
-
-    # transform configuration to string if list/tuple given
-    if isinstance(config, (list, tuple)):
-        config = "\n".join(config)
+    config = cfg_form_commands(task=task, config=config, multiline=True)
 
     # push config to device
     task.run(

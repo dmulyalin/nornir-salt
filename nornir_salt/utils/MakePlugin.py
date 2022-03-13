@@ -18,7 +18,7 @@ from nornir_netmiko.tasks import netmiko_send_command
 
 log = logging.getLogger(__name__)
 
-# define connection name for RetryRunner to properly detect it 
+# define connection name for RetryRunner to properly detect it
 CONNECTION_NAME = "netmiko"
 
 
@@ -31,14 +31,14 @@ def task(task: Task, commands: list, interval:int = 1, **kwargs) -> Result:
     :param commands: (list) commands to send to device
     :param interval: (int) interval between sending commands, default 1s
     :return result: Nornir result object with task execution results named after commands
-    
+
     Sample Usage:
-    
+
         salt nrp1 nr.task salt://path/to/task_file.py commands='["show clock", "show hostname"]'
     """
     task.name = "{name}"
     log.info("Starting '{{}}' task for host '{{}}'".format(task.name, task.host.name))
-    
+
     for command in commands:
         task.run(
             task=netmiko_send_command,
@@ -58,17 +58,17 @@ template_testsprocessor_custom_test_fun = '''from nornir.core.task import Result
 def run(result):
     """
     Custom test function to test devices output.
-          
+
     Sample usage:
-    
+
         salt nrp1 nr.test suite="salt://tests/sample_suite.txt" table=brief
-        
+
     Where sample_suite.txt content:
-    
+
         - test: custom
           function_file: "salt://tests/{name}.py"
           name: test_cust_fun_various_inputs_list_of_result
-          task: 
+          task:
             - show clock
             - show ip int brief
     """
@@ -78,8 +78,8 @@ def run(result):
         if "Clock source: NTP" not in result.result:
             ret.append(
                 {{
-                    "exception": "NTP not synced", 
-                    "result": "FAIL", 
+                    "exception": "NTP not synced",
+                    "result": "FAIL",
                     "success": False
                 }}
             )
@@ -114,14 +114,14 @@ template_testsprocessor_custom_fun_suite = """
 - test: custom
   function_file: "salt://tests/{filename}"
   name: test_cust_fun_various_inputs_list_of_result
-  task: 
+  task:
     - show clock
     - show ip int brief
 - test: custom
   function_file: "salt://tests/{filename}"
   use_all_tasks: True
   name: test_cust_fun_various_inputs_multiresult
-  task: 
+  task:
     - show clock
     - show ip int brief
 - test: custom
@@ -130,20 +130,21 @@ template_testsprocessor_custom_fun_suite = """
   name: test_cust_fun_various_inputs_single_result
 """
 
+
 def MakePlugin(kind, name=None):
     """
     Function to generate boilerplate code for Nornir plugins.
-    
+
     :param kind: (str) plugin kind to generate code for
     :param name: (str) plugin file name to use
-    
+
     Supported plugin kinds:
-    
+
     * ``task`` - creates Nornir task plugin in current directory
     * ``test`` - creates ``TestsProcessor`` custom test function in current directory
-    
+
     Sample usage:
-        
+
         salt-run nr.make_plugin dir
         salt-run nr.make_plugin ?
         salt-run nr.make_plugin task name=run_check_commands
@@ -161,10 +162,14 @@ def MakePlugin(kind, name=None):
         name = name or "TestsProcessor_custom_test"
         filename = "{n}.py".format(n=name)
         with open(filename, "w", encoding="utf-8") as f:
-            f.write(template_testsprocessor_custom_test_fun.format(name=name))     
+            f.write(template_testsprocessor_custom_test_fun.format(name=name))
         return "Generated test function '{f}', sample tests suite:\n{s}".format(
-            f=filename, 
-            s=template_testsprocessor_custom_fun_suite.format(filename=filename)
+            f=filename,
+            s=template_testsprocessor_custom_fun_suite.format(filename=filename),
         )
     else:
-        raise ValueError("Unsupported kind '{}', supported: {}".format(kind, ", ".join(supported_kinds)))
+        raise ValueError(
+            "Unsupported kind '{}', supported: {}".format(
+                kind, ", ".join(supported_kinds)
+            )
+        )

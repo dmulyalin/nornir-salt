@@ -188,6 +188,8 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
     )
     response = getattr(requests, method)(**parameters)
 
+    response.raise_for_status()
+
     # form results
     if "json" in response.headers.get("Content-type", "text"):
         try:

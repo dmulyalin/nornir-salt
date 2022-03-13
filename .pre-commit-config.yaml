@@ -41,3 +41,14 @@ repos:
     hooks:
       - id: bandit
         exclude: ^tests/|^docs/
+  # pylint, to run it directly use: python3 -m pylint . --rcfile=pylintrc
+  # enabled only spelling checks for docstrings
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: python3 -m pylint
+        language: system
+        args:
+          - "--rcfile=pylintrc"
+        exclude: ^tests/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$

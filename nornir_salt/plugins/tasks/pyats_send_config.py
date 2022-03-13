@@ -1,6 +1,6 @@
 """
 pyats_send_config
-#######################
+#################
 
 This task plugin relies on Genie device conection ``config`` method
 to send configuration commands to devices over SSH or Telnet.
@@ -33,7 +33,7 @@ Code to invoke ``pyats_send_config`` task::
 
     output = nr.run(
         task=pyats_send_config,
-        commands=["sinterface loopback 0", "description 'configured by script'"]
+        commands=["interface loopback 0", "description 'configured by script'"]
     )
 
 ``pyats_send_config`` returns Nornir results object with task name set
@@ -48,6 +48,7 @@ API Reference
 import logging
 import traceback
 from nornir.core.task import Result, Task
+from nornir_salt.utils import cfg_form_commands
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +72,6 @@ def pyats_send_config(task: Task, config: str = None, **kwargs):
     Device ``configure`` method supports below additional arguments that can be passed
     via ``**kwargs``:
 
-    :param reply: Addition Dialogs for interactive config commands.
     :param timeout: Timeout value in sec, Default Value is 30 sec
     :param error_pattern: list of regex to detect command errors
     :param target: Target RP where to execute service, for DualRp only
@@ -94,17 +94,7 @@ def pyats_send_config(task: Task, config: str = None, **kwargs):
     testbed = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     device = testbed.devices[task.host.name]
 
-    # get configuration from host data if any
-    if "config" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["config"]
-    elif "commands" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["commands"]
-    elif "filename" in task.host.data.get("__task__", {}):
-        config = task.host.data["__task__"]["filename"]
-
-    # transform configuration to a list if string given
-    if isinstance(config, str):
-        config = config.splitlines()
+    config = cfg_form_commands(task=task, config=config)
 
     # send config
     try:

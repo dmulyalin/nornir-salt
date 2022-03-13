@@ -43,7 +43,7 @@ Code to invoke ``netmiko_send_command_ps`` task::
     ip address 1.1.1.100 255.255.255.255
     end
     show ip int brief
-    wr
+    write
     '''
 
     output = nr.run(

@@ -55,7 +55,7 @@ def tcp_ping(
     """
     :param ports: list of int, optional, tcp ports to ping, defaults to host's port or 22
     :param timeout: int, optional, connection timeout, defaults to 1
-    :param host: string, optional, address to TCP ping, defaults to hosts's ``hostname`` value
+    :param host: string, optional, address to TCP ping, defaults to hosts' ``hostname`` value
     :returns: dictionary of port numbers as keys with True/False as values
     """
     ports = ports or []

@@ -47,7 +47,7 @@ log = logging.getLogger(__name__)
 
 def salt_clear_hcache(task: Task, cache_keys: List = None, **kwargs) -> Result:
     """
-    Function to iterate over provided cache keys and delete them from hosts's data.
+    Function to iterate over provided cache keys and delete them from hosts' data.
 
     :param cache_keys: (list or str) list of cache keys to clean from host's data,
         if ``cache_keys`` argument not provided removes all cached data

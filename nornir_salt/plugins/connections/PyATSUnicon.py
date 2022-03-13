@@ -9,7 +9,7 @@ Check `supported platofrms <https://pubhub.devnetcloud.com/media/unicon/docs/use
 page for platform codes.
 
 This plugin uses Genie to load testbed inventory with single device and optional jumphosts definition,
-Genie itslef relies on PyATS to perform lower level tasks, where PyATS relies on Unicon library to
+Genie itself relies on PyATS to perform lower level tasks, where PyATS relies on Unicon library to
 communicate with devices over CLI.
 
 PyATSUnicon reference
@@ -55,7 +55,7 @@ class PyATSUnicon:
 
     ``connection_options:pyats:extras`` section used to load PyATS testbed object.
 
-    Above invetory reconstructed to this PyATS testbed data::
+    Above inventory reconstructed to this PyATS testbed data::
 
         devices:
           host-1:
@@ -111,7 +111,7 @@ class PyATSUnicon:
                 devices:
                   host-1-bar: {}
 
-    Where ``host-1-foo`` is Nornir invetory host name and ``host-1-bar`` is actual device prompt
+    Where ``host-1-foo`` is Nornir inventory host name and ``host-1-bar`` is actual device prompt
     as seen on cli, these two keys must be of the same value.
 
     This plugin establishes all connections to device on startup.

@@ -10,7 +10,7 @@ N2GProcessor Sample Usage
 
 Code to demonstrate how to use ``N2GProcessor`` plugin::
 
-    TBD
+    To be Done
 
 N2GProcessor reference
 =========================
