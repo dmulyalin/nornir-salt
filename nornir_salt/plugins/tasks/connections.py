@@ -51,12 +51,14 @@ API reference
 .. autofunction:: nornir_salt.plugins.tasks.connections.conn_close
 .. autofunction:: nornir_salt.plugins.tasks.connections.conn_open
 """
+import time
 import traceback
 import logging
 
 from typing import Optional, Any, Dict
 
 from nornir.core.task import Result
+from nornir.core.inventory import Host
 
 log = logging.getLogger(__name__)
 
@@ -106,6 +108,7 @@ def conn_close(task, conn_name="all", **kwargs):
 def conn_open(
     task,
     conn_name,
+    host: Optional[Host] = None,
     hostname: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
@@ -115,9 +118,11 @@ def conn_open(
     default_to_host_attributes: bool = True,
     close_open: bool = False,
     reconnect: list = None,
+    raise_on_error: bool = False,
 ):
     """
-    Helper function to open connection to host
+    Helper function to open connections to hosts. Supports reconnect
+    logic retrying different connection parameters.
 
     :param conn_name: name of connection to open
     :param hostname: hostname or ip address to connect to
@@ -128,26 +133,30 @@ def conn_open(
     :param extras: connection plugin extras parameters
     :param default_to_host_attributes: on True uses host's inventory data for not supplied arguments
     :param close_open: if True, closes already open connection and connects again
-    :param reconnect: list of parameters to try connecting to device if primary set of
+    :param reconnect: list of parameters to use to try connecting to device if primary set of
         parameters fails. If ``reconnect`` item is a dictionary, it is supplied as ``**kwargs``
-        to host open connection call, alternatively, ``reconnect`` item can refer to a name
-        of credentials set from inventory data ``credentials`` section.
+        to host open connection call. Alternatively, ``reconnect`` item can refer to a name
+        of credentials set from inventory data ``credentials`` section within host, groups or
+        defaults section.
+    :param raise_on_error: raises error if not able to establish connection even after trying
+        all ``reconnect`` parameters, used to signal exception to parent function e.g. RetryRunner
+    :param host: Nornir Host object supplied by RetryRunner
     :return: boolean, True on success
 
-    Sample ``reconnect`` list::
+    Sample ``reconnect`` list content::
 
         [
             {
-                "username": "cisco123",
+                "username": "foo123",
                 "port": "24",
-                "password": "123cisco",
+                "password": "123foo",
             },
             "deprecated_creds",
             "local_account"
         ]
 
-    Where ``deprecated_creds`` and ``local_account`` stored in Nornir inventory data
-    credentials section::
+    Where ``deprecated_creds`` and ``local_account`` could be stored
+    in Nornir inventory default data credentials section::
 
         defaults:
           data:
@@ -161,13 +170,14 @@ def conn_open(
     """
     reconnect = reconnect or []
     ret = {}
+    host = host or task.host
 
     # check if need to close connection first
-    if conn_name in task.host.connections:
+    if conn_name in host.connections:
         if close_open:
-            task.host.close_connection(conn_name)
+            host.close_connection(conn_name)
         else:
-            return Result(host=task.host, result="Connection already open")
+            return Result(host=host, result="Connection already open")
 
     conn_params = [
         {
@@ -187,13 +197,13 @@ def conn_open(
         # source parameters from inventory crdentials section
         if isinstance(param, str):
             param_name = param
-            param = task.host.get("credentials", {}).get(param)
+            param = host.get("credentials", {}).get(param)
 
         if not isinstance(param, dict):
             raise TypeError("'{}' parameters not found or invalid".format(param_name))
 
         try:
-            task.host.open_connection(
+            host.open_connection(
                 **param, connection=conn_name, configuration=task.nornir.config
             )
             if index == 0:
@@ -205,6 +215,7 @@ def conn_open(
             else:
                 msg = "Connected with reconnect index '{}'".format(index - 1)
             ret = {"result": msg}
+            break
         except:
             tb = traceback.format_exc()
             ret = {
@@ -212,8 +223,13 @@ def conn_open(
                 "exception": tb,
                 "failed": True,
             }
+            time.sleep(0.1)
 
-    return Result(host=task.host, **ret)
+    # check if need to raise an error
+    if ret.get("exception") and raise_on_error:
+        raise RuntimeError(ret["exception"])
+
+    return Result(host=host, **ret)
 
 
 def connections(task, call, **kwargs):
