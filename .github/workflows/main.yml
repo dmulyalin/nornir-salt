@@ -26,6 +26,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools
           pip install -r requirements-dev.txt
+          pip install -r requirements-prodmax.txt
       - name: Run pre-commit
         run: pre-commit run --all-files
 
