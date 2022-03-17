@@ -8,7 +8,7 @@ to certain hosts/devices.
 
 Filtering order::
 
-    FO -> FB -> FC -> FR -> FG -> FP -> FL -> FM -> FN
+    FO -> FB -> FH -> FC -> FR -> FG -> FP -> FL -> FM -> FN
 
 .. note:: If multiple filters provided, hosts must pass all checks - ``AND`` logic - to succeed.
 
@@ -40,7 +40,7 @@ FB - Filter gloB
 
 Filter hosts by name using Glob Patterns matching `fnmatchcase <https://docs.python.org/3.4/library/fnmatch.html#fnmatch.fnmatchcase>`_ module::
 
-    # Match R1, R2, R# hostnames but not R11 or R4:
+    # Match R1, R2, R# host names but not R11 or R4:
     filtered_hosts = FFun(NornirObj, FB="R[123]")
 
     # Match R1, R2, and SW1 but not R11 or R4 or eSW1 using list of patterns:
@@ -48,6 +48,19 @@ Filter hosts by name using Glob Patterns matching `fnmatchcase <https://docs.pyt
 
     # Match R1, R2, and SW1 but not R11 or R4 or eSW1 using comma separated list of patterns:
     filtered_hosts = FFun(NornirObj, FB="R[12], SW*")
+
+If list of patterns provided, host matching at least one pattern will pass this check.
+
+FH - Filter Hostname
+--------------------
+
+Filter hosts by hostname using Glob Patterns matching `fnmatchcase <https://docs.python.org/3.4/library/fnmatch.html#fnmatch.fnmatchcase>`_ module::
+
+    # Match devices with hostnames of 1.2.3.4, 192.168.1.0-255:
+    filtered_hosts = FFun(NornirObj, FH="1.2.3.4, 192.168.1.*")
+
+    # Match deices with hostname of core-sw-2.lab.local, core-sw-3.lab.local:
+    filtered_hosts = FFun(NornirObj, FH="core-sw-[23].lab.local")
 
 If list of patterns provided, host matching at least one pattern will pass this check.
 
@@ -210,7 +223,7 @@ from nornir.core.filter import F
 log = logging.getLogger(__name__)
 
 # list that enumerates all available FFun functions, useful for arguments filtering
-FFun_functions = ["FO", "FB", "FC", "FR", "FG", "FP", "FL", "FM", "FN"]
+FFun_functions = ["FO", "FB", "FH", "FC", "FR", "FG", "FP", "FL", "FM", "FN"]
 
 
 def FFun(nr, check_if_has_filter=False, **kwargs):
@@ -223,6 +236,7 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
         where ``has_filter`` is boolean set to True if any of ``Fx`` filters provided
     :param FO: (str) Nornir Filter object dictionary
     :param FB: (str or list) glob pattern or comma separate list of patterns to filter based on hosts' names
+    :param FH: (str or list) glob pattern or comma separate list of patterns to filter based on hosts' hostname parameter
     :param FC: (str or list) pattern or comma separate list of patterns to check for containment in hostname
     :param FR: (str or list) regex pattern or list of patterns to filter based on hosts' names
     :param FG: (str) Name of inventory group to return only hosts that part of it
@@ -243,6 +257,9 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
         has_filter = True
     if kwargs.get("FB"):
         ret = _filter_FB(ret, kwargs.pop("FB"))
+        has_filter = True
+    if kwargs.get("FH"):
+        ret = _filter_FH(ret, kwargs.pop("FH"))
         has_filter = True
     if kwargs.get("FC"):
         ret = _filter_FC(ret, kwargs.pop("FC"))
@@ -296,6 +313,24 @@ def _filter_FB(ret, pattern):
         )
     else:
         return ret.filter(filter_func=lambda h: fnmatchcase(h.name, str(pattern)))
+
+
+def _filter_FH(ret, pattern):
+    """
+    Function to filter hosts by hostname using glob patterns
+    """
+    # check if comma separated list of patterns given
+    if isinstance(pattern, str) and "," in pattern:
+        pattern = [i.strip() for i in pattern.split(",")]
+    # run filtering
+    if isinstance(pattern, list):
+        return ret.filter(
+            filter_func=lambda h: any(
+                [fnmatchcase(h.hostname, str(p)) for p in pattern]
+            )
+        )
+    else:
+        return ret.filter(filter_func=lambda h: fnmatchcase(h.hostname, str(pattern)))
 
 
 def _filter_FC(ret, pattern):

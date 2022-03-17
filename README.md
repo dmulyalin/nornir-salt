@@ -1,6 +1,8 @@
-[![Downloads](https://pepy.tech/badge/nornir-salt)](https://pepy.tech/project/nornir-salt)
-[![PyPI versions](https://img.shields.io/pypi/pyversions/nornir-salt.svg)](https://pypi.python.org/pypi/nornir-salt/)
-[![Documentation status](https://readthedocs.org/projects/nornir-salt/badge/?version=latest)](http://nornir-salt.readthedocs.io/?badge=latest)
+[![Downloads][pepy-downloads-badge]][pepy-link]
+[![PyPI versions][pepy-downloads-badge]][pepy-downloads-link]
+[![Documentation status][readthedocs-badge]][readtedocs-link]
+[![GitHub Discussion][github-discussions-badge]][github-discussions-link]
+[![Code style: black][black-badge]][black-link]
 
 # nornir-salt
 
@@ -13,3 +15,14 @@ Refer to [documentation](https://nornir-salt.readthedocs.io/en/latest/) for addi
 # Contributing
 
 Issues, bug reports and feature requests are welcomed.
+
+[github-discussions-link]:  https://github.com/dmulyalin/nornir-salt/discussions
+[github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
+[black-badge]:              https://img.shields.io/badge/code%20style-black-000000.svg
+[black-link]:               https://github.com/psf/black
+[pypi-link]:                https://pypi.python.org/pypi/nornir-salt/
+[pypi-badge]:               https://img.shields.io/pypi/pyversions/nornir-salt.svg
+[pepy-downloads-link]:      https://pepy.tech/project/nornir-salt
+[pepy-downloads-badge]:     https://pepy.tech/badge/nornir-salt
+[readthedocs-link]:         http://nornir-salt.readthedocs.io/?badge=latest
+[readthedocs-badge]:        https://readthedocs.org/projects/nornir-salt/badge/?version=latest

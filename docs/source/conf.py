@@ -37,7 +37,8 @@ release = '0.10.0'
 extensions = [
 'sphinx.ext.autodoc',
 'sphinx.ext.napoleon',
-'sphinx.ext.autosectionlabel'
+'sphinx.ext.autosectionlabel',
+'sphinxcontrib.spelling',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,6 +51,11 @@ exclude_patterns = []
 
 # use index.rst instead of contents.rst:
 master_doc = 'index'
+
+# spelling check parameters
+spelling_lang='en_US'
+tokenizer_lang='en_US'
+spelling_word_list_filename='spelling_wordlist.txt'
 
 # -- Options for HTML output -------------------------------------------------
 

@@ -58,8 +58,8 @@ class QueueRunner:
     QueueRunner run tasks over each host using queue together
     with workers threads consuming work from work queue.
 
-    Instead of firing up num_workes threads for each batch of hosts,
-    QueueRunner starts num_workes threads once and uses queue to
+    Instead of firing up num_workers threads for each batch of hosts,
+    QueueRunner starts num_workers threads once and uses queue to
     submit tasks and obtain results.
 
     Arguments:

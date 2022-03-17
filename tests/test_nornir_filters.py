@@ -661,3 +661,101 @@ def test_FFun_functions_imported():
     assert isinstance(FFun_functions, list)
 
 # test_FFun_functions_imported()
+
+def test_FH():
+    res = FFun(NornirObj, FH="192.168.1.15[13]")
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert hosts_dict == {
+        "R1": {
+            "connection_options": {},
+            "data": {"role": "core", "site": "B1"},
+            "groups": ["lab"],
+            "hostname": "192.168.1.151",
+            "name": "R1",
+            "password": None,
+            "platform": "ios",
+            "port": None,
+            "username": None,
+        },
+        "R2": {
+            "connection_options": {},
+            "data": {"role": "agg", "site": "B2"},
+            "groups": ["lab"],
+            "hostname": "192.168.1.153",
+            "name": "R2",
+            "password": None,
+            "platform": "ios",
+            "port": None,
+            "username": None,
+        },
+    }
+    
+def test_FH_list():
+    res = FFun(NornirObj, FH=["192.168.1.15[13]", "192.168.2.14*"])
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert hosts_dict == {'R1': {'connection_options': {},
+                                 'data': {'role': 'core', 'site': 'B1'},
+                                 'groups': ['lab'],
+                                 'hostname': '192.168.1.151',
+                                 'name': 'R1',
+                                 'password': None,
+                                 'platform': 'ios',
+                                 'port': None,
+                                 'username': None},
+                         'R2': {'connection_options': {},
+                                 'data': {'role': 'agg', 'site': 'B2'},
+                                 'groups': ['lab'],
+                                 'hostname': '192.168.1.153',
+                                 'name': 'R2',
+                                 'password': None,
+                                 'platform': 'ios',
+                                 'port': None,
+                                 'username': None},
+                         'SW1': {'connection_options': {},
+                                 'data': {'role': 'access', 'site': 'B3'},
+                                 'groups': ['lab', 'pod1'],
+                                 'hostname': '192.168.2.144',
+                                 'name': 'SW1',
+                                 'password': None,
+                                 'platform': 'nxos_ssh',
+                                 'port': None,
+                                 'username': None}}
+                                 
+
+def test_FH_comma_separated_list():
+    res = FFun(NornirObj, FH="192.168.1.15[13], 192.168.2.14*")
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert hosts_dict == {'R1': {'connection_options': {},
+                                 'data': {'role': 'core', 'site': 'B1'},
+                                 'groups': ['lab'],
+                                 'hostname': '192.168.1.151',
+                                 'name': 'R1',
+                                 'password': None,
+                                 'platform': 'ios',
+                                 'port': None,
+                                 'username': None},
+                         'R2': {'connection_options': {},
+                                 'data': {'role': 'agg', 'site': 'B2'},
+                                 'groups': ['lab'],
+                                 'hostname': '192.168.1.153',
+                                 'name': 'R2',
+                                 'password': None,
+                                 'platform': 'ios',
+                                 'port': None,
+                                 'username': None},
+                         'SW1': {'connection_options': {},
+                                 'data': {'role': 'access', 'site': 'B3'},
+                                 'groups': ['lab', 'pod1'],
+                                 'hostname': '192.168.2.144',
+                                 'name': 'SW1',
+                                 'password': None,
+                                 'platform': 'nxos_ssh',
+                                 'port': None,
+                                 'username': None}}
+								 
