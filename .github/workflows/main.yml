@@ -29,7 +29,40 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files
 
-  run_tests:
+  run_tests_windows:
+    # windows does not have py3.6 for x64 arch, have to skip tests for it
+    name: Testing on Python ${{ matrix.python-version }} (${{ matrix.platform}})
+    defaults:
+      run:
+        # that is to run pytest from within tests directory
+        working-directory: tests
+        shell: bash
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        python-version: [ '3.7', '3.8', '3.9' ]
+        platform: [windows-latest]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dev dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools
+          pip install -r ../requirements-dev.txt
+      - name: Install Prodmax dependencies
+        run: |
+          pip install -r ../requirements-prodmax.txt
+      - name: Run pytest
+        run: pytest -vv
+
+  run_tests_unix:
     name: Testing on Python ${{ matrix.python-version }} (${{ matrix.platform}})
     defaults:
       run:
@@ -41,27 +74,22 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ '3.6', '3.7', '3.8', '3.9' ]
-        platform: [ubuntu-latest, macOS-10.15, windows-latest]
+        platform: [ubuntu-latest, macOS-10.15]
     runs-on: ${{ matrix.platform }}
 
     steps:
       - uses: actions/checkout@v2
-        if: ${{ matrix.platform != 'windows-latest' && matrix.python-version != '3.6' }} # skip python3.6 for windows
       - name: Setup Python
-        if: ${{ matrix.platform != 'windows-latest' && matrix.python-version != '3.6' }} # skip python3.6 for windows
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Dev dependencies
-        if: ${{ matrix.platform != 'windows-latest' && matrix.python-version != '3.6' }} # skip python3.6 for windows
         run: |
           python -m pip install --upgrade pip setuptools
           pip install -r ../requirements-dev.txt
       - name: Install Prodmax dependencies
-        if: ${{ matrix.platform != 'windows-latest' && matrix.python-version != '3.6' }} # skip python3.6 for windows
         run: |
           pip install -r ../requirements-prodmax.txt
       - name: Run pytest
-        if: ${{ matrix.platform != 'windows-latest' && matrix.python-version != '3.6' }} # skip python3.6 for windows
         run: pytest -vv
