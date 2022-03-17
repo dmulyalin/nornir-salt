@@ -1,6 +1,6 @@
 [![Downloads][pepy-downloads-badge]][pepy-link]
-[![PyPI versions][pepy-downloads-badge]][pepy-downloads-link]
-[![Documentation status][readthedocs-badge]][readtedocs-link]
+[![PyPI versions][pypi-badge]][pypi-link]
+[![Documentation status][readthedocs-badge]][readthedocs-link]
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 [![Code style: black][black-badge]][black-link]
 
