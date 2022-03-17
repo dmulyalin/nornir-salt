@@ -1,8 +1,9 @@
-[![Downloads][pepy-downloads-badge]][pepy-link]
+[![Downloads][pepy-downloads-badge]][pepy-downloads-link]
 [![PyPI versions][pypi-badge]][pypi-link]
-[![Documentation status][readthedocs-badge]][readthedocs-link]
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 [![Code style: black][black-badge]][black-link]
+[![Documentation status][readthedocs-badge]][readthedocs-link]
+[![Tests][github-tests-badge]][github-tests-link]
 
 # nornir-salt
 
@@ -26,3 +27,5 @@ Issues, bug reports and feature requests are welcomed.
 [pepy-downloads-badge]:     https://pepy.tech/badge/nornir-salt
 [readthedocs-link]:         http://nornir-salt.readthedocs.io/?badge=latest
 [readthedocs-badge]:        https://readthedocs.org/projects/nornir-salt/badge/?version=latest
+[github-tests-badge]:       https://github.com/dmulyalin/nornir-salt/actions/workflows/main.yml/badge.svg
+[github-tests-link]:        https://github.com/dmulyalin/nornir-salt/actions
