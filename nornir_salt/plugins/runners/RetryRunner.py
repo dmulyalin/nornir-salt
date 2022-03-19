@@ -4,12 +4,6 @@ RetryRunner plugin
 
 RetryRunner plugin implements retry logic to improve task execution reliability.
 
-.. warning:: For grouped tasks need to explicitly provide ``connection_name`` attribute
-    such as `netmiko`, `napalm`, `scrapli`. Specifying ``connection_name`` attribute for
-    standalone tasks not required. Lack of ``connection_name`` attribute will result in skipping
-    connection retry logic and connections to all hosts initiated simultaneously up to the
-    number of `num_workers`
-
 Primary usecase for RetryRunner is to make Nornir task execution as reliable as possible
 utilizing queuing, retries, connections splaying and exponential backoff mechanisms.
 
@@ -156,6 +150,159 @@ Sample code to demonstrate usage of ``RetryRunner``, ``DictInventory`` and ``Res
     formed_result3 = ResultSerializer(result3, add_details=True)
     pprint.pprint(formed_result3, width=100)
 
+Connections handling
+====================
+
+.. warning::  For parent or grouped tasks need to explicitly provide connection plugin
+    ``connection_name`` task parameter such as ``netmiko, napalm, scrapli, scrapli_netconf``,
+    etc. Specifying ``connection_name`` attribute for parent or grouped tasks not required if that
+    task has ``CONNECTION_NAME`` global variable defined within it. Lack of ``connection_name``
+    attribute will result in skipping connections retry logic, jumphost connection logic or credentials
+    retry logic and connections to all hosts initiated simultaneously up to the number of ``num_workers``
+    option.
+
+Above restriction stems from the fact that Nornir tasks does not have built-in way to communicate
+the set of connection plugins that task will use. By convention, task may contain ``CONNECTION_NAME``
+global parameter to identify the name(s) of connection plugin(s) task uses.
+
+``CONNECTION_NAME`` global parameter can be a single connection name or a comma separated list of
+connection plugin names that task and its subtask uses. RetryRunner honors this parameter and tries
+to establish all specified connections before starting the task.
+
+Alternatively, inline task parameter ``connection_name`` can be provided on task run.
+
+However, only parent/main/grouped task supports task parameters, subtasks does not support them.
+As a result, if subtask uses connection plugin different from specified in parent task ``connection_name``
+parameter or ``CONNECTION_NAME`` variable, subtask connection does not handled by RetryRunner
+connections establishment logic and connection established on subtask start simultaneously in parallel
+up to the number of ``num_workers`` option.
+
+Sample task that uses different connection plugins for subtasks::
+
+    from nornir.core.task import Result, Task
+    from nornir_scrapli.tasks import netconf_get_config
+    from nornir_scrapli.tasks import send_command as scrapli_send_command
+    from nornir_netmiko.tasks import netmiko_send_command
+
+    # inform RetryRunner to establish these connections
+    CONNECTION_NAME = "scrapli_netconf, netmiko, scrapli"
+
+    def task(task: Task) -> Result:
+
+        task.run(
+            name="Pull Configuration Using Scrapli Netconf",
+            task=netconf_get_config,
+            source="running"
+        )
+
+        task.run(
+            name="Pull Configuration using Netmiko",
+            task=netmiko_send_command,
+            command_string="show run",
+            enable=True
+        )
+
+        task.run(
+            name="Pull Configuration using Scrapli",
+            task=scrapli_send_command,
+            command="show run"
+        )
+
+        return Result(host=task.host)
+
+
+RetryRunner task parameters
+===========================
+
+RetryRunner supports a number of task parameters to influence its behavior on a per-task
+basis. These parameters can be supplied to the task as key/value arguments to override
+RetryRunner options supplied on Nornir object instantiation.
+
+RetryRunner task parameters description:
+
+* ``run_connect_retry`` - number of connection attempts
+* ``run_task_retry`` - number of attempts to run task
+* ``run_creds_retry`` - list of connection credentials and parameters to retry while connecting to device
+* ``run_num_workers`` - number of threads for tasks execution
+* ``run_num_connectors`` - number of threads for device connections
+* ``run_reconnect_on_fail`` - if True, re-establish connection on task failure
+* ``connection_name`` - name of connection plugin to use to initiate connection to device
+
+.. note:: Tasks retry count is the smallest of ``run_connect_retry`` and ``run_task_retry`` counters,
+    i.e. ``task_retry`` set to ``min(run_connect_retry, run_task_retry)`` value.
+
+.. warning:: only main/parent tasks support RetryRunner task parameters, subtasks does not support them.
+
+Sample code to use RetryRunner task parameters::
+
+    import yaml
+    from nornir import InitNornir
+    from nornir.core.task import Result, Task
+    from nornir_netmiko import netmiko_send_command
+
+    inventory_data = '''
+    hosts:
+      R1:
+        hostname: 192.168.1.151
+        platform: ios
+        groups: [lab]
+
+    groups:
+      lab:
+        username: foo
+        password: bar
+
+    defaults:
+      data:
+        credentials:
+          local_creds:
+            username: nornir
+            password: nornir
+          dev_creds:
+            username: devops
+            password: foobar
+    '''
+
+    inventory_dict = yaml.safe_load(inventory_data)
+
+    NornirObj = InitNornir(
+        runner={
+            "plugin": "RetryRunner"
+        },
+        inventory={
+            "plugin": "DictInventory",
+            "options": {
+                "hosts": inventory_dict["hosts"],
+                "groups": inventory_dict["groups"],
+                "defaults": inventory_dict.get("defaults", {})
+            }
+        },
+    )
+
+    # run task without retrying - simulate QueueRunner behavior
+    result1 = NornirObj.run(
+        task=netmiko_send_command,
+        command_string="show clock",
+        run_connect_retry=0,
+        run_task_retry=0,
+    )
+
+    # run task one by one - simulate SerialRunner behavior but with retrying
+    result2 = NornirObj.run(
+        task=netmiko_send_command,
+        command_string="show clock",
+        run_num_workers=1,
+        run_num_connectors=1,
+    )
+
+    # retry credentials if login fails but without retrying conection establishment
+    result3 = NornirObj.run(
+        task=netmiko_send_command,
+        command_string="show clock",
+        run_retry_creds=["local_creds", "dev_creds"]
+        run_connect_retry=0,
+    )
+
 Connecting to hosts behind jumphost
 ===================================
 
@@ -242,94 +389,7 @@ Sample code to use ``creds_retry``::
     )
 
 Credentials will be tried in a sequence defined in ``creds_retry`` option
-as soon as connection using main credentials will fail to establish.
-
-RetryRunner task parameters
-===========================
-
-RetryRunner supports a number of task parameters to influence its behavior on a per-task
-basis. These parameters can be supplied to the task as key/value arguments to override
-RetryRunner options supplied on Nornir object instantiation.
-
-RetryRunner task parameters description:
-
-* ``run_connect_retry`` - number of connection attempts
-* ``run_task_retry`` - number of attempts to run task
-* ``run_creds_retry`` - list of connection credentials and parameters to retry while connecting to device
-* ``run_num_workers`` - number of threads for tasks execution
-* ``run_num_connectors`` - number of threads for device connections
-* ``connection_name`` - name of connection plugin to use to initiate connection to device
-
-.. note:: Tasks retry count is the smallest of ``run_connect_retry`` and ``run_task_retry`` counters,
-    i.e. ``task_retry`` set to ``min(run_connect_retry, run_task_retry)`` value.
-
-Sample code to use RetryRunner task parameters::
-
-    import yaml
-    from nornir import InitNornir
-    from nornir.core.task import Result, Task
-    from nornir_netmiko import netmiko_send_command
-
-    inventory_data = '''
-    hosts:
-      R1:
-        hostname: 192.168.1.151
-        platform: ios
-        groups: [lab]
-
-    groups:
-      lab:
-        username: foo
-        password: bar
-
-    defaults:
-      data:
-        credentials:
-          local_creds:
-            username: nornir
-            password: nornir
-          dev_creds:
-            username: devops
-            password: foobar
-    '''
-
-    inventory_dict = yaml.safe_load(inventory_data)
-
-    NornirObj = InitNornir(
-        runner={"plugin": "RetryRunner"},
-        inventory={
-            "plugin": "DictInventory",
-            "options": {
-                "hosts": inventory_dict["hosts"],
-                "groups": inventory_dict["groups"],
-                "defaults": inventory_dict.get("defaults", {})
-            }
-        },
-    )
-
-    # run task without retrying - simulate QueueRunner behavior
-    result1 = NornirObj.run(
-        task=netmiko_send_command,
-        command_string="show clock",
-        run_connect_retry=0,
-        run_task_retry=0,
-    )
-
-    # run task one by one - simulate SerialRunner behavior but with retrying
-    result2 = NornirObj.run(
-        task=netmiko_send_command,
-        command_string="show clock",
-        run_num_workers=1,
-        run_num_connectors=1,
-    )
-
-    # retry credentials if login fails but without retrying conection establishment
-    result3 = NornirObj.run(
-        task=netmiko_send_command,
-        command_string="show clock",
-        run_retry_creds=["local_creds", "dev_creds"]
-        run_connect_retry=0,
-    )
+as soon as connection using main credentials fail to establish.
 
 API Reference
 =============
@@ -400,6 +460,7 @@ def worker(
                 )
             )
             time.sleep(random.randrange(0, task_splay) / 1000)  # nosec
+
             work_result = task.start(host)
         # check if need to run task retry logic
         if task.results.failed:
@@ -469,12 +530,11 @@ def connector(
                 connectors_q.put(connection)
                 connectors_q.task_done()
                 continue
-        # initiate connection to host
-        connection_name = task.task.__globals__.get(
-            "CONNECTION_NAME", params["connection_name"]
-        )
-        if connection_name and connection_name not in host.connections:
-            try:
+        try:
+            # initiate connections to host
+            for connection_name in params["connection_name"]:
+                if connection_name in host.connections:
+                    continue
                 time.sleep(random.randrange(0, connect_splay) / 1000)  # nosec
                 extras = host.get_connection_parameters(connection_name).extras
                 if host.get("jumphost") and connection_name in ["netmiko", "ncclient"]:
@@ -501,37 +561,44 @@ def connector(
                         host.name, connection_name
                     )
                 )
-            except Exception as e:
-                # close host connections to retry them
-                close_host_connection(host, connection_name)
-                err_msg = "nornir_salt:RetryRunner {} - connection retry attempt {}, error: '{}'".format(
-                    host.name, params["connection_retry"], e
-                )
-                log.error(err_msg)
-                if params["connection_retry"] < connect_retry:
-                    params["connection_retry"] += 1
-                    params["timestamp"] = time.time()
-                    connectors_q.put(connection)
-                    connectors_q.task_done()
-                    continue
-                else:
-                    # record exception in params for worker thread to react on it
-                    params["connect_exception"] = err_msg
+        except Exception as e:
+            # close host connections to retry it
+            close_host_connection(host, [connection_name])
+            err_msg = "nornir_salt:RetryRunner {} - connection {}, retry attempt {}, error: '{}'".format(
+                host.name, connection_name, params["connection_retry"], e
+            )
+            log.error(err_msg)
+            if params["connection_retry"] < connect_retry:
+                params["connection_retry"] += 1
+                params["timestamp"] = time.time()
+                connectors_q.put(connection)
+                connectors_q.task_done()
+                continue
+            else:
+                # record exception in params for worker thread to react on it
+                params["connect_exception"] = err_msg
         connectors_q.task_done()
         work_q.put((task, host, params, result))
 
 
-def close_host_connection(host, connection_name):
-    try:
-        host.close_connection(connection_name)
-    except:
-        _ = host.connections.pop(connection_name, None)
-    if host.get("jumphost"):
-        channel_name = "jumphost_{}_channel".format(host["jumphost"]["hostname"])
+def close_host_connection(host, connection_names):
+    """
+    Helper function to close connections to host
+
+    :param host: nornir host object
+    :param connection_names: list of connection names to close
+    """
+    for connection_name in connection_names:
         try:
-            host.close_connection(channel_name)
+            host.close_connection(connection_name)
         except:
-            _ = host.connections.pop(channel_name, None)
+            _ = host.connections.pop(connection_name, None)
+        if host.get("jumphost"):
+            channel_name = "jumphost_{}_channel".format(host["jumphost"]["hostname"])
+            try:
+                host.close_connection(channel_name)
+            except:
+                _ = host.connections.pop(channel_name, None)
 
 
 def connect_to_device_behind_jumphost(host, jumphosts_connections):
@@ -692,7 +759,16 @@ class RetryRunner:
         run_creds_retry = task.params.pop("run_creds_retry", self.creds_retry)
         run_num_workers = task.params.pop("run_num_workers", self.num_workers)
         run_num_connectors = task.params.pop("run_num_connectors", self.num_connectors)
-        run_connection_name = task.params.pop("connection_name", None)
+        run_reconnect_on_fail = task.params.pop(
+            "run_reconnect_on_fail", self.reconnect_on_fail
+        )
+        # atempt to extract a list of connections this task uses
+        run_connection_name = task.params.pop(
+            "connection_name", task.task.__globals__.get("CONNECTION_NAME", "")
+        )
+        run_connection_name = [
+            i.strip() for i in run_connection_name.split(",") if i.strip()
+        ]
         # do sanity checks
         if run_num_connectors <= 0:
             raise RuntimeError("nornir-salt:RetryRunner num_connectors must be above 0")
@@ -735,7 +811,7 @@ class RetryRunner:
                     self.task_splay,
                     int(run_task_retry),
                     int(run_connect_retry),
-                    self.reconnect_on_fail,
+                    run_reconnect_on_fail,
                 ),
             )
             t.start()

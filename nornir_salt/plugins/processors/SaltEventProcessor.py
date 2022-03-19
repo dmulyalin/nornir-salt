@@ -46,7 +46,8 @@ class SaltEventProcessor:
     :param loader_context: (obj) salt loader context
     :param proxy_id: (str) Proxy Minion ID to form event tags
     :param tmstp_ftr: (str) timestamp formatter string, default is "%d-%b-%Y %H:%M:%S"
-    :param identity: (dict) task identity dictionary of uuid4, jid, function_name keys
+    :param identity: (dict) task identity dictionary of uuid4, jid, function, user keys,
+        merged with event data dictionary
     """
 
     def __init__(
@@ -63,8 +64,8 @@ class SaltEventProcessor:
         self.proxy_id = proxy_id
         self.tmstp_ftr = tmstp_ftr
         self.jid = identity["jid"]
-        self.function = identity["function_name"]
         self.worker_id = worker_id
+        self.identity = identity
 
     def _emit_event(self, tag, data):
         """
@@ -90,15 +91,14 @@ class SaltEventProcessor:
             proxy_id=self.proxy_id, task_name=task.name, jid=self.jid
         )
         data = {
+            **self.identity,
             "timestamp": self._timestamp(),
             "task_name": task.name,
-            "jid": self.jid,
             "proxy_id": self.proxy_id,
             "task_event": "started",
             "task_type": "task",
             "hosts": list(task.nornir.inventory.hosts.keys()),
             "status": "RUNNING",
-            "function": self.function,
             "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
@@ -108,15 +108,14 @@ class SaltEventProcessor:
             proxy_id=self.proxy_id, task_name=task.name, jid=self.jid
         )
         data = {
+            **self.identity,
             "timestamp": self._timestamp(),
             "task_name": task.name,
-            "jid": self.jid,
             "proxy_id": self.proxy_id,
             "task_event": "completed",
             "task_type": "task",
             "hosts": list(task.nornir.inventory.hosts.keys()),
             "status": "FAILED" if task.results.failed else "PASSED",
-            "function": self.function,
             "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
@@ -126,15 +125,14 @@ class SaltEventProcessor:
             proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
+            **self.identity,
             "timestamp": self._timestamp(),
             "task_name": task.name,
-            "jid": self.jid,
             "host": host.name,
             "proxy_id": self.proxy_id,
             "task_event": "started",
             "task_type": "task_instance",
             "status": "RUNNING",
-            "function": self.function,
             "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
@@ -146,15 +144,14 @@ class SaltEventProcessor:
             proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
+            **self.identity,
             "timestamp": self._timestamp(),
             "task_name": task.name,
-            "jid": self.jid,
             "proxy_id": self.proxy_id,
             "host": host.name,
             "task_event": "completed",
             "task_type": "task_instance",
             "status": "FAILED" if task.results.failed else "PASSED",
-            "function": self.function,
             "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
@@ -164,15 +161,14 @@ class SaltEventProcessor:
             proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
+            **self.identity,
             "timestamp": self._timestamp(),
             "task_name": task.name,
-            "jid": self.jid,
             "proxy_id": self.proxy_id,
             "host": host.name,
             "task_event": "started",
             "task_type": "subtask",
             "status": "RUNNING",
-            "function": self.function,
             "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)
@@ -184,15 +180,14 @@ class SaltEventProcessor:
             proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
         )
         data = {
+            **self.identity,
             "timestamp": self._timestamp(),
             "task_name": task.name,
-            "jid": self.jid,
             "proxy_id": self.proxy_id,
             "host": host.name,
             "task_event": "completed",
             "task_type": "subtask",
             "status": "FAILED" if task.results.failed else "PASSED",
-            "function": self.function,
             "worker_id": self.worker_id,
         }
         self._emit_event(tag, data)

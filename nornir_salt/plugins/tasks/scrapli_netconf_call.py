@@ -240,7 +240,11 @@ def scrapli_netconf_call(task: Task, call: str, *args, **kwargs) -> Result:
     # call conn object method otherwise
     else:
         result = getattr(conn, call)(*args, **kwargs)
-        failed = result.failed if hasattr(result, "failed") else failed
+        if (
+            any(err in result.raw_result for err in result.failed_when_contains)
+            or result.error_messages
+        ):
+            failed = True
 
     # format results
     if hasattr(result, "result"):
