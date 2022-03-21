@@ -1,6 +1,6 @@
 import setuptools
 
-__version__ = "0.10.0"
+__version__ = "0.10.1"
 __author__ = "Denis Mulyalin <d.mulyalin@gmail.com>"
 
 with open("README.md", "r", encoding="utf8") as f:
@@ -59,4 +59,5 @@ setuptools.setup(
     ConnectionsPool=nornir_salt.plugins.connections:ConnectionsPool
     pyats=nornir_salt.plugins.connections:PyATSUnicon
     """,
+    data_files=[('', ['requirements.txt', 'requirements-dev.txt', 'requirements-prodmax.txt', 'requirements-prodmin.txt'])]
 )
