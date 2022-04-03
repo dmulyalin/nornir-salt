@@ -62,9 +62,7 @@ except ImportError:
 CONNECTION_NAME = "scrapli"
 
 
-@ValidateFuncArgs(
-    model_scrapli_send_commands, mixins=[send_command]
-)
+@ValidateFuncArgs(model_scrapli_send_commands, mixins=[send_command])
 def scrapli_send_commands(
     task: Task,
     commands: list = None,

@@ -1341,7 +1341,7 @@ def run_ttp(
 
         import pprint
         from nornir import InitNornir
-        from nornir_salt.plugins.functions import ResultSerializer 
+        from nornir_salt.plugins.functions import ResultSerializer
         from nornir_salt.plugins.processors import DataProcessor
         from nornir_salt.plugins.tasks import netmiko_send_commands
 

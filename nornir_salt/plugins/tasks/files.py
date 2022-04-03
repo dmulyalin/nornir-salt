@@ -199,10 +199,7 @@ def file_read(
 
 @ValidateFuncArgs(model_file_list)
 def file_list(
-    task,
-    filegroup=None,
-    base_url: str = "/var/nornir-salt/",
-    index: str = "common",
+    task, filegroup=None, base_url: str = "/var/nornir-salt/", index: str = "common"
 ):
     """
     Function to produce a list of text files saved by ``ToFileProcessor``
@@ -255,10 +252,7 @@ def file_list(
 
 @ValidateFuncArgs(model_file_remove)
 def file_remove(
-    task,
-    filegroup,
-    base_url: str = "/var/nornir-salt/",
-    index: str = "common",
+    task, filegroup, base_url: str = "/var/nornir-salt/", index: str = "common"
 ):
     """
     Function to remove files saved by ``ToFileProcessor``

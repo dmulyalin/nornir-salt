@@ -34,5 +34,5 @@ def salt_cfg_gen(task, config=None, **kwargs):
     task.name = "salt_cfg_gen"
 
     config = cfg_form_commands(task=task, config=config, multiline=True)
-	
+
     return Result(host=task.host, result=config)

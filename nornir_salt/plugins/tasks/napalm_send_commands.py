@@ -62,6 +62,7 @@ log = logging.getLogger(__name__)
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
 CONNECTION_NAME = "napalm"
 
+
 @ValidateFuncArgs(model_napalm_send_commands)
 def napalm_send_commands(
     task: Task,

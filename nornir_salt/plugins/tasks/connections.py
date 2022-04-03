@@ -62,7 +62,7 @@ from nornir_salt.utils.pydantic_models import (
     model_conn_list,
     model_conn_close,
     model_conn_open,
-    model_connections
+    model_connections,
 )
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
@@ -70,7 +70,7 @@ log = logging.getLogger(__name__)
 
 
 @ValidateFuncArgs(model_conn_list)
-def conn_list(task, conn_name: str="all") -> list:
+def conn_list(task, conn_name: str = "all") -> list:
     """
     Function to list host's active connections.
 
@@ -91,7 +91,7 @@ def conn_list(task, conn_name: str="all") -> list:
 
 
 @ValidateFuncArgs(model_conn_close)
-def conn_close(task, conn_name:str = "all") -> list:
+def conn_close(task, conn_name: str = "all") -> list:
     """
     Task to close host's connections.
 

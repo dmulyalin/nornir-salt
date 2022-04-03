@@ -2,15 +2,8 @@ import logging
 import inspect
 
 from functools import wraps
-from pydantic import (
-    BaseModel,
-    create_model,
-    StrictBool,
-    StrictInt,
-    StrictFloat,
-    StrictStr,
-)
-from typing import Union, Optional, List, Any, Dict, Callable
+from pydantic import BaseModel, create_model
+from typing import Optional, List, Any, Dict, Callable
 
 log = logging.getLogger(__name__)
 
@@ -43,16 +36,16 @@ class ValidateFuncArgs:
         self.config = config or {}
 
     def __call__(self, function: Callable) -> Callable:
-        
+
         self.function = function
-        
+
         @wraps(function)
         def wrapper(*args, **kwargs):
             self._validate(args, kwargs)
             return self.function(*args, **kwargs)
-            
+
         return wrapper
-        
+
     def _merge_args_to_kwargs(self, args: List, kwargs: Dict) -> Dict:
         """
         Function to merge args with kwargs using function argspec, this is to
@@ -72,15 +65,15 @@ class ValidateFuncArgs:
             fun_kwonlyargs,  # list of keyword-only parameter names
             fun_kwonlydefaults,  # dictionary mapping kwonlyargs parameter names to default values
             fun_annotations,  # dictionary mapping parameter names to annotations
-        ) = inspect.getfullargspec(self.function)       
-        
+        ) = inspect.getfullargspec(self.function)
+
         # "def foo(a, b):" - combine "foo(1, 2)" args with "a, b" fun_args
-        args_to_kwargs = dict(zip(fun_args, args))  
-        
+        args_to_kwargs = dict(zip(fun_args, args))
+
         # "def foo(a, *b):" - combine "foo(1, 2, 3)" 2|3 args with "*b" fun_varargs
         if fun_varargs:
-            args_to_kwargs[fun_varargs] = args[len(fun_args):]
-        
+            args_to_kwargs[fun_varargs] = args[len(fun_args) :]
+
         merged_kwargs = {**kwargs, **args_to_kwargs}
 
         return merged_kwargs
@@ -109,7 +102,10 @@ class ValidateFuncArgs:
         return self.model
 
     def _form_fields_spec(
-        self, function: Callable, skip_fields: List[str] = None, make_optional: bool = True
+        self,
+        function: Callable,
+        skip_fields: List[str] = None,
+        make_optional: bool = True,
     ) -> Dict:
         """
         Function to form a dictionary of arguments and their types in
@@ -195,5 +191,4 @@ class ValidateFuncArgs:
         model = self._get_model()
         model = self._add_mixins(model)
         # if below step succeeds, kwargs passed model validation
-        model_instance = model(**merged_kwargs)
-
+        _ = model(**merged_kwargs)

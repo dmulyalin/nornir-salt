@@ -778,7 +778,9 @@ class RetryRunner:
             "run_reconnect_on_fail", self.reconnect_on_fail
         )
         # form a list of exception patterns to stop task retries
-        run_task_stop_errors = task.params.pop("run_task_stop_errors", self.task_stop_errors)
+        run_task_stop_errors = task.params.pop(
+            "run_task_stop_errors", self.task_stop_errors
+        )
         run_task_stop_errors.append("*validation error*")
         # attempt to extract a list of connections this task uses
         run_connection_name = task.params.pop(
