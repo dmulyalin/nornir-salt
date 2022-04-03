@@ -29,7 +29,7 @@ Sample Usage
 
 Code to invoke ``pyats_send_config`` task::
 
-    from nornir_salt import pyats_send_config
+    from nornir_salt.plugins.tasks import pyats_send_config
 
     output = nr.run(
         task=pyats_send_config,

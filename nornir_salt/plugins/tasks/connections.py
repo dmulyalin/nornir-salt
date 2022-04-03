@@ -22,7 +22,7 @@ Code to invoke ``connections`` task plugins::
     )
 
     # close all connections
-    connections_close = nr.run(
+    conn_close = nr.run(
         task=connections,
         call="close"
     )
@@ -56,37 +56,47 @@ import traceback
 import logging
 
 from typing import Optional, Any, Dict
-
 from nornir.core.task import Result
 from nornir.core.inventory import Host
+from nornir_salt.utils.pydantic_models import (
+    model_conn_list,
+    model_conn_close,
+    model_conn_open,
+    model_connections
+)
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
 
-def conn_list(task, **kwargs):
+@ValidateFuncArgs(model_conn_list)
+def conn_list(task, conn_name: str="all") -> list:
     """
     Function to list host's active connections.
 
-    :return: (list) list of hosts' connections
+    :param conn_name: name of connection to list, default is "all"
+    :return: list of hosts' connections
     """
     # form list of host connections
     ret = [
         {
-            "connection_name": conn_name,
+            "connection_name": conn,
             "connection_plugin": str(type(conn_obj)).split(" ")[1].strip(">"),
         }
-        for conn_name, conn_obj in task.host.connections.items()
+        for conn, conn_obj in task.host.connections.items()
+        if conn_name == "all" or conn == conn_name
     ]
 
     return Result(host=task.host, result=ret)
 
 
-def conn_close(task, conn_name="all", **kwargs):
+@ValidateFuncArgs(model_conn_close)
+def conn_close(task, conn_name:str = "all") -> list:
     """
     Task to close host's connections.
 
-    :param conn_name: (str) name of connection to close, default is "all"
-    :return: (list) list of connections closed
+    :param conn_name: name of connection to close, default is "all"
+    :return: list of connections closed
     """
     ret = []
 
@@ -105,6 +115,7 @@ def conn_close(task, conn_name="all", **kwargs):
     return Result(host=task.host, result=ret)
 
 
+@ValidateFuncArgs(model_conn_open)
 def conn_open(
     task,
     conn_name,
@@ -232,6 +243,7 @@ def conn_open(
     return Result(host=host, **ret)
 
 
+@ValidateFuncArgs(model_connections)
 def connections(task, call, **kwargs):
     """
     Dispatcher function to call one of the functions.
@@ -243,9 +255,9 @@ def connections(task, call, **kwargs):
 
     Call function nicknames:
 
-    * ls - calls conn_list
-    * close - calls conn_close
-    * open - calls conn_open
+    * ls - calls conn_list task
+    * close - calls conn_close task
+    * open - calls conn_open task
     """
     if "conn_name" in kwargs:
         task.name = "connections:{}:{}".format(call, kwargs["conn_name"])

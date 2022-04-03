@@ -59,5 +59,15 @@ setuptools.setup(
     ConnectionsPool=nornir_salt.plugins.connections:ConnectionsPool
     pyats=nornir_salt.plugins.connections:PyATSUnicon
     """,
-    data_files=[('', ['requirements.txt', 'requirements-dev.txt', 'requirements-prodmax.txt', 'requirements-prodmin.txt'])]
+    data_files=[
+        (
+            "",
+            [
+                "requirements.txt",
+                "requirements-dev.txt",
+                "requirements-prodmax.txt",
+                "requirements-prodmin.txt",
+            ],
+        )
+    ],
 )

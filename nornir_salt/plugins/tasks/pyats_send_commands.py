@@ -62,7 +62,7 @@ Given this inventory::
 
 Code to invoke ``pyats_send_commands`` task::
 
-    from nornir_salt import pyats_send_commands
+    from nornir_salt.plugins.tasks import pyats_send_commands
 
     # send via "default" connection
     output_via_default = nr.run(
@@ -106,6 +106,8 @@ import traceback
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cli_form_commands
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from nornir_salt.utils.pydantic_models import model_pyats_send_commands
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
     from pyats.connections.pool import ConnectionPool
@@ -125,7 +127,7 @@ CONNECTION_NAME = "pyats"
 
 def _form_results(task, res, command):
     """
-    Helper function to save code on forming results out of PyATS output
+    Helper function to save code on forming results for PyATS output
 
     :param task: (obj) Nornir task object
     :param res: (str, dict) PyATS command execution results
@@ -141,6 +143,7 @@ def _form_results(task, res, command):
             task.results.append(Result(host=task.host, result=output, name=cmd.strip()))
 
 
+@ValidateFuncArgs(model_pyats_send_commands)
 def pyats_send_commands(
     task: Task,
     commands: list = None,

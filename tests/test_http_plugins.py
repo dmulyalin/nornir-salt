@@ -19,10 +19,10 @@ try:
 except ImportError:
     HAS_NORNIR = False
 
-from nornir_salt import ResultSerializer
-from nornir_salt import DictInventory
-from nornir_salt import http_call
-from nornir_salt import HTTPPlugin
+from nornir_salt.plugins.functions import ResultSerializer
+from nornir_salt.plugins.inventory import DictInventory
+from nornir_salt.plugins.tasks import http_call
+from nornir_salt.plugins.connections import HTTPPlugin
 
 logging.basicConfig(level=logging.ERROR)
 

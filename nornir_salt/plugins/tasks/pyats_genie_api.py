@@ -17,7 +17,7 @@ Sample Usage
 
 Code to invoke ``pyats_genie_api`` task::
 
-    from nornir_salt import pyats_genie_api
+    from nornir_salt.plugins.tasks import pyats_genie_api
 
     output = nr.run(
         task=pyats_genie_api,
@@ -37,6 +37,8 @@ API Reference
 """
 import logging
 from nornir.core.task import Result, Task
+from nornir_salt.utils.pydantic_models import model_pyats_genie_api
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -45,6 +47,7 @@ log = logging.getLogger(__name__)
 CONNECTION_NAME = "pyats"
 
 
+@ValidateFuncArgs(model_pyats_genie_api)
 def pyats_genie_api(task: Task, api: str, **kwargs):
     """
     Salt-nornir task function to call Genie device's api methods.

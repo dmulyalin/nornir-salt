@@ -16,7 +16,7 @@ Dependencies:
 Sample code to use TabulateFormatter::
 
     from nornir import InitNornir
-    from nornir_salt import TabulateFormatter
+    from nornir_salt.plugins.functions import TabulateFormatter
     from nornir_netmiko import netmiko_send_command
 
     nr = InitNornir(config_file="config.yaml")

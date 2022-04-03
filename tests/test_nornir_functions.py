@@ -17,11 +17,11 @@ try:
 except ImportError:
     HAS_NORNIR = False
 
-from nornir_salt import ResultSerializer
-from nornir_salt import DictInventory
-from nornir_salt import tcp_ping
-from nornir_salt import nr_test
-from nornir_salt import DumpResults
+from nornir_salt.plugins.functions import ResultSerializer
+from nornir_salt.plugins.inventory import DictInventory
+from nornir_salt.plugins.tasks import tcp_ping
+from nornir_salt.plugins.tasks import nr_test
+from nornir_salt.plugins.functions import DumpResults
 
 
 logging.basicConfig(level=logging.ERROR)

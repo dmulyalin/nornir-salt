@@ -10,7 +10,7 @@ http_call sample usage
 
 Sample code to run ``http_call`` task::
 
-    from nornir_salt import http_call
+    from nornir_salt.plugins.tasks import http_call
     from nornir import InitNornir
 
     nr = InitNornir(config_file="nornir_config.yaml")

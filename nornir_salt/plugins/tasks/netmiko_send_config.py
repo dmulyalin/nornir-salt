@@ -28,7 +28,7 @@ netmiko_send_config sample usage
 
 Code to invoke ``netmiko_send_config`` task::
 
-    from nornir_salt import netmiko_send_config
+    from nornir_salt.plugins.tasks import netmiko_send_config
 
     output = nr.run(
         task=netmiko_send_config,

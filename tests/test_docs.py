@@ -19,10 +19,12 @@ try:
 except ImportError:
     HAS_NORNIR = False
 
-from nornir_salt import (
-    ResultSerializer, DictInventory, nr_test,
-    DataProcessor, netmiko_send_commands
-)
+from nornir_salt.plugins.functions import ResultSerializer
+from nornir_salt.plugins.inventory import DictInventory
+from nornir_salt.plugins.tasks import nr_test
+from nornir_salt.plugins.processors import DataProcessor
+from nornir_salt.plugins.tasks import netmiko_send_commands
+
 
 logging.basicConfig(level=logging.ERROR)
 InventoryPluginRegister.register("DictInventory", DictInventory)

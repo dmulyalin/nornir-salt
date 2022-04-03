@@ -15,7 +15,7 @@ of additional helper methods for extended functionality.
 Sample code to run ``scrapli_netconf_call`` task::
 
     from nornir import InitNornir
-    from nornir_salt import scrapli_netconf_call
+    from nornir_salt.plugins.tasks import scrapli_netconf_call
 
     nr = InitNornir(config_file="config.yaml")
 

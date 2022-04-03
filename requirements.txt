@@ -1,1 +1,2 @@
 nornir==3.*
+pydantic==1.9.*

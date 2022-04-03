@@ -18,11 +18,11 @@ try:
 except ImportError:
     HAS_NORNIR = False
 
-from nornir_salt import ResultSerializer
-from nornir_salt import DictInventory
-from nornir_salt import nr_test
-from nornir_salt.plugins.processors.ToFileProcessor import ToFileProcessor
-from nornir_salt.plugins.processors.DataProcessor import DataProcessor
+from nornir_salt.plugins.functions import ResultSerializer
+from nornir_salt.plugins.inventory import DictInventory
+from nornir_salt.plugins.tasks import nr_test
+from nornir_salt.plugins.processors import ToFileProcessor
+from nornir_salt.plugins.processors import DataProcessor
 from nornir_salt.plugins.tasks import file_read, file_remove, file_list, file_diff, files
 
 logging.basicConfig(level=logging.ERROR)
@@ -1037,9 +1037,9 @@ ntp server 7.7.7.9
     )
     res = ResultSerializer(output, add_details=True)
 
-    # pprint.pprint(res, width=150)
-    # print(res["IOL1"]["ntp_config"]["result"])
-    # print(res["IOL2"]["ntp_config"]["result"])
+    pprint.pprint(res, width=150)
+    print(res["IOL1"]["ntp_config"]["result"])
+    print(res["IOL2"]["ntp_config"]["result"])
 
     assert """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
@@ -1105,9 +1105,9 @@ ntp server 7.7.7.9
     )
     res = ResultSerializer(output, add_details=True)
 
-    # pprint.pprint(res, width=150)
-    # print(res["IOL1"]["ntp_config"]["result"])
-    # print(res["IOL2"]["ntp_config"]["result"])
+    pprint.pprint(res, width=150)
+    print(res["IOL1"]["ntp_config"]["result"])
+    print(res["IOL2"]["ntp_config"]["result"])
 
     assert """-ntp server 7.7.6.8
 +ntp server 7.7.7.8

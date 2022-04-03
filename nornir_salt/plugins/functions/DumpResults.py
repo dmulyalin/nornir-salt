@@ -19,9 +19,8 @@ DumpResults sample usage
 Code to invoke ``DumpResults`` function ::
 
     from nornir import InitNornir
-    from nornir_salt import TabulateFormatter
+    from nornir_salt.plugins.functions import TabulateFormatter, DumpResults
     from nornir_netmiko import netmiko_send_command
-    from nornir_salt import DumpResults
 
     nr = InitNornir(config_file="config.yaml")
 

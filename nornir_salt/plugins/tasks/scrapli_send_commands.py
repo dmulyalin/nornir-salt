@@ -27,7 +27,7 @@ Sample Usage
 Code to invoke ``scrapli_send_commands`` task::
 
     from nornir import InitNornir
-    from nornir_salt import scrapli_send_commands
+    from nornir_salt.plugins.tasks import scrapli_send_commands
 
     nr = InitNornir(config_file="config.yaml")
 
@@ -46,12 +46,15 @@ API Reference
 """
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cli_send_commands, cli_form_commands
+from nornir_salt.utils.pydantic_models import model_scrapli_send_commands
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
     from nornir_scrapli.tasks import send_command
 
     HAS_SCRAPLI = True
 except ImportError:
+    send_command = None
     HAS_SCRAPLI = False
 
 # define connection name for RetryRunner to properly detect it using:
@@ -59,11 +62,13 @@ except ImportError:
 CONNECTION_NAME = "scrapli"
 
 
+@ValidateFuncArgs(
+    model_scrapli_send_commands, mixins=[send_command]
+)
 def scrapli_send_commands(
     task: Task,
     commands: list = None,
     interval: int = 0.01,
-    use_ps: bool = False,
     split_lines: bool = True,
     new_line_char: str = "_br_",
     repeat: int = 1,

@@ -15,10 +15,10 @@ try:
 except ImportError:
     HAS_NORNIR = False
 
-from nornir_salt import ResultSerializer
-from nornir_salt import DictInventory
-from nornir_salt import nr_test
-from nornir_salt.plugins.processors.TestsProcessor import TestsProcessor
+from nornir_salt.plugins.functions import ResultSerializer
+from nornir_salt.plugins.inventory import DictInventory
+from nornir_salt.plugins.tasks import nr_test
+from nornir_salt.plugins.processors import TestsProcessor
 
 
 logging.basicConfig(level=logging.ERROR)
@@ -1580,7 +1580,7 @@ ntp server 7.7.7.7
 
 
 def _test_docs_sample_code():
-    from nornir_salt import netmiko_send_commands
+    from nornir_salt.plugins.tasks import netmiko_send_commands
 
     tests = [
         {

@@ -15,7 +15,7 @@ and allows to execute any of its methods supplying method name using
 Sample code to run ``pygnmi_call`` task::
 
     from nornir import InitNornir
-    from nornir_salt import pygnmi_call
+    from nornir_salt.plugins.tasks import pygnmi_call
 
     nr = InitNornir(config_file="config.yaml")
 
@@ -71,7 +71,7 @@ can be invoked in the same way as ``gNMIclient`` connection object methods by pa
 their name as a ``call`` attribute::
 
     from nornir import InitNornir
-    from nornir_salt import pygnmi_call
+    from nornir_salt.plugins.tasks import pygnmi_call
 
     nr = InitNornir(config_file="config.yaml")
 
@@ -157,7 +157,7 @@ def _call_update(connection, path: list, **kwargs):
     Sample code to run ``replace`` function task::
 
         from nornir import InitNornir
-        from nornir_salt import pygnmi_call
+        from nornir_salt.plugins.tasks import pygnmi_call
 
         nr = InitNornir(config_file="config.yaml")
 
@@ -189,7 +189,7 @@ def _call_replace(connection, path: list, **kwargs):
     Sample code to run ``replace`` function task::
 
         from nornir import InitNornir
-        from nornir_salt import pygnmi_call
+        from nornir_salt.plugins.tasks import pygnmi_call
 
         nr = InitNornir(config_file="config.yaml")
 
@@ -219,7 +219,7 @@ def _call_delete(connection, path: list, **kwargs):
     Sample code to run ``delete`` function task::
 
         from nornir import InitNornir
-        from nornir_salt import pygnmi_call
+        from nornir_salt.plugins.tasks import pygnmi_call
 
         nr = InitNornir(config_file="config.yaml")
 

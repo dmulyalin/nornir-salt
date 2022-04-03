@@ -226,6 +226,7 @@ RetryRunner task parameters description:
 * ``run_num_workers`` - number of threads for tasks execution
 * ``run_num_connectors`` - number of threads for device connections
 * ``run_reconnect_on_fail`` - if True, re-establish connection on task failure
+* ``run_task_stop_errors`` - list of glob patterns to stop retrying if seen in task exception string
 * ``connection_name`` - name of connection plugin to use to initiate connection to device
 
 .. note:: Tasks retry count is the smallest of ``run_connect_retry`` and ``run_task_retry`` counters,
@@ -401,6 +402,7 @@ import queue
 import logging
 import time
 import random
+from fnmatch import fnmatchcase
 from typing import List
 from nornir.core.task import AggregatedResult, Task, MultiResult, Result
 from nornir.core.inventory import Host
@@ -426,6 +428,7 @@ def worker(
     task_retry: int,
     connect_retry: int,
     reconnect_on_fail: bool,
+    stop_errors: List,
 ):
     while not stop_event.is_set():
         try:
@@ -455,9 +458,7 @@ def worker(
                     work_q.task_done()
                     continue
             log.info(
-                "nornir_salt:RetryRunner {} - running task '{}'".format(
-                    host.name, task.name
-                )
+                f"nornir_salt:RetryRunner {host.name} - running task '{task.name}'"
             )
             time.sleep(random.randrange(0, task_splay) / 1000)  # nosec
 
@@ -465,12 +466,21 @@ def worker(
         # check if need to run task retry logic
         if task.results.failed:
             log.error(
-                "nornir_salt:RetryRunner {} - task execution retry attempt {} failed: '{}'".format(
-                    host.name, params["task_retry"], work_result[0].exception
-                )
+                f"nornir_salt:RetryRunner {host.name} - task execution retry "
+                f"attempt {params['task_retry']} failed: '{work_result[0].exception}'"
             )
+            # check if need to stop because of this error
+            stop_error_found = False
+            for i in stop_errors:
+                if fnmatchcase(str(work_result[0].exception), i):
+                    log.warning(
+                        f"nornir_salt:RetryRunner {host.name} - task exception "
+                        f"matched stop pattern '{i}', stopping"
+                    )
+                    stop_error_found = True
             if (
-                params["task_retry"] < task_retry
+                not stop_error_found
+                and params["task_retry"] < task_retry
                 and params["connection_retry"] < connect_retry
             ):
                 params["task_retry"] += 1
@@ -491,7 +501,7 @@ def worker(
                     work_q.put(work)
                 work_q.task_done()
                 continue
-        # enreach result objects with runner statistics
+        # en reach result objects with runner statistics
         for result_item in work_result:
             result_item.connection_retry = params["connection_retry"]
             result_item.task_retry = params["task_retry"]
@@ -713,6 +723,9 @@ class RetryRunner:
         and stopping connectors and workers threads, default 600
     :param creds_retry: list of connection credentials and parameters to retry while connecting
         to device
+    :param task_stop_errors: list of glob patterns to stop retrying if seen in task exception string,
+        these patterns not applicable to errors encountered during connection establishment. Error
+        ``*validation error*`` pattern always included in these list.
     """
 
     def __init__(
@@ -728,6 +741,7 @@ class RetryRunner:
         reconnect_on_fail: bool = True,
         task_timeout: int = 600,
         creds_retry: list = None,
+        task_stop_errors: list = None,
     ) -> None:
         self.num_workers = num_workers
         self.num_connectors = num_connectors
@@ -741,6 +755,7 @@ class RetryRunner:
         self.reconnect_on_fail = reconnect_on_fail
         self.task_timeout = task_timeout
         self.creds_retry = creds_retry or []
+        self.task_stop_errors = task_stop_errors or []
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
         connectors_q = queue.Queue()
@@ -762,7 +777,10 @@ class RetryRunner:
         run_reconnect_on_fail = task.params.pop(
             "run_reconnect_on_fail", self.reconnect_on_fail
         )
-        # atempt to extract a list of connections this task uses
+        # form a list of exception patterns to stop task retries
+        run_task_stop_errors = task.params.pop("run_task_stop_errors", self.task_stop_errors)
+        run_task_stop_errors.append("*validation error*")
+        # attempt to extract a list of connections this task uses
         run_connection_name = task.params.pop(
             "connection_name", task.task.__globals__.get("CONNECTION_NAME", "")
         )
@@ -812,6 +830,7 @@ class RetryRunner:
                     int(run_task_retry),
                     int(run_connect_retry),
                     run_reconnect_on_fail,
+                    run_task_stop_errors,
                 ),
             )
             t.start()

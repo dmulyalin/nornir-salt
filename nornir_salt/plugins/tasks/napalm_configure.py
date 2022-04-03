@@ -18,7 +18,7 @@ napalm_configure sample usage
 Code to invoke ``napalm_configure`` task::
 
     from nornir import InitNornir
-    from nornir_salt import napalm_configure
+    from nornir_salt.plugins.tasks import napalm_configure
 
     nr = InitNornir(config_file="config.yaml")
 

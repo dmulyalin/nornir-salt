@@ -17,7 +17,7 @@ ncclient_call sample usage
 Sample code to run ``ncclient_call`` task::
 
     from nornir import InitNornir
-    from nornir_salt import ncclient_call
+    from nornir_salt.plugins.tasks import ncclient_call
 
     nr = InitNornir(config_file="config.yaml")
 

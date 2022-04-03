@@ -62,6 +62,14 @@ import difflib
 import logging
 
 from nornir.core.task import Result
+from nornir_salt.utils.pydantic_models import (
+    model_file_read,
+    model_file_list,
+    model_file_remove,
+    model_file_diff,
+    model_files,
+)
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -110,6 +118,7 @@ def _load_index_data(base_url, index):
     return index_data
 
 
+@ValidateFuncArgs(model_file_read)
 def file_read(
     task,
     filegroup,
@@ -117,7 +126,6 @@ def file_read(
     task_name: str = None,
     last: int = 1,
     index: str = "common",
-    **kwargs
 ):
     """
     Function to read text files content saved by ``ToFileProcessor``.
@@ -189,12 +197,12 @@ def file_read(
     return Result(host=task.host, skip_results=True)
 
 
+@ValidateFuncArgs(model_file_list)
 def file_list(
     task,
     filegroup=None,
     base_url: str = "/var/nornir-salt/",
     index: str = "common",
-    **kwargs
 ):
     """
     Function to produce a list of text files saved by ``ToFileProcessor``
@@ -245,12 +253,12 @@ def file_list(
     return Result(host=task.host, result=ret)
 
 
+@ValidateFuncArgs(model_file_remove)
 def file_remove(
     task,
     filegroup,
     base_url: str = "/var/nornir-salt/",
     index: str = "common",
-    **kwargs
 ):
     """
     Function to remove files saved by ``ToFileProcessor``
@@ -314,6 +322,7 @@ def file_remove(
     return Result(host=task.host, result=ret)
 
 
+@ValidateFuncArgs(model_file_diff)
 def file_diff(
     task,
     filegroup,
@@ -321,7 +330,6 @@ def file_diff(
     task_name: str = None,
     last=None,
     index: str = "common",
-    **kwargs
 ):
     """
     Function to read text files content saved by ``ToFileProcessor`` and
@@ -441,6 +449,7 @@ def file_diff(
     return Result(host=task.host, skip_results=True)
 
 
+@ValidateFuncArgs(model_files)
 def files(task, call, *args, **kwargs):
     """
     Dispatcher function to call one of the functions.
@@ -452,14 +461,17 @@ def files(task, call, *args, **kwargs):
 
     Call function nicknames:
 
-    * ``ls`` - calls `file_list`_
-    * ``rm`` - calls `file_remove`_
+    * ``ls`` or ``list`` - calls `file_list`_
+    * ``rm`` or ``remove`` or ``delete`` - calls `file_remove`_
     * ``read`` - calls `file_read`_
     * ``diff`` - calls `file_diff`_
     """
     dispatcher = {
         "ls": file_list,
+        "list": file_list,
         "rm": file_remove,
+        "remove": file_remove,
+        "delete": file_remove,
         "read": file_read,
         "diff": file_diff,
     }

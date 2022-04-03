@@ -9,7 +9,7 @@ InventoryFun Sample Usage
 
 Sample code to invoke ``InventoryFun`` function to ``create`` new host::
 
-    from nornir_salt import InventoryFun
+    from nornir_salt.plugins.functions import InventoryFun
 
     host_data = {
         "name": "IOL3",
@@ -31,7 +31,7 @@ Sample code to invoke ``InventoryFun`` function to ``create`` new host::
 
 Sample code to invoke ``InventoryFun`` function to ``update`` existing host::
 
-    from nornir_salt import InventoryFun
+    from nornir_salt.plugins.functions import InventoryFun
 
     host_data = {
         "name": "IOL2",
@@ -59,14 +59,14 @@ Sample code to invoke ``InventoryFun`` function to ``update`` existing host::
 
 Sample code to invoke ``InventoryFun`` function to ``delete`` existing host::
 
-    from nornir_salt import InventoryFun
+    from nornir_salt.plugins.functions import InventoryFun
 
     res = InventoryFun(nr, call="delete_host", name="IOL2")
     # or res = InventoryFun(nr, "delete_host", name="IOL2")
 
 Sample code to invoke ``InventoryFun`` function to bulk ``load`` from list::
 
-    from nornir_salt import InventoryFun
+    from nornir_salt.plugins.functions import InventoryFun
 
     data = [
         {

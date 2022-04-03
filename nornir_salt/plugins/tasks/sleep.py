@@ -6,7 +6,7 @@ Function to sleep for given amount of time on a per-host basis.
 
 Code to invoke ``sleep`` task::
 
-    from nornir_salt import sleep
+    from nornir_salt.plugins.tasks import sleep
 
     output = nr.run(task=sleep, sleep_for=10)
     output = nr.run(task=sleep, sleep_random=[1,5])

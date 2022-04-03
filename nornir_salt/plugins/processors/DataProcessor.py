@@ -11,7 +11,7 @@ Code to demonstrate how to use ``DataProcessor`` plugin::
 
     from nornir import InitNornir
     from nornir_netmiko import netmiko_send_command
-    from nornir_salt import DataProcessor
+    from nornir_salt.plugins.processors import DataProcessor
 
     nr = InitNornir(config_file="config.yaml")
 
@@ -529,7 +529,8 @@ def flatten(data, parent_key="", separator=".", **kwargs):
     pass dictionary produced by ``load_xml`` through ``flatten`` function::
 
         from nornir import InitNornir
-        from nornir_salt import ncclient_call, DataProcessor
+        from nornir_salt.plugins.tasks import ncclient_call
+        from nornir_salt.plugins.processors import DataProcessor
 
         nr = InitNornir(config_file="config.yaml")
 
@@ -1253,7 +1254,7 @@ def parse_ttp(
 
         from nornir import InitNornir
         from nornir_netmiko import netmiko_send_command
-        from nornir_salt import DataProcessor
+        from nornir_salt.plugins.processors import DataProcessor
 
         nr = InitNornir(config_file="config.yaml")
 
@@ -1340,7 +1341,9 @@ def run_ttp(
 
         import pprint
         from nornir import InitNornir
-        from nornir_salt import ResultSerializer, DataProcessor, netmiko_send_commands
+        from nornir_salt.plugins.functions import ResultSerializer 
+        from nornir_salt.plugins.processors import DataProcessor
+        from nornir_salt.plugins.tasks import netmiko_send_commands
 
         nr = InitNornir(config_file="nornir_config.yaml")
 
@@ -1477,7 +1480,7 @@ def ntfsm(result: Result, task: Task, host, **kwargs):
 
         from nornir import InitNornir
         from nornir_netmiko import netmiko_send_command
-        from nornir_salt import DataProcessor
+        from nornir_salt.plugins.processors import DataProcessor
 
         nr = InitNornir(config_file="config.yaml")
 

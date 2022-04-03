@@ -14,7 +14,7 @@ netmiko_send_commands sample usage
 
 Code to invoke ``netmiko_send_commands`` task::
 
-    from nornir_salt import netmiko_send_commands
+    from nornir_salt.plugins.tasks import netmiko_send_commands
 
     output = nr.run(
         task=netmiko_send_commands,
@@ -36,7 +36,10 @@ import logging
 
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cli_send_commands, cli_form_commands
-from .netmiko_send_command_ps import netmiko_send_command_ps
+from .netmiko_send_command_ps import netmiko_send_command_ps, send_command_ps
+
+from nornir_salt.utils.pydantic_models import model_netmiko_send_commands
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
     from nornir_netmiko.tasks import netmiko_send_command
@@ -52,10 +55,13 @@ log = logging.getLogger(__name__)
 CONNECTION_NAME = "netmiko"
 
 
+@ValidateFuncArgs(
+    model=model_netmiko_send_commands, mixins=[netmiko_send_command, send_command_ps]
+)
 def netmiko_send_commands(
     task: Task,
     commands: list = None,
-    interval: int = 0.01,
+    interval: float = 0.01,
     use_ps: bool = False,
     split_lines: bool = True,
     new_line_char: str = "_br_",

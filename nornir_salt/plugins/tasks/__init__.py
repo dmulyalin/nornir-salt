@@ -11,7 +11,7 @@ from .napalm_configure import napalm_configure
 from .scrapli_send_config import scrapli_send_config
 from .http_call import http_call
 from .files import files, file_read, file_list, file_remove, file_diff
-from .connections import connections, conn_close, conn_list
+from .connections import connections, conn_close, conn_list, conn_open
 from .pygnmi_call import pygnmi_call
 from .salt_clear_hcache import salt_clear_hcache
 from .napalm_send_commands import napalm_send_commands
@@ -41,6 +41,7 @@ __all__ = (
     "connections",
     "conn_close",
     "conn_list",
+    "conn_open",
     "pygnmi_call",
     "salt_clear_hcache",
     "napalm_send_commands",

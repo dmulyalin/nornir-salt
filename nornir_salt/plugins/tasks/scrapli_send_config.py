@@ -18,7 +18,7 @@ scrapli_send_config sample usage
 Code to invoke ``scrapli_send_config`` task::
 
     from nornir import InitNornir
-    from nornir_salt import scrapli_send_config
+    from nornir_salt.plugins.tasks import scrapli_send_config
 
     nr = InitNornir(config_file="config.yaml")
 

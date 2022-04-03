@@ -11,7 +11,7 @@ Code to demonstrate how to use ``ToFileProcessor`` plugin::
 
     from nornir import InitNornir
     from nornir_netmiko import netmiko_send_command
-    from nornir_salt import ToFileProcessor
+    from nornir_salt.plugins.processors import ToFileProcessor
 
     nr = InitNornir(config_file="config.yaml")
 

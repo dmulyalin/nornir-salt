@@ -76,7 +76,9 @@ Sample code to run tests::
     import pprint
 
     from nornir import InitNornir
-    from nornir_salt import TestsProcessor, ResultSerializer, netmiko_send_commands
+    from nornir_salt.plugins.processors import TestsProcessor
+    from nornir_salt.plugins.functions import ResultSerializer
+    from nornir_salt.plugins.tasks import netmiko_send_commands
 
     nr = InitNornir(config_file="nornir.yaml")
 
@@ -140,7 +142,9 @@ or list of dictionaries. For example::
 
     import pprint
     from nornir import InitNornir
-    from nornir_salt import TestsProcessor, ResultSerializer, nr_test
+    from nornir_salt.plugins.processors import TestsProcessor
+    from nornir_salt.plugins.functions import ResultSerializer
+    from nornir_salt.plugins.tasks import nr_test
 
     nr = InitNornir(config_file="nornir.yaml")
 

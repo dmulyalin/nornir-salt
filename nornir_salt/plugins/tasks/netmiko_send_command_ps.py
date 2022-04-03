@@ -32,7 +32,7 @@ netmiko_send_command_ps sample usage
 Code to invoke ``netmiko_send_command_ps`` task::
 
     from nornir import InitNornir
-    from nornir_salt import netmiko_send_command_ps
+    from nornir_salt.plugins.tasks import netmiko_send_command_ps
 
     nr = InitNornir(config_file="config.yaml")
 

@@ -16,7 +16,7 @@ from nornir.core.plugins.inventory import InventoryPluginRegister
     
 # these libs imported from nornir_salt dir
 from nornir_salt.plugins.functions import FFun, FFun_functions
-from nornir_salt import DictInventory
+from nornir_salt.plugins.inventory import DictInventory
     
 inventory_data = """
 hosts:

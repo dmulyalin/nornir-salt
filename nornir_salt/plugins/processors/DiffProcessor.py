@@ -12,7 +12,7 @@ Code to demonstrate how to use ``DiffProcessor`` plugin::
 
     from nornir import InitNornir
     from nornir_netmiko import netmiko_send_command
-    from nornir_salt import DiffProcessor
+    from nornir_salt.plugins.processors import DiffProcessor
 
     nr = InitNornir(config_file="config.yaml")
 

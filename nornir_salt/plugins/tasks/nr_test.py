@@ -10,7 +10,7 @@ nr_test sample usage
 
 Code to invoke ``nr_test`` task::
 
-    from nornir_salt import nr_test
+    from nornir_salt.plugins.tasks import nr_test
 
     output = nr.run(task=nr_test, abc=123)
 
@@ -27,7 +27,11 @@ nr_test reference
 """
 from nornir.core.task import Result
 
+from nornir_salt.utils.pydantic_models import model_nr_test
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
+
+@ValidateFuncArgs(model_nr_test)
 def nr_test(
     task,
     ret_data_per_host=None,

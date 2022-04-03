@@ -26,7 +26,7 @@ napalm_send_commands sample usage
 
 Code to invoke ``napalm_send_commands`` task::
 
-    from nornir_salt import napalm_send_commands
+    from nornir_salt.plugins.tasks import napalm_send_commands
 
     output = nr.run(
         task=napalm_send_commands,
@@ -46,6 +46,9 @@ import logging
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cli_form_commands
 
+from nornir_salt.utils.pydantic_models import model_napalm_send_commands
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
+
 try:
     from nornir_napalm.plugins.tasks import napalm_cli
 
@@ -59,7 +62,7 @@ log = logging.getLogger(__name__)
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)
 CONNECTION_NAME = "napalm"
 
-
+@ValidateFuncArgs(model_napalm_send_commands)
 def napalm_send_commands(
     task: Task,
     commands=None,
@@ -106,7 +109,7 @@ def napalm_send_commands(
     )
 
     # send commands one by one
-    if isinstance(interval, (int, float)):
+    if interval:
         for index, command in enumerate(commands):
             task.run(task=napalm_cli, commands=[command])
             # do not sleep after last command sent
