@@ -1,0 +1,117 @@
+[tool.poetry]
+name = "nornir_salt"
+version = "0.10.1"
+description = "Nornir plugins used with SaltStack Salt-Nornir Proxy Minion"
+authors = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
+maintainers = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/dmulyalin/nornir-salt"
+repository = "https://github.com/dmulyalin/nornir-salt"
+documentation = "https://nornir-salt.readthedocs.io/"
+keywords = ["Nornir", "SaltStack"]
+classifiers = [
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+[tool.poetry.dependencies]
+# mandatory dependencies
+python = "^3.6, ^3.7, ^3.8, ^3.9"
+nornir = "3.2.0"
+pydantic = "1.9.*"
+
+# optional dependencies for extras definition
+cerberus = { version = "1.3.4", optional = true }
+genie = { version = "22.1", markers = "sys_platform != 'win32'", optional = true }
+jmespath = { version = "0.10.0", optional = true }
+napalm = { version = "3.3.1", optional = true }
+ncclient = { version = "0.6.9", optional = true }
+netmiko = { version = "3.4.0", optional = true }
+nornir-napalm = { version = "0.1.2", optional = true }
+nornir-netmiko = { version = "0.1.2", optional = true }
+nornir-scrapli = { version = "2021.7.30", optional = true }
+ntc-templates = { version = "^1.7.0", optional = true }
+paramiko = { version = "2.9.2", optional = true }
+pyats = { version = "22.1", markers = "sys_platform != 'win32'", optional = true }
+pygnmi = { version = "0.6.8", optional = true }
+pyyaml = { version = "6.0", optional = true }
+requests = { version = "2.27.1", optional = true }
+scrapli = { version = "2021.7.30", optional = true }
+scrapli-community = { version = "2021.7.30", optional = true }
+scrapli-netconf = { version = "2022.1.30a1", optional = true }
+tabulate = { version = "0.8.9", optional = true }
+ttp = { version = "0.8.4", optional = true }
+ttp-templates = { version = "0.1.3", optional = true }
+xmltodict = { version = "0.12.0", optional = true }
+	
+[tool.poetry.dev-dependencies]
+bandit = "*"
+black = "*"
+flake8 = "*"
+pre-commit = "*"
+pyenchant = "*"
+pylint = "*"
+pytest = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.extras]
+prodmin = [
+    "ncclient",
+    "netmiko",
+    "nornir",
+    "nornir-netmiko",
+    "paramiko",
+    "requests",
+    "tabulate",
+    "ttp",
+    "ttp-templates",
+    "xmltodict",
+]
+prodmax = [
+    "cerberus",
+    "genie",
+    "jmespath",
+    "napalm",
+    "ncclient",
+    "netmiko",
+    "nornir",
+    "nornir-napalm",
+    "nornir-netmiko",
+    "nornir-scrapli",
+    "ntc-templates",
+    "paramiko",
+    "pyats",
+    "pygnmi",
+    "pyyaml",
+    "requests",
+    "scrapli",
+    "scrapli-community",
+    "scrapli-netconf",
+    "tabulate",
+    "ttp",
+    "ttp-templates",
+    "xmltodict",
+]
+
+[tool.poetry.plugins."nornir.plugins.inventory"]
+"DictInventory" = "nornir_salt.plugins.inventory:DictInventory"
+
+[tool.poetry.plugins."nornir.plugins.runners"]
+"QueueRunner" = "nornir_salt.plugins.runners:QueueRunner"
+"RetryRunner" = "nornir_salt.plugins.runners:RetryRunner"
+
+[tool.poetry.plugins."nornir.plugins.connections"]
+"ncclient" = "nornir_salt.plugins.connections:NcclientPlugin"
+"http" = "nornir_salt.plugins.connections:HTTPPlugin"
+"pygnmi" = "nornir_salt.plugins.connections:PyGNMIPlugin"
+"ConnectionsPool" = "nornir_salt.plugins.connections:ConnectionsPool"
+"pyats" = "nornir_salt.plugins.connections:PyATSUnicon"
