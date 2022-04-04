@@ -176,8 +176,13 @@ class SaltEventProcessor:
     def subtask_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
-        tag = "nornir-proxy/{jid}/{proxy_id}/{host}/subtask/completed/{task_name}".format(
-            proxy_id=self.proxy_id, host=host.name, task_name=task.name, jid=self.jid
+        tag = (
+            "nornir-proxy/{jid}/{proxy_id}/{host}/subtask/completed/{task_name}".format(
+                proxy_id=self.proxy_id,
+                host=host.name,
+                task_name=task.name,
+                jid=self.jid,
+            )
         )
         data = {
             **self.identity,

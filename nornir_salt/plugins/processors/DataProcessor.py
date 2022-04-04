@@ -1745,7 +1745,7 @@ class DataProcessor:
             )
 
     def task_started(self, task: Task) -> None:
-        """ Pre-Process Task details before executing it """
+        """Pre-Process Task details before executing it"""
         for dp_dict in self.dp:
             dp_dict_copy = dp_dict.copy()
             try:
@@ -1765,7 +1765,7 @@ class DataProcessor:
     def task_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
-        """ Process results from device once main task completed """
+        """Process results from device once main task completed"""
         # check if has failed tasks, do nothing in such a case
         if result.failed:
             log.error("nornir_salt:DataProcessor do nothing, return, has failed tasks")
@@ -1794,10 +1794,10 @@ class DataProcessor:
                             if hasattr(i, "skip_results") and i.skip_results is True:
                                 continue
                             # pass task result through dp function
-                            i.result = task_instance_completed_dispatcher_per_result_data[
-                                fun
-                            ](
-                                i.result, **dp_dict_copy
+                            i.result = (
+                                task_instance_completed_dispatcher_per_result_data[fun](
+                                    i.result, **dp_dict_copy
+                                )
                             )
                         except:
                             i.exception = traceback.format_exc()

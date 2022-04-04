@@ -17,29 +17,35 @@ repos:
       - id: check-added-large-files
         args: ['--maxkb=1000']
   # black
-  - repo: https://github.com/psf/black
-    rev: 19.3b0
+  - repo: local
     hooks:
       - id: black
-        exclude: ^tests/|^docs/
+        name: black
+        exclude: ^tests/|^docs/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$|README.md|pyproject.toml|poetry.lock|\.github/.*
+        entry: black nornir_salt
+        language: system
         args:
           - "--line-length=88"
   # flake8
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  - repo: local
     hooks:
       - id: flake8
-        exclude: ^tests/|^docs/
+        name: flake8
+        language: system
+        entry: flake8
+        exclude: ^tests/|^docs/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$|README.md|pyproject.toml|poetry.lock|\.github/.*
         args:
           - "--max-line-length=88"
           - "--max-complexity=19"
           - "--select=B,C,E,F,W,T4,B9"
           - "--ignore=F403,E402,E722,E203,W503,C901,E501"
   # bandit security checks
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.0
+  - repo: local
     hooks:
       - id: bandit
+        name: bandit
+        language: system
+        entry: bandit
         exclude: ^tests/|^docs/
   # pylint, to run it directly use: python3 -m pylint . --rcfile=pylintrc
   # enabled only spelling checks for docstrings
@@ -47,8 +53,8 @@ repos:
     hooks:
       - id: pylint
         name: pylint
-        entry: python3 -m pylint
         language: system
+        entry: pylint .
         args:
           - "--rcfile=pylintrc"
         exclude: ^tests/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$
