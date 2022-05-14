@@ -16,6 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
 ]
@@ -57,7 +58,7 @@ flake8 = "4.0.*"
 pre-commit = "2.15.*"
 pyenchant = "3.2.*"
 pylint = "2.12.*"
-pytest = { version = "^7.1.1", markers = "python_version >= '3.7'" }
+pytest = { version = "^7.1.*", markers = "python_version >= '3.7'" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
