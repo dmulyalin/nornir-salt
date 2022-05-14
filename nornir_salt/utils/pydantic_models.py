@@ -465,22 +465,18 @@ class modelTestsProcessorTest(BaseModel):
         test = values["test"]
         # verify that test has task defined except for when use_all_tasks is True
         if not values.get("use_all_tasks"):
-            assert values.get("task"), f"No task defined for test '{test}'"  # nosec
+            assert values.get("task"), f"No task defined for test '{test}'"
         # iterate over test types and verify required parameters provided
         if any(i in test.lower() for i in ["contains", "equal"]):
-            assert (
-                "pattern" in values
-            ), f"No pattern provided for test '{test}'"  # nosec
+            assert "pattern" in values, f"No pattern provided for test '{test}'"
         elif any(i in test.lower() for i in ["custom"]):
             assert any(  # nosec
                 i in values for i in ["function_file", "function_text", "function_call"]
             ), f"No function provided for test '{test}'"
         elif any(i in test.lower() for i in ["cerberus"]):
-            assert values.get(
-                "schema"
-            ), f"No schema provided for test '{test}'"  # nosec
+            assert values.get("schema"), f"No schema provided for test '{test}'"
         elif any(i in test.lower() for i in ["eval"]):
-            assert values.get(  # nosec
+            assert values.get(
                 "expr"
             ), f"No evaluate expression provided for test '{test}'"
         return values
