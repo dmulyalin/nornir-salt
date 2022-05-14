@@ -26,7 +26,6 @@ nr_test reference
 .. autofunction:: nornir_salt.plugins.tasks.nr_test.nr_test
 """
 from nornir.core.task import Result
-
 from nornir_salt.utils.pydantic_models import model_nr_test
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 

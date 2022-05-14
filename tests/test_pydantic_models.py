@@ -26,7 +26,9 @@ from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors import DataProcessor
 from nornir_salt.plugins.tasks import netmiko_send_commands
 from nornir_salt.plugins.runners import RetryRunner
+from nornir_salt.utils.pydantic_models import modelTestsProcessorSuite
 
+from pydantic import ValidationError
 
 logging.basicConfig(level=logging.ERROR)
 InventoryPluginRegister.register("DictInventory", DictInventory)
@@ -136,4 +138,71 @@ def test_model_nr_test():
     assert bad_ret["sandbox-iosxe-latest-1"]["nr_test"]["failed"] == True
     assert "str type expected" in bad_ret["sandbox-iosxe-latest-1"]["nr_test"]["result"]
     
+def test_modelTestsProcessorSuite_wrong_test_name():
+    tests = [
+        {
+            "task": "show run | inc ntp",
+            "name": "Test NTP config",
+            "test": "wrong_name",
+        }
+    ]
+    with pytest.raises(ValidationError):
+        _ = modelTestsProcessorSuite(tests=tests)
     
+def test_modelTestsProcessorSuite_no_task():
+    tests = [
+        {
+            "name": "Test NTP config",
+            "test": "contains",
+        }
+    ]
+    with pytest.raises(ValidationError) as e:
+        _ = modelTestsProcessorSuite(tests=tests)
+    assert "No task defined for test" in str(e.value)
+
+def test_modelTestsProcessorSuite_no_task_but_use_all_tasks():
+    tests = [
+        {
+            "name": "Test NTP config",
+            "test": "contains",
+            "pattern": "foo",
+            "use_all_tasks": True
+        }
+    ]
+    _ = modelTestsProcessorSuite(tests=tests)
+    
+def test_modelTestsProcessorSuite_no_pattern():
+    tests = [
+        {
+            "name": "Test NTP config",
+            "task": "foo",
+            "test": "contains",
+        }
+    ]
+    with pytest.raises(ValidationError) as e:
+        _ = modelTestsProcessorSuite(tests=tests)
+    assert "No pattern provided for test" in str(e.value)
+    
+def test_modelTestsProcessorSuite_no_schema():
+    tests = [
+        {
+            "name": "Test NTP config",
+            "task": "foo",
+            "test": "cerberus",
+        }
+    ]
+    with pytest.raises(ValidationError) as e:
+        _ = modelTestsProcessorSuite(tests=tests)
+    assert "No schema provided for test" in str(e.value)
+    
+def test_modelTestsProcessorSuite_no_expr():
+    tests = [
+        {
+            "name": "Test NTP config",
+            "task": "foo",
+            "test": "eval",
+        }
+    ]
+    with pytest.raises(ValidationError) as e:
+        _ = modelTestsProcessorSuite(tests=tests)
+    assert "No evaluate expression provided for test" in str(e.value)

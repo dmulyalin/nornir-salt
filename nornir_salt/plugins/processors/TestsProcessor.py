@@ -34,18 +34,17 @@ Running tests as simple as defining a list of dictionaries - test suite - each d
 represents single test definition. Reference to a particular test function API for
 description of test function specific arguments it supports.
 
-These are mandatory arguments/keys each test dictionary must contain:
+These are arguments/keys each test dictionary may contain:
 
-* ``name`` - name of the test
-* ``task`` - name of the task to check results for or list of task names to use with custom test function
-* ``test`` - name of test function to run
-
-Additional arguments/keys that test dictionary can contain:
-
-* ``err_msg`` - string, error message to use for exception in case of test failure
-* ``path`` - string, dot separated path to data to test within results
-* ``report_all`` - boolean, default is False, if ``path`` evaluates to a list of items
+* ``test`` - mandatory, name of test function to run
+* ``name`` - optional, name of the test, if not provided derived from task, test and criteria arguments
+* ``task`` - optional, name of the task to check results for or list of task names to use with custom
+  test function, ``task`` parameter might be omitted if ``use_all_tasks`` is set to true
+* ``err_msg`` - optional, error message string to use for exception in case of test failure
+* ``path`` - optional, dot separated string representing path to data to test within results
+* ``report_all`` - optional, boolean, default is False, if ``path`` evaluates to a list of items
   and ``report_all`` set to True, reports all tests, even successful ones
+* ``use_all_tasks`` - optional, boolean to indicate if need to supply all task results to the test function
 
 To simplify test functions calls, ``TestsProcessor`` implements these set of aliases
 for ``test`` argument:
@@ -227,6 +226,7 @@ import traceback
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
+from nornir_salt.utils.pydantic_models import modelTestsProcessorSuite
 
 log = logging.getLogger(__name__)
 
@@ -869,6 +869,9 @@ class TestsProcessor:
         self.len_tasks = 0
         self.failed_only = failed_only
 
+        # validate tests and other parameters
+        _ = modelTestsProcessorSuite(tests=self.tests)
+
     def task_started(self, task: Task) -> None:
         pass
 
@@ -912,7 +915,11 @@ class TestsProcessor:
                 # make sure we have test name defined
                 if not test.get("name"):
                     test["name"] = "{} {} {}..".format(
-                        test["task"], test["test"], str(test.get("pattern", ""))[:9]
+                        test.get("task", "Test all tasks")
+                        if test.get("use_all_tasks")
+                        else test["task"],
+                        test["test"],
+                        str(test.get("pattern", ""))[:9],
                     )
 
                 # get task results to use; use all results

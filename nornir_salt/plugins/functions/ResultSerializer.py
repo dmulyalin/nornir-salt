@@ -47,7 +47,8 @@ task's results.
 
 Second structure type uses list to store task results.
 
-If ``add_details`` is False and ``to_dict`` is True returns dictionary::
+If ``add_details`` is False and ``to_dict`` is True returns dictionary keyed
+by host name with values being another dictionary keyed by task names::
 
     {
         "hostname_1": {
@@ -68,7 +69,7 @@ For instance::
                'show run | inc hostname': 'hostname IOL2'}}
 
 If ``add_details`` is True and ``to_dict`` is True returns dictionary
-with additional details::
+with additional task execution details::
 
     {
         "hostname_1": {
@@ -121,7 +122,8 @@ For example::
                                           'failed': False,
                                           'result': 'hostname IOL2'}}}
 
-If ``add_details`` is False and ``to_dict`` is False returns dictionary::
+If ``add_details`` is False and ``to_dict`` is False returns dictionary keyed by
+host name with values set to a list of task results dictionaries::
 
     {
         "hostname_1": [
@@ -134,7 +136,9 @@ If ``add_details`` is False and ``to_dict`` is False returns dictionary::
         ]
     }
 
-If ``add_details`` is True and ``to_dict`` is False returns dictionary::
+If ``add_details`` is True and ``to_dict`` is False returns dictionary keyed by
+host name values set to a list of task results dictionaries with additional task
+execution details::
 
     {
         "hostname_1": [
@@ -166,6 +170,11 @@ If ``add_details`` is True and ``to_dict`` is False returns dictionary::
             }
         ]
     }
+
+``to_dict`` set to ``False`` is mainly useful when task with same name called
+multiple times, in that case all tasks results will be included in results,
+while if set otherwise, only last task result will appear in nested results
+dictionary.
 
 Skipping results
 ================

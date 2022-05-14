@@ -41,6 +41,8 @@ scrapli_send_config reference
 import logging
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cfg_form_commands
+from nornir_salt.utils.pydantic_models import model_scrapli_send_config
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
     from nornir_scrapli.tasks import send_config as nornir_scrapli_send_config
@@ -52,6 +54,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
+@ValidateFuncArgs(model_scrapli_send_config)
 def scrapli_send_config(task: Task, config=None, **kwargs):
     """
     Nornir Task function to send configuration to devices using
@@ -60,7 +63,7 @@ def scrapli_send_config(task: Task, config=None, **kwargs):
     :param kwargs: arguments for ``file.apply_template_on_contents`` salt function
         for configuration rendering as well as for ``task.run`` method
     :param config: (str or list) configuration string or list of commands to send to device
-    :param commit: not implemented yet
+    :param commit: not implemented
     :return result: Nornir result object with task execution results
     """
     # run sanity check

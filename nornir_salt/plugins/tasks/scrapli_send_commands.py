@@ -54,8 +54,8 @@ try:
 
     HAS_SCRAPLI = True
 except ImportError:
-    send_command = None
     HAS_SCRAPLI = False
+    send_command = None
 
 # define connection name for RetryRunner to properly detect it using:
 # connection_name = task.task.__globals__.get("CONNECTION_NAME", None)

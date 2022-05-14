@@ -112,6 +112,13 @@ import logging
 
 from nornir.core.task import Result, Task
 from nornir_salt.plugins.connections.PyGNMIPlugin import CONNECTION_NAME
+from nornir_salt.utils.pydantic_models import (
+    model_pygnmi_call,
+    model_pygnmi_call_update,
+    model_pygnmi_call_replace,
+    model_pygnmi_call_delete,
+)
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -139,6 +146,7 @@ def _call_help(connection, method_name: str, **kwargs):
     return h
 
 
+@ValidateFuncArgs(model_pygnmi_call_update)
 def _call_update(connection, path: list, **kwargs):
     """
     Update function helps to update configuration for elements matched by
@@ -171,6 +179,7 @@ def _call_update(connection, path: list, **kwargs):
     return connection.set(update=[(path[0], dict(kwargs))])
 
 
+@ValidateFuncArgs(model_pygnmi_call_replace)
 def _call_replace(connection, path: list, **kwargs):
     """
     Replace function helps to replace configuration for elements matched by
@@ -204,6 +213,7 @@ def _call_replace(connection, path: list, **kwargs):
     return connection.set(replace=[(path[0], dict(kwargs))])
 
 
+@ValidateFuncArgs(model_pygnmi_call_delete)
 def _call_delete(connection, path: list, **kwargs):
     """
     Delete function helps to delete configuration elements matched by provided paths
@@ -232,13 +242,13 @@ def _call_delete(connection, path: list, **kwargs):
     return connection.set(delete=path)
 
 
+@ValidateFuncArgs(model_pygnmi_call)
 def pygnmi_call(task: Task, call: str, name_arg: str = None, **kwargs) -> Result:
     """
     Task to call one of PyGNMI ``gNMIclient`` object methods or one of
     additional helper functions.
 
     :param call: (str) ``gNMIclient`` connection object method to call
-    :param arg: (list) any ``*args`` to use with call method
     :param kwargs: (dict) any ``**kwargs`` to use with call method
     :param name_arg: (str) used as "name" argument with call method, need it
         only because "name" argument used by "Nornir.run" method itself ans collides
@@ -255,7 +265,7 @@ def pygnmi_call(task: Task, call: str, name_arg: str = None, **kwargs) -> Result
     # update task name
     task.name = call
 
-    # check if "_name_arg" in kwargs, use it as "name", this happens
+    # check if "name_arg" in kwargs, use it as "name", this happens
     # if actual "name" argument given on nr.gnmi call by saltstack
     if name_arg:
         kwargs["name"] = name_arg

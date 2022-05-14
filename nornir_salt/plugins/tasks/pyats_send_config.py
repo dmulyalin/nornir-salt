@@ -49,6 +49,8 @@ import logging
 import traceback
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cfg_form_commands
+from nornir_salt.utils.pydantic_models import model_pyats_send_config
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +59,7 @@ log = logging.getLogger(__name__)
 CONNECTION_NAME = "pyats"
 
 
+@ValidateFuncArgs(model_pyats_send_config)
 def pyats_send_config(task: Task, config: str = None, **kwargs):
     """
     Salt-nornir Task function to send configuration to devices using

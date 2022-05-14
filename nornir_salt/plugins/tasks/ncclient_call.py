@@ -71,6 +71,8 @@ import time
 from fnmatch import fnmatchcase
 from nornir.core.task import Result, Task
 from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
+from nornir_salt.utils.pydantic_models import model_ncclient_call
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -263,6 +265,7 @@ def _call_help(manager, method_name, *args, **kwargs):
     return h, False
 
 
+@ValidateFuncArgs(model_ncclient_call)
 def ncclient_call(task: Task, call: str, *args, **kwargs) -> Result:
     """
     Task to handle a call of NCClient manager object methods

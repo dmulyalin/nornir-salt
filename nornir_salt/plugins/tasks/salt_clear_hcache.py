@@ -41,15 +41,18 @@ import logging
 from typing import List
 
 from nornir.core.task import Result, Task
+from nornir_salt.utils.pydantic_models import model_salt_clear_hcache
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
 
+@ValidateFuncArgs(model_salt_clear_hcache)
 def salt_clear_hcache(task: Task, cache_keys: List = None, **kwargs) -> Result:
     """
     Function to iterate over provided cache keys and delete them from hosts' data.
 
-    :param cache_keys: (list or str) list of cache keys to clean from host's data,
+    :param cache_keys: (list of str) list of cache keys to clean from host's data,
         if ``cache_keys`` argument not provided removes all cached data
     :returns: (dict) dictionary keyed by cache key and True/False status
     """

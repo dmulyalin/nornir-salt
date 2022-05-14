@@ -1,6 +1,6 @@
 """
 napalm_configure
-###################
+################
 
 This task plugin uses ``nornir-napalm`` ``napalm_configure`` task
 to configuration commands to devices over SSH or Telnet.
@@ -41,6 +41,8 @@ napalm_configure reference
 import logging
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cfg_form_commands
+from nornir_salt.utils.pydantic_models import model_napalm_configure
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
     from nornir_napalm.plugins.tasks import napalm_configure as nornir_napalm_configure
@@ -48,10 +50,12 @@ try:
     HAS_NAPALM = True
 except ImportError:
     HAS_NAPALM = False
+    nornir_napalm_configure = None
 
 log = logging.getLogger(__name__)
 
 
+@ValidateFuncArgs(model_napalm_configure, mixins=[nornir_napalm_configure])
 def napalm_configure(task: Task, config=None, **kwargs):
     """
     Nornir Task function to send configuration to devices using

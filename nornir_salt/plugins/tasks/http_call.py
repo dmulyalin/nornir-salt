@@ -36,6 +36,8 @@ import json
 import requests
 from nornir.core.task import Result, Task
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from nornir_salt.utils.pydantic_models import model_http_call
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -46,6 +48,7 @@ log = logging.getLogger(__name__)
 CONNECTION_NAME = "http"
 
 
+@ValidateFuncArgs(model_http_call)
 def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
     """
     Task function to call one of the supported ``requests`` library methods.

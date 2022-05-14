@@ -47,6 +47,7 @@ try:
     HAS_NETMIKO = True
 except ImportError:
     HAS_NETMIKO = False
+    netmiko_send_command = None
 
 log = logging.getLogger(__name__)
 

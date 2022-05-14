@@ -23,6 +23,8 @@ class ValidateFuncArgs:
         all required arguments must be defined in ``model``.
     """
 
+    __slots__ = ["model", "mixins", "mixins_skip_args", "config", "function"]
+
     def __init__(
         self,
         model: Optional[BaseModel] = None,

@@ -51,6 +51,8 @@ import traceback
 import time
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cfg_form_commands
+from nornir_salt.utils.pydantic_models import model_netmiko_send_config
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
     from nornir_netmiko.tasks import (  # noqa
@@ -68,6 +70,7 @@ log = logging.getLogger(__name__)
 CONNECTION_NAME = "netmiko"
 
 
+@ValidateFuncArgs(model_netmiko_send_config)
 def netmiko_send_config(
     task: Task,
     config=None,

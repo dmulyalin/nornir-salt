@@ -23,8 +23,11 @@ API Reference
 import time
 import random
 from nornir.core.task import Result
+from nornir_salt.utils.pydantic_models import model_sleep
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 
+@ValidateFuncArgs(model_sleep)
 def sleep(task, sleep_for=5, sleep_random=None):
     """
     Task to sleep for given amount of time.

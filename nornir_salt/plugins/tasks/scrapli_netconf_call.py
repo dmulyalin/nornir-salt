@@ -60,6 +60,8 @@ import logging
 import traceback
 from fnmatch import fnmatchcase
 from nornir.core.task import Result, Task
+from nornir_salt.utils.pydantic_models import model_scrapli_netconf_call
+from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -206,6 +208,7 @@ def _call_server_capabilities(conn, capab_filter=None, *args, **kwargs):
     return conn.server_capabilities, False
 
 
+@ValidateFuncArgs(model_scrapli_netconf_call)
 def scrapli_netconf_call(task: Task, call: str, *args, **kwargs) -> Result:
     """
     Dispatcher function to call one of the supported scrapli_netconf methods
