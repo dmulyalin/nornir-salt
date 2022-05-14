@@ -21,7 +21,7 @@ repos:
     hooks:
       - id: black
         name: black
-        exclude: ^tests/|^docs/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$|README.md|pyproject.toml|poetry.lock|\.github/.*
+        exclude: ^tests/|^docs/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$|README.md|pyproject.toml|poetry.lock|\.github/.*|.readthedocs.yaml
         entry: black nornir_salt
         language: system
         args:
@@ -33,7 +33,7 @@ repos:
         name: flake8
         language: system
         entry: flake8
-        exclude: ^tests/|^docs/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$|README.md|pyproject.toml|poetry.lock|\.github/.*
+        exclude: ^tests/|^docs/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$|README.md|pyproject.toml|poetry.lock|\.github/.*|.readthedocs.yaml
         args:
           - "--max-line-length=88"
           - "--max-complexity=19"
@@ -46,7 +46,7 @@ repos:
         name: bandit
         language: system
         entry: bandit
-        exclude: ^tests/|^docs/|pyproject.toml|^.github/|LICENSE
+        exclude: ^tests/|^docs/|pyproject.toml|^.github/|LICENSE|.readthedocs.yaml
         args:
           - "--skip=B101"
   # pylint, to run it directly use: python3 -m pylint . --rcfile=pylintrc
@@ -59,4 +59,4 @@ repos:
         entry: pylint .
         args:
           - "--rcfile=pylintrc"
-        exclude: ^tests/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$
+        exclude: ^tests/|gitignore|LICENSE|requirements|pre-commit-config|pylintrc|.*\.png$|.readthedocs.yaml
