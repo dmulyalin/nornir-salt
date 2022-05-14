@@ -51,6 +51,19 @@ ttp = { version = "0.8.4", optional = true }
 ttp-templates = { version = "0.1.3", optional = true }
 xmltodict = { version = "0.12.0", optional = true }
 
+# docs dependencies for extras definition
+readthedocs-sphinx-search = { version = "0.1.1", optional = true }
+Sphinx = { version = "4.3.0", optional = true }
+sphinx_rtd_theme = { version = "1.0.0", optional = true }
+sphinxcontrib-applehelp = { version = "1.0.1", optional = true }
+sphinxcontrib-devhelp = { version = "1.0.1", optional = true }
+sphinxcontrib-htmlhelp = { version = "2.0.0", optional = true }
+sphinxcontrib-jsmath = { version = "1.0.1", optional = true }
+sphinxcontrib-napoleon = { version = "0.7", optional = true }
+sphinxcontrib-qthelp = { version = "1.0.2", optional = true }
+sphinxcontrib-serializinghtml = { version = "1.1.5", optional = true }
+sphinxcontrib-spelling = { version = "7.2.1", optional = true }
+
 [tool.poetry.dev-dependencies]
 bandit = "1.7.*"
 black = "22.3.*"
@@ -101,6 +114,19 @@ prodmax = [
     "ttp",
     "ttp-templates",
     "xmltodict",
+]
+docs = [
+    "readthedocs-sphinx-search",
+    "Sphinx",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-applehelp",
+    "sphinxcontrib-devhelp",
+    "sphinxcontrib-htmlhelp",
+    "sphinxcontrib-jsmath",
+    "sphinxcontrib-napoleon",
+    "sphinxcontrib-qthelp",
+    "sphinxcontrib-serializinghtml",
+    "sphinxcontrib-spelling",
 ]
 
 [tool.poetry.plugins."nornir.plugins.inventory"]
