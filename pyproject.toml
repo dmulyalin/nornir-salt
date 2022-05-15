@@ -81,7 +81,6 @@ build-backend = "poetry.core.masonry.api"
 prodmin = [
     "ncclient",
     "netmiko",
-    "nornir",
     "nornir-netmiko",
     "paramiko",
     "requests",
@@ -97,7 +96,6 @@ prodmax = [
     "napalm",
     "ncclient",
     "netmiko",
-    "nornir",
     "nornir-napalm",
     "nornir-netmiko",
     "nornir-scrapli",
