@@ -2273,8 +2273,8 @@ prodmin = ["ncclient", "netmiko", "nornir-netmiko", "paramiko", "requests", "tab
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.6.5,<=3.10"
-content-hash = "69770942edcd16b2290577fa29b9d12bf579f7f2c144a898dac2e7768832bbb6"
+python-versions = ">=3.6.5,<3.11"
+content-hash = "149b572f8ec2eb1cf730d17873887dfaf295549ba1814201670535cdb417d4cf"
 
 [metadata.files]
 aiocontextvars = [

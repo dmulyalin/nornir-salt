@@ -28,7 +28,7 @@ Issues, bug reports and feature requests are welcomed.
 [pepy-downloads-badge]:        https://pepy.tech/badge/nornir-salt
 [readthedocs-link]:            http://nornir-salt.readthedocs.io/?badge=latest
 [readthedocs-badge]:           https://readthedocs.org/projects/nornir-salt/badge/?version=latest
-[github-tests-badge]:          https://github.com/dmulyalin/nornir-salt/actions/workflows/main.yml/badge.svg
+[github-tests-badge]:          https://github.com/dmulyalin/nornir-salt/actions/workflows/main.yml/badge.svg?branch=master
 [github-tests-link]:           https://github.com/dmulyalin/nornir-salt/actions
 [pypi-latest-release-badge]:   https://img.shields.io/pypi/v/nornir-salt.svg
 [pypi-latest-release-link]:    https://pypi.python.org/pypi/nornir-salt

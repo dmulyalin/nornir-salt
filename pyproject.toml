@@ -23,7 +23,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 # mandatory dependencies
-python = ">=3.6.5,<=3.10"
+python = ">=3.6.5,<3.11"
 nornir = "3.2.0"
 pydantic = "1.9.*"
 
