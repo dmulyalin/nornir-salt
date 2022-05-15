@@ -1,4 +1,4 @@
-name: Nornir-Salt Tests
+name: build
 on:
   push:
     branches:
