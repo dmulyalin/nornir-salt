@@ -216,6 +216,7 @@ class model_file_remove(BaseModel):
     filegroup: Union[StrictStr, List[StrictStr], StrictBool]
     base_url: Optional[StrictStr] = "/var/nornir-salt/"
     index: Optional[StrictStr] = "common"
+    tf_index_lock: Optional[Any]
 
     class Config:
         arbitrary_types_allowed = True

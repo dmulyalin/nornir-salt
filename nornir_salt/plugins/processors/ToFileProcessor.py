@@ -38,6 +38,7 @@ import random
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
+from multiprocessing import Lock
 
 log = logging.getLogger(__name__)
 
@@ -52,6 +53,8 @@ class ToFileProcessor:
     :param max_files: (int) default is 5, maximum number of file for given ``tf`` file group
     :param index: (str) index filename to read and store files data into
     :param skip_failed: (bool) if True, do not save failed task results, default is False
+    :param tf_index_lock: Lock object to safely access and update files index to make files
+        saving operation thread and/or multiprocessing safe
 
     Files saved under ``base_url`` location, where individual filename formed using string::
 
@@ -97,19 +100,19 @@ class ToFileProcessor:
         max_files=5,
         index=None,
         skip_failed=False,
+        tf_index_lock=None,
     ):
         self.tf = tf
         self.base_url = base_url
         self.max_files = max(1, max_files)
         self.index = index or "common"
         self.skip_failed = skip_failed
+        self.tf_index_lock = tf_index_lock or Lock()
 
         self.aliases_file = os.path.join(
             base_url, "tf_index_{}.json".format(self.index)
         )
         self.aliases_data = {}  # dictionary to store tf_index_{index}.json content
-
-        self._load_aliases()
 
     def _load_aliases(self):
         # create aliases file if does not exist
@@ -123,7 +126,6 @@ class ToFileProcessor:
             self.aliases_data = json.loads(f.read())
 
     def _dump_aliases(self):
-        # save aliases data
         with open(self.aliases_file, mode="w", encoding="utf-8") as f:
             f.write(
                 json.dumps(
@@ -149,75 +151,91 @@ class ToFileProcessor:
             )
             return
 
-        host_filename = "{tf}__{timestamp}__{rand}__{hostname}.txt".format(
-            timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"),
-            rand=random.randint(0, 1000),  # nosec
-            hostname=host.name,
-            tf=self.tf,
-        )
-        host_filename = os.path.join(self.base_url, host_filename)
+        # lock the index from overwrite
+        self.tf_index_lock.acquire()
 
-        # add aliases data
-        self.aliases_data.setdefault(self.tf, {})
-        self.aliases_data[self.tf].setdefault(host.name, [])
+        try:
+            # load filegroups data into memory
+            self._load_aliases()
 
-        # save data to file and populate alias details for tasks
-        os.makedirs(os.path.dirname(host_filename), exist_ok=True)
-        with open(host_filename, mode="w", encoding="utf-8") as f:
-            self.aliases_data[self.tf][host.name].insert(
-                0,
-                {
-                    "filename": host_filename,
-                    "tasks": {},
-                    "timestamp": time.strftime("%d %b %Y %H:%M:%S %Z"),
-                },
+            host_filename = "{tf}__{timestamp}__{rand}__{hostname}.txt".format(
+                timestamp=time.strftime("%d_%B_%Y_%H_%M_%S"),
+                rand=random.randint(0, 1000),  # nosec
+                hostname=host.name,
+                tf=self.tf,
             )
-            span_start = 0
+            host_filename = os.path.join(self.base_url, host_filename)
 
-            for i in result:
-                # skip if has skip_results and no exception
-                if (
-                    hasattr(i, "skip_results")
-                    and i.skip_results is True
-                    and not i.exception
-                ):
-                    continue
-                # skip if has exception but skip_failed is True
-                if i.exception and self.skip_failed:
-                    continue
+            # add aliases data
+            self.aliases_data.setdefault(self.tf, {})
+            self.aliases_data[self.tf].setdefault(host.name, [])
 
-                # save results to file
-                if isinstance(i.result, (str, int, float, bool)):
-                    result_to_save = str(i.result)
-                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {
-                        "content_type": "str"
-                    }
-                # convert structured data to json
-                else:
-                    result_to_save = json.dumps(
-                        i.result, sort_keys=True, indent=4, separators=(",", ": ")
-                    )
-                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {
-                        "content_type": "json"
-                    }
-                f.write(result_to_save + "\n")
-
-                # add aliases data
-                span = (span_start, span_start + len(result_to_save) + 1)
-                self.aliases_data[self.tf][host.name][0]["tasks"][i.name]["span"] = span
-                span_start += len(result_to_save) + 1  # f.write appends \n hence +1
-
-        # check if need to delete old files
-        if len(self.aliases_data[self.tf][host.name]) > self.max_files:
-            file_to_rm = self.aliases_data[self.tf][host.name].pop(-1)
-            try:
-                os.remove(file_to_rm["filename"])
-            except:
-                log.error(
-                    "nornir-salt:ToFileProcessor failed to remove file '{}':\n{}".format(
-                        file_to_rm, traceback.format_exc()
-                    )
+            # save data to file and populate alias details for tasks
+            os.makedirs(os.path.dirname(host_filename), exist_ok=True)
+            with open(host_filename, mode="w", encoding="utf-8") as f:
+                self.aliases_data[self.tf][host.name].insert(
+                    0,
+                    {
+                        "filename": host_filename,
+                        "tasks": {},
+                        "timestamp": time.strftime("%d %b %Y %H:%M:%S %Z"),
+                    },
                 )
+                span_start = 0
+
+                for i in result:
+                    # skip if has skip_results and no exception
+                    if (
+                        hasattr(i, "skip_results")
+                        and i.skip_results is True
+                        and not i.exception
+                    ):
+                        continue
+                    # skip if has exception but skip_failed is True
+                    if i.exception and self.skip_failed:
+                        continue
+
+                    # save results to file
+                    if isinstance(i.result, (str, int, float, bool)):
+                        result_to_save = str(i.result)
+                        self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {
+                            "content_type": "str"
+                        }
+                    # convert structured data to json
+                    else:
+                        result_to_save = json.dumps(
+                            i.result, sort_keys=True, indent=4, separators=(",", ": ")
+                        )
+                        self.aliases_data[self.tf][host.name][0]["tasks"][i.name] = {
+                            "content_type": "json"
+                        }
+                    f.write(result_to_save + "\n")
+
+                    # add aliases data
+                    span = (span_start, span_start + len(result_to_save) + 1)
+                    self.aliases_data[self.tf][host.name][0]["tasks"][i.name][
+                        "span"
+                    ] = span
+                    span_start += len(result_to_save) + 1  # f.write appends \n hence +1
+
+            # check if need to delete old files
+            if len(self.aliases_data[self.tf][host.name]) > self.max_files:
+                file_to_rm = self.aliases_data[self.tf][host.name].pop(-1)
+                try:
+                    os.remove(file_to_rm["filename"])
+                except:
+                    log.error(
+                        "nornir-salt:ToFileProcessor failed to remove file '{}':\n{}".format(
+                            file_to_rm, traceback.format_exc()
+                        )
+                    )
+
+            # save data to index file
+            self._dump_aliases()
+        except Exception as e:
+            raise e
+        finally:
+            self.tf_index_lock.release()
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
         pass  # ignore subtasks
@@ -228,4 +246,4 @@ class ToFileProcessor:
         pass  # ignore subtasks
 
     def task_completed(self, task: Task, result: AggregatedResult) -> None:
-        self._dump_aliases()
+        pass

@@ -70,6 +70,7 @@ from nornir_salt.utils.pydantic_models import (
     model_files,
 )
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from multiprocessing import Lock
 
 log = logging.getLogger(__name__)
 
@@ -252,7 +253,11 @@ def file_list(
 
 @ValidateFuncArgs(model_file_remove)
 def file_remove(
-    task, filegroup, base_url: str = "/var/nornir-salt/", index: str = "common"
+    task,
+    filegroup,
+    base_url: str = "/var/nornir-salt/",
+    index: str = "common",
+    tf_index_lock: Lock = None,
 ):
     """
     Function to remove files saved by ``ToFileProcessor``
@@ -261,59 +266,70 @@ def file_remove(
         to remove. If set to True will remove all files
     :param base_url: (str) OS path to folder with saved files, default "/var/nornir-salt/"
     :param index: (str) ``ToFileProcessor`` index filename to read files information from
+    :param tf_index_lock: Lock object to safely access and update files index to make remove
+        operation thread and/or multiprocessing safe
     :return: Result object with removed files summary
     """
     ret = []
+    tf_index_lock = tf_index_lock or Lock()
 
-    # load index data
-    index_data = _load_index_data(base_url, index)
+    # lock index file access to safely update it
+    tf_index_lock.acquire()
 
-    # check if need to remove files for all filegroups
-    if filegroup is True:
-        filegroups = list(index_data.keys())
-    else:
-        filegroups = filegroup if isinstance(filegroup, list) else [filegroup]
+    try:
+        # load index data
+        index_data = _load_index_data(base_url, index)
 
-    for group in filegroups:
-        # do sanity check
-        if group not in index_data:
-            task.results.append(
-                Result(
-                    host=task.host,
-                    result=None,
-                    exception="nornir-salt:file_remove '{}' files group not found".format(
-                        group
-                    ),
+        # check if need to remove files for all filegroups
+        if filegroup is True:
+            filegroups = list(index_data.keys())
+        else:
+            filegroups = filegroup if isinstance(filegroup, list) else [filegroup]
+
+        for group in filegroups:
+            # do sanity check
+            if group not in index_data:
+                task.results.append(
+                    Result(
+                        host=task.host,
+                        result=None,
+                        exception="nornir-salt:file_remove '{}' files group not found".format(
+                            group
+                        ),
+                    )
                 )
+                continue
+
+            # iterate over previous results
+            for file_details in index_data[group].get(task.host.name, []):
+                filename = file_details["filename"]
+                tasks = file_details.pop("tasks")
+                if os.path.exists(filename):
+                    os.remove(filename)
+                    ret.append(
+                        {
+                            "host": task.host.name,
+                            "filegroup": group,
+                            "tasks": "\n".join(list(tasks.keys())),
+                            **file_details,
+                        }
+                    )
+
+            # clean up index data
+            _ = index_data[group].pop(task.host.name, None)
+
+        # save new index data
+        index_file = os.path.join(base_url, "tf_index_{}.json".format(index))
+        with open(index_file, mode="w", encoding="utf-8") as f:
+            f.write(
+                json.dumps(index_data, sort_keys=True, indent=4, separators=(",", ": "))
             )
-            continue
 
-        # iterate over previous results
-        for file_details in index_data[group].get(task.host.name, []):
-            filename = file_details["filename"]
-            tasks = file_details.pop("tasks")
-            if os.path.exists(filename):
-                os.remove(filename)
-                ret.append(
-                    {
-                        "host": task.host.name,
-                        "filegroup": group,
-                        "tasks": "\n".join(list(tasks.keys())),
-                        **file_details,
-                    }
-                )
-
-        # clean up index data
-        _ = index_data[group].pop(task.host.name, None)
-
-    # save new index data
-    index_file = os.path.join(base_url, "tf_index_{}.json".format(index))
-    with open(index_file, mode="w", encoding="utf-8") as f:
-        f.write(
-            json.dumps(index_data, sort_keys=True, indent=4, separators=(",", ": "))
-        )
-
-    return Result(host=task.host, result=ret)
+        return Result(host=task.host, result=ret)
+    except Exception as e:
+        raise e
+    finally:
+        tf_index_lock.release()
 
 
 @ValidateFuncArgs(model_file_diff)
