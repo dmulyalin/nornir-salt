@@ -758,4 +758,57 @@ def test_FH_comma_separated_list():
                                  'platform': 'nxos_ssh',
                                  'port': None,
                                  'username': None}}
-								 
+                                 
+def test_FX():
+    res = FFun(NornirObj, FX="R[13]")
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert hosts_dict ==  {'R2': {'connection_options': {},
+                                 'data': {'role': 'agg', 'site': 'B2'},
+                                 'groups': ['lab'],
+                                 'hostname': '192.168.1.153',
+                                 'name': 'R2',
+                                 'password': None,
+                                 'platform': 'ios',
+                                 'port': None,
+                                 'username': None},
+                          'SW1': {'connection_options': {},
+                                  'data': {'role': 'access', 'site': 'B3'},
+                                  'groups': ['lab', 'pod1'],
+                                  'hostname': '192.168.2.144',
+                                  'name': 'SW1',
+                                  'password': None,
+                                  'platform': 'nxos_ssh',
+                                  'port': None,
+                                  'username': None}}
+                                  
+def test_FX_comma_list():
+    res = FFun(NornirObj, FX="R[13], R2")
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert hosts_dict ==  {'SW1': {'connection_options': {},
+                                  'data': {'role': 'access', 'site': 'B3'},
+                                  'groups': ['lab', 'pod1'],
+                                  'hostname': '192.168.2.144',
+                                  'name': 'SW1',
+                                  'password': None,
+                                  'platform': 'nxos_ssh',
+                                  'port': None,
+                                  'username': None}}
+								  
+def test_FX_list():
+    res = FFun(NornirObj, FX=["R[13]", "R2"])
+    res_dict = res.dict()
+    hosts_dict = res_dict.get("inventory", {}).get("hosts")
+    pprint.pprint(hosts_dict)
+    assert hosts_dict ==  {'SW1': {'connection_options': {},
+                                  'data': {'role': 'access', 'site': 'B3'},
+                                  'groups': ['lab', 'pod1'],
+                                  'hostname': '192.168.2.144',
+                                  'name': 'SW1',
+                                  'password': None,
+                                  'platform': 'nxos_ssh',
+                                  'port': None,
+                                  'username': None}}

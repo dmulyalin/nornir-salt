@@ -8,7 +8,7 @@ to certain hosts/devices.
 
 Filtering order::
 
-    FO -> FB -> FH -> FC -> FR -> FG -> FP -> FL -> FM -> FN
+    FO -> FB -> FH -> FC -> FR -> FG -> FP -> FL -> FM -> FX -> FN
 
 .. note:: If multiple filters provided, hosts must pass all checks - ``AND`` logic - to succeed.
 
@@ -131,6 +131,22 @@ Match only hosts with given platform name patterns::
 
 If list of patterns provided, host with platform matching at least one pattern passes this check.
 
+FX- Filter eXclude
+----------------
+
+Exclude hosts by name using Glob Patterns matching `fnmatchcase <https://docs.python.org/3.4/library/fnmatch.html#fnmatch.fnmatchcase>`_ module::
+
+    # Exclude R1, R2, R# host names but allow R11 or R4:
+    filtered_hosts = FFun(NornirObj, FX="R[123]")
+
+    # Exclude R1, R2, and SW1 but allow R11 or R4 or eSW1 using list of patterns:
+    filtered_hosts = FFun(NornirObj, FX=["R[12]", "SW*"])
+
+    # Exclude R1, R2, and SW1 but allow R11 or R4 or eSW1 using comma separated list of patterns:
+    filtered_hosts = FFun(NornirObj, FX="R[12], SW*")
+
+If list of patterns provided, host matching at least one pattern will be excluded.
+
 FN - Filter Negate
 ------------------
 
@@ -223,7 +239,7 @@ from nornir.core.filter import F
 log = logging.getLogger(__name__)
 
 # list that enumerates all available FFun functions, useful for arguments filtering
-FFun_functions = ["FO", "FB", "FH", "FC", "FR", "FG", "FP", "FL", "FM", "FN"]
+FFun_functions = ["FO", "FB", "FH", "FC", "FR", "FG", "FP", "FL", "FM", "FN", "FX"]
 
 
 def FFun(nr, check_if_has_filter=False, **kwargs):
@@ -242,8 +258,8 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
     :param FG: (str) Name of inventory group to return only hosts that part of it
     :param FP: (str) string, comma separated list of IPv4 or IPv6 prefixes e.g. 102.168.1.0/24
     :param FL: (str) string, comma separated list of hosts' names to return
-    :param FN: (bool) default is False, if True, will negate match results to opposite
-        set of hosts
+    :param FN: (bool) default is False, if True, will negate match results to opposite set of hosts
+    :param FX: (str or list) glob pattern or comma separate list of patterns to exclude hosts based on hosts' names
     """
     ret = nr
     has_filter = False
@@ -278,6 +294,9 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
         has_filter = True
     if "FM" in kwargs:
         ret = _filter_FM(ret, kwargs.pop("FM"))
+        has_filter = True
+    if "FX" in kwargs:
+        ret = _filter_FX(ret, kwargs.pop("FX"))
         has_filter = True
     if "FN" in kwargs:
         ret = _filter_FN(ret, nr, kwargs.pop("FN"))
@@ -457,3 +476,21 @@ def _filter_FN(ret, nr, FN):
     matched_hosts = set(ret.inventory.hosts.keys())
     FNed_hosts = all_hosts.difference(matched_hosts)
     return _filter_FL(nr, list(FNed_hosts))
+
+
+def _filter_FX(ret, pattern):
+    """
+    Function to exclude hosts by name using glob patterns
+    """
+    # check if comma separated list of patterns given
+    if isinstance(pattern, str) and "," in pattern:
+        pattern = [i.strip() for i in pattern.split(",")]
+    # run filtering
+    if isinstance(pattern, list):
+        return ret.filter(
+            filter_func=lambda h: not any(
+                [fnmatchcase(h.name, str(p)) for p in pattern]
+            )
+        )
+    else:
+        return ret.filter(filter_func=lambda h: not fnmatchcase(h.name, str(pattern)))
