@@ -1,13 +1,15 @@
 Installation
 ############
 
-From PyPi::
+From PyPI::
 
-  pip install nornir_salt[prodmin]
+  pip install nornir_salt[prodmax]
 
 From GitHub master branch::
 
   python3 -m pip install git+https://github.com/dmulyalin/nornir-salt
+
+.. warning:: Python 3.6 support deprecated starting with Nornir-Salt version 0.12.0
 
 Installation extras
 ===================
@@ -32,8 +34,26 @@ Nornir-Salt comes with these installation extras.
        additional modules required to support complete Salt-Nornir feature set such as
        PyGNMI, PyATS, Scrapli, NAPALM etc. All libraries have versions fixed to produce
        tested and working environment.
+   * - ``netmiko``
+     - Installs netmiko, nornir-netmiko
+   * - ``napalm``
+     - Installs napalm, nornir-napalm
+   * - ``scrapli``
+     - Installs scrapli, scrapli-community
+   * - ``pyats``
+     - Installs genie, pyats
+   * - ``netconf``
+     - Installs ncclient, scrapli-netconf
+   * - ``gnmi``
+     - Installs pygnmi
+   * - ``restconf``
+     - Installs requests
+   * - ``dataprocessor``
+     - Installs cerberus, jmespath, ntc-templates, pyyaml, tabulate, ttp,
+       ttp-templates, xmltodict, lxml
 
-To install Nornir-Salt only, without any additional plugins::
+To install Nornir-Salt with its core dependencies (Nornir and Pydantic) only,
+without any additional libraries::
 
     pip install salt-nornir
 
@@ -44,3 +64,11 @@ To install minimum production set::
 To install maximum production set::
 
     pip install salt-nornir[prodmax]
+
+**Why different extras?** - to simplify dependency installation for different requirements. It might
+make sense to start testing Nornir-Salt using prodmax set, but later on narrow down to using Netmiko
+and Ncclient only, in that case prodmin set would make sense as it helps to save some hard drive space
+and improve installation speed.
+
+Alternatively to using extras, individual libraries of desired version can be installed, provided
+extras only use version that were tested together making it safer choice for less experienced users.

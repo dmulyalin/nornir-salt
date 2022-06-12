@@ -71,16 +71,32 @@ class ToFileProcessor:
     using dictionary structure::
 
         {
-            "config": {
-                "IOL1": [
+            "facts": {
+                "ceos1": [
                     {
-                        "filename": "./tofile_outputs/config__22_August_2021_14_08_33__IOL1.txt",
+                        "filename": "/var/salt-nornir/nrp1/files/facts__10_June_2022_13_42_36__683__ceos1.txt",
                         "tasks": {
-                            "show run | inc ntp": {
-                                "span": [0, 48],
-                                "content_type": "str"
-                        }
+                            "run_ttp": {
+                                "content_type": "json",
+                                "span": [0, 139]
+                            }
+                        },
+                        "timestamp": "10 Jun 2022 13:42:36 UTC"
                     }
+                ]
+            },
+            "show_clock_output": {
+                "ceos1": [
+                    {
+                        "filename": "/var/salt-nornir/nrp1/files/show_clock_output__10_June_2022_14_34_20__1__ceos1.txt",
+                        "tasks": {
+                            "show clock": {
+                                "content_type": "str",
+                                "span": [0, 59]
+                            }
+                        },
+                        "timestamp": "10 Jun 2022 14:34:20 UTC"
+                    },
                 ]
             }
         }

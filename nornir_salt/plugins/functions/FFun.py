@@ -131,8 +131,8 @@ Match only hosts with given platform name patterns::
 
 If list of patterns provided, host with platform matching at least one pattern passes this check.
 
-FX- Filter eXclude
-----------------
+FX - Filter eXclude
+-------------------
 
 Exclude hosts by name using Glob Patterns matching `fnmatchcase <https://docs.python.org/3.4/library/fnmatch.html#fnmatch.fnmatchcase>`_ module::
 

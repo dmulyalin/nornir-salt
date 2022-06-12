@@ -19,23 +19,19 @@ from typing import Union, Optional, List, Any, Dict, Callable, Tuple
 
 class model_ffun_fx_filters(BaseModel):
     FO: Optional[Union[Dict, List[Dict]]] = Field(None, title="Filter Object")
-    FB: Optional[Union[List[StrictStr], StrictStr]] = Field(None, title="Filter gloB")
+    FB: Optional[Union[List[str], str]] = Field(None, title="Filter gloB")
     FH: Optional[Union[List[StrictStr], StrictStr]] = Field(
         None, title="Filter Hostname"
     )
-    FC: Optional[Union[List[StrictStr], StrictStr]] = Field(
-        None, title="Filter Contains"
-    )
-    FR: Optional[Union[List[StrictStr], StrictStr]] = Field(None, title="Filter Regex")
+    FC: Optional[Union[List[str], str]] = Field(None, title="Filter Contains")
+    FR: Optional[Union[List[str], str]] = Field(None, title="Filter Regex")
     FG: Optional[StrictStr] = Field(None, title="Filter Group")
     FP: Optional[Union[List[StrictStr], StrictStr]] = Field(None, title="Filter Prefix")
     FL: Optional[Union[List[StrictStr], StrictStr]] = Field(None, title="Filter List")
     FM: Optional[Union[List[StrictStr], StrictStr]] = Field(
         None, title="Filter platforM"
     )
-    FX: Optional[Union[List[StrictStr], StrictStr]] = Field(
-        None, title="Filter eXclude"
-    )
+    FX: Optional[Union[List[str], str]] = Field(None, title="Filter eXclude")
     FN: Optional[StrictBool] = Field(
         None, title="Filter Negate", description="Negate the match"
     )
