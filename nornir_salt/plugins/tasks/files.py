@@ -114,8 +114,13 @@ def _load_index_data(base_url, index):
     :return: Dictionary of index data
     """
     index_file = os.path.join(base_url, "tf_index_{}.json".format(index))
+
+    if not os.path.exists(index_file):
+        return {}
+
     with open(index_file, mode="r", encoding="utf-8") as f:
         index_data = json.loads(f.read())
+
     return index_data
 
 
