@@ -61,7 +61,7 @@ def cli_send_commands(
                 stop_patern_matched = (
                     True
                     if stop_patern_matched is True
-                    else any([fnmatchcase(str(r.result), stop_pattern) for r in res])
+                    else any(fnmatchcase(str(r.result), stop_pattern) for r in res)
                 )
             # do not wait after last command sent
             if index + 1 < len(commands):

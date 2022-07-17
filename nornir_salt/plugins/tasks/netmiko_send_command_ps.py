@@ -160,8 +160,12 @@ def send_command_ps(
         time.sleep(inter_loop_sleep)
         no_data_elapsed += inter_loop_sleep
 
-        # read data from channel
-        chunk = self._read_channel()
+        # read data from channel for netmiko 3
+        if hasattr(self, "_read_channel"):
+            chunk = self._read_channel()
+        # read data from channel for netmiko 4
+        else:
+            chunk = self.read_channel()
         if chunk:
             no_data_elapsed = 0
             data_received += chunk

@@ -994,7 +994,7 @@ def key_filter(data, pattern=None, checks_required=True, **kwargs):
     return {
         k: data[k]
         for k in data.keys()
-        if any([c["fun"](k, c["criteria"]) for c in checks])
+        if any(c["fun"](k, c["criteria"]) for c in checks)
     }
 
 
