@@ -114,6 +114,23 @@ except ImportError:
                 return self._request(ele)
 
 
+def _form_result(result) -> str:
+    """
+    Helper function to extract XML string results from Ncclient
+    response.
+
+    :param result: (obj) Ncclient RPC call result object
+    """
+    if hasattr(result, "_root"):
+        result = etree.tostring(result._root, pretty_print=True).decode()
+    elif isinstance(result, (list, dict, bool)):
+        pass
+    else:
+        result = str(result)
+
+    return result
+
+
 def _call_transaction(manager, *args, **kwargs):
     """
     Function to edit device configuration in a reliable fashion using
@@ -123,12 +140,16 @@ def _call_transaction(manager, *args, **kwargs):
         ``target`` argument provided and device supports candidate datastore uses
         ``candidate`` datastore, uses ``running`` datastore otherwise
     :param config: (str) configuration to apply
-    :param format: (str) configuration string format, default is xml
+    :param format: (str) configuration string format, default is "xml"
     :param confirmed: (bool) if True (default) uses commit confirmed
     :param commit_final_delay: (int) time to wait before doing final commit after
         commit confirmed, default is 1 second
     :param confirm_delay: (int) device commit confirmed rollback delay, default 60 seconds
     :param validate: (bool) if True (default) validates candidate configuration before commit
+    :param edit_rpc: (str) name of edit configuration RPC, options are - "edit_config"
+        (default), "load_configuration" (juniper devices only)
+    :param edit_arg: (dict) dictionary of arguments to use with configuration edit RPC
+    :param commit_arg: (dict) dictionary of commit RPC arguments used with first commit call
     :returns result: (list) list of steps performed with details
 
     Function work flow:
@@ -145,10 +166,12 @@ def _call_transaction(manager, *args, **kwargs):
     """
     result = []
     failed = False
+    edit_rpc = kwargs.get("edit_rpc", "edit_config")
+    commit_arg = kwargs.get("commit_arg", {})
     commit_final_delay = int(kwargs.get("commit_final_delay", 1))
-    confirm_delay = str(
-        kwargs.get("confirm_delay", 60)
-    )  # ncclient expects timeout to be a string
+
+    # ncclient expects timeout to be a string
+    confirm_delay = str(kwargs.get("confirm_delay", 60))
 
     # get capabilities
     can_validate = ":validate" in manager.server_capabilities
@@ -156,59 +179,62 @@ def _call_transaction(manager, *args, **kwargs):
     has_candidate_datastore = ":candidate" in manager.server_capabilities
 
     # decide on target configuration datastore
-    kwargs["target"] = kwargs.get(
-        "target", "candidate" if has_candidate_datastore else "running"
-    )
+    target = kwargs.get("target", "candidate" if has_candidate_datastore else "running")
+
+    # form edit RPC arguments
+    edit_arg = kwargs.get("edit_arg", {})
+    edit_arg["config"] = kwargs["config"]
+    edit_arg["target"] = target
 
     # execute transaction
-    with manager.locked(target=kwargs["target"]):
-        if has_candidate_datastore and kwargs["target"] == "candidate":
+    with manager.locked(target=target):
+        if has_candidate_datastore and target == "candidate":
             r = manager.discard_changes()
-            result.append(
-                {"discard_changes": etree.tostring(r._root, pretty_print=True)}
-            )
+            result.append({"discard_changes": _form_result(r)})
         try:
-            r = manager.edit_config(
-                config=kwargs["config"],
-                target=kwargs["target"],
-                format=kwargs.get("format", "xml"),
-            )
-            result.append({"edit_config": etree.tostring(r._root, pretty_print=True)})
+            r = getattr(manager, edit_rpc)(**edit_arg)
+            result.append({edit_rpc: _form_result(r)})
             # validate configuration
             if can_validate and kwargs.get("validate", True):
-                r = manager.validate(source=kwargs["target"])
-                result.append({"validate": etree.tostring(r._root, pretty_print=True)})
-            if kwargs["target"] == "candidate" and has_candidate_datastore:
+                r = manager.validate(source=target)
+                result.append({"validate": _form_result(r)})
+            if target == "candidate" and has_candidate_datastore:
                 # run commit confirmed
                 if can_commit_confirmed and kwargs.get("confirmed", True):
-                    pid = "dob04041989"
-                    r = manager.commit(
-                        confirmed=True, timeout=confirm_delay, persist=pid
-                    )
-                    result.append(
-                        {"commit_confirmed": etree.tostring(r._root, pretty_print=True)}
-                    )
-                    # run final commit
-                    time.sleep(commit_final_delay)
-                    r = manager.commit(confirmed=True, persist_id=pid)
-                    result.append(
-                        {"commit": etree.tostring(r._root, pretty_print=True)}
-                    )
+                    # try runing commit confirmed using RFC6241 standart
+                    try:
+                        pid = "dob04041989"
+                        r = manager.commit(
+                            confirmed=True,
+                            timeout=confirm_delay,
+                            persist=pid,
+                            **commit_arg,
+                        )
+                        result.append({"commit_confirmed": _form_result(r)})
+                        # run final commit
+                        time.sleep(commit_final_delay)
+                        r = manager.commit(confirmed=True, persist_id=pid)
+                        result.append({"commit": _form_result(r)})
+                    # Ncclient juniper driver uses juniper custom RPC for
+                    # commit and throws TypeError for "persist" argument
+                    except TypeError:
+                        r = manager.commit(confirmed=True, timeout=confirm_delay)
+                        result.append({"commit_confirmed": _form_result(r)})
+                        # run final commit
+                        time.sleep(commit_final_delay)
+                        r = manager.commit()
+                        result.append({"commit": _form_result(r)})
                 # run normal commit
                 else:
-                    r = manager.commit()
-                    result.append(
-                        {"commit": etree.tostring(r._root, pretty_print=True)}
-                    )
+                    r = manager.commit(**commit_arg)
+                    result.append({"commit": _form_result(r)})
         except:
             tb = traceback.format_exc()
-            log.error("nornir_salt:ncclient_call transaction error: {}".format(tb))
+            log.error(f"nornir_salt:ncclient_call transaction error: {tb}")
             result.append({"error": tb})
-            if has_candidate_datastore and kwargs["target"] == "candidate":
+            if has_candidate_datastore and target == "candidate":
                 r = manager.discard_changes()
-                result.append(
-                    {"discard_changes": etree.tostring(r._root, pretty_print=True)}
-                )
+                result.append({"discard_changes": _form_result(r)})
             failed = True
 
     return result, failed
@@ -257,8 +283,8 @@ def _call_help(manager, method_name, *args, **kwargs):
 
     :param method_name: (str) name of method or function to return docstring for
     """
-    if "_call_{}".format(method_name) in globals():
-        function_obj = globals()["_call_{}".format(method_name)]
+    if f"_call_{method_name}" in globals():
+        function_obj = globals()[f"_call_{method_name}"]
     else:
         function_obj = getattr(manager, method_name)
     h = function_obj.__doc__ if hasattr(function_obj, "__doc__") else ""
@@ -304,24 +330,14 @@ def ncclient_call(task: Task, call: str, *args, **kwargs) -> Result:
     manager._vendor_operations.setdefault("rpc", GenericRPC)
 
     log.debug(
-        "nornir_salt:ncclient_call calling '{}' with args: '{}'; kwargs: '{}'".format(
-            call, args, kwargs
-        )
+        f"nornir_salt:ncclient_call '{call}' with args: '{args}'; kwargs: '{kwargs}'"
     )
 
     # check if need to call one of helper function
     if "_call_{}".format(call) in globals():
-        result, failed = globals()["_call_{}".format(call)](manager, *args, **kwargs)
+        result, failed = globals()[f"_call_{call}"](manager, *args, **kwargs)
     # call manager object method otherwise
     else:
         result = getattr(manager, call)(*args, **kwargs)
 
-    # format results
-    if hasattr(result, "_root"):
-        result = etree.tostring(result._root, pretty_print=True).decode()
-    elif isinstance(result, (list, dict, bool)):
-        pass
-    else:
-        result = str(result)
-
-    return Result(host=task.host, result=result, failed=failed)
+    return Result(host=task.host, result=_form_result(result), failed=failed)

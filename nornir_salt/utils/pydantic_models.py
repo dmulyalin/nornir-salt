@@ -302,11 +302,32 @@ class model_napalm_configure(BaseModel):
         extra = "allow"
 
 
+class NclientEditRPCnames(str, Enum):
+    files_ls = "edit_config"
+    files_list = "load_configuration"
+
+
 class model_ncclient_call(BaseModel):
     """Model for nornir_salt.plugins.tasks.ncclient_call plugin arguments"""
 
     task: Task
     call: StrictStr
+    edit_rpc: Optional[NclientEditRPCnames]
+    confirm_delay: Optional[StrictInt]
+    target: Optional[StrictStr]
+    config: Optional[Union[StrictStr, List[StrictStr]]]
+    format_: Optional[StrictStr] = Field(alias="format")
+    confirmed: Optional[StrictBool]
+    commit_final_delay: Optional[StrictInt]
+    confirm_delay: Optional[StrictInt]
+    validate_: Optional[StrictBool] = Field(alias="validate")
+    edit_rpc: Optional[StrictStr]
+    edit_arg: Optional[Dict]
+    commit_arg: Optional[Dict]
+    capab_filter: Optional[StrictStr]
+    method_name: Optional[StrictStr]
+    rpc: Optional[StrictStr]
+    filter_: Optional[StrictStr]
 
     class Config:
         arbitrary_types_allowed = True
