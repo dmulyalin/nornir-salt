@@ -201,15 +201,12 @@ def _call_transaction(manager, *args, **kwargs):
             if target == "candidate" and has_candidate_datastore:
                 # run commit confirmed
                 if can_commit_confirmed and kwargs.get("confirmed", True):
+                    commit_arg["confirmed"] = True
+                    commit_arg.setdefault("timeout", confirm_delay)
                     # try runing commit confirmed using RFC6241 standart
                     try:
                         pid = "dob04041989"
-                        r = manager.commit(
-                            confirmed=True,
-                            timeout=confirm_delay,
-                            persist=pid,
-                            **commit_arg,
-                        )
+                        r = manager.commit(**commit_arg, persist=pid)
                         result.append({"commit_confirmed": _form_result(r)})
                         # run final commit
                         time.sleep(commit_final_delay)
@@ -218,7 +215,7 @@ def _call_transaction(manager, *args, **kwargs):
                     # Ncclient juniper driver uses juniper custom RPC for
                     # commit and throws TypeError for "persist" argument
                     except TypeError:
-                        r = manager.commit(confirmed=True, timeout=confirm_delay)
+                        r = manager.commit(**commit_arg)
                         result.append({"commit_confirmed": _form_result(r)})
                         # run final commit
                         time.sleep(commit_final_delay)
