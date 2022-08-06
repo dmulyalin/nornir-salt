@@ -20,7 +20,7 @@ def cfg_form_commands(task: Task, config: list = None, multiline: bool = False):
 
     - extracting commands from host's __task__ data
     - splitting multiline config string to a list of commands
-    - replaces escaped newline - \\n - with newline - \n 
+    - replaces escaped newline - \\n - with newline - \n
 
     :param task: (obj) Nornir Task object
     :param config: (str or list) configuration string or list of commands to send to device
@@ -46,7 +46,7 @@ def cfg_form_commands(task: Task, config: list = None, multiline: bool = False):
     # transform config to a list of commands if string given
     elif isinstance(config, str):
         config = config.splitlines()
-                
+
     # make sure to handle \\n in config
     if isinstance(config, list):
         cfg = []
@@ -54,9 +54,9 @@ def cfg_form_commands(task: Task, config: list = None, multiline: bool = False):
             if "\\n" in cfg_line:
                 cfg.extend(cfg_line.split("\\n"))
             else:
-                cfg.append(cfg_line)     
+                cfg.append(cfg_line)
         config = cfg
-    elif isinstance(config, str) and "\\n" in  config:
+    elif isinstance(config, str) and "\\n" in config:
         config = config.replace("\\n", "\n")
-        
+
     return config
