@@ -11,15 +11,16 @@ def cfg_form_commands(task: Task, config: list = None, multiline: bool = False):
 
     Used by:
 
-    - netmiko_send_config
-    - scrapli_send_config
-    - napalm_configure
-    - pyats_send_config
+    - netmiko_send_config with multiline=False
+    - scrapli_send_config with multiline=True
+    - napalm_configure with multiline=True
+    - pyats_send_config with multiline=False
 
-    Support:
+    Supports:
 
     - extracting commands from host's __task__ data
     - splitting multiline config string to a list of commands
+    - replaces escaped newline - \\n - with newline - \n 
 
     :param task: (obj) Nornir Task object
     :param config: (str or list) configuration string or list of commands to send to device
@@ -45,5 +46,17 @@ def cfg_form_commands(task: Task, config: list = None, multiline: bool = False):
     # transform config to a list of commands if string given
     elif isinstance(config, str):
         config = config.splitlines()
-
+                
+    # make sure to handle \\n in config
+    if isinstance(config, list):
+        cfg = []
+        for cfg_line in config:
+            if "\\n" in cfg_line:
+                cfg.extend(cfg_line.split("\\n"))
+            else:
+                cfg.append(cfg_line)     
+        config = cfg
+    elif isinstance(config, str) and "\\n" in  config:
+        config = config.replace("\\n", "\n")
+        
     return config

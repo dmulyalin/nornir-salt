@@ -123,6 +123,9 @@ def netmiko_send_config(
     conn = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     config = cfg_form_commands(task=task, config=config)
 
+    # make sure netmiko has prompt, some devices fail to enter
+    # enable mode because of is_alive called by keepalive function
+    _ = conn.find_prompt()
     # enter enable mode
     if enable and conn.check_enable_mode() is False:
         conn.enable()

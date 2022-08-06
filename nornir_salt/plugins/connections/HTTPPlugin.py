@@ -22,7 +22,7 @@ class HTTPPlugin:
 
     Connection reference name is ``http``
 
-    Full list of inventory extras see `here <https://docs.python-requests.org/en/latest/api/>`_
+    Full list of inventory extras see `here <https://requests.readthedocs.io/en/latest/api/>`_
 
     Sample Nornir inventory::
 
