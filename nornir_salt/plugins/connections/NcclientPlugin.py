@@ -49,9 +49,9 @@ class NcclientPlugin:
                 raise_mode: None
 
     Anything under inventory ``extras`` section passed on to Ncclient
-    ``manager.connect`` call.
+    ``manager.connect`` call except for non Ncclient specific argument.
 
-    **``extras` section non Ncclient specific argument**
+    **``extras`` section non Ncclient specific argument**
 
     ``raise_mode`` - valid values are None, "all" (default) or "errors",
     defines how errors indicated by RPC handled by Ncclient:
