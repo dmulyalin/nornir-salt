@@ -9,12 +9,17 @@ NcclientPlugin reference
 
 .. autofunction:: nornir_salt.plugins.connections.NcclientPlugin.NcclientPlugin
 """
+import logging
+
 from typing import Any, Dict, Optional
 from pathlib import Path
 from nornir.core.configuration import Config
 
+log = logging.getLogger(__name__)
+
 try:
     from ncclient import manager
+    from ncclient.operations import RaiseMode
 
     HAS_NCCLIENT = True
 except ImportError:
@@ -41,9 +46,19 @@ class NcclientPlugin:
               extras:
                 allow_agent: False
                 hostkey_verify: False
+                raise_mode: None
 
     Anything under inventory ``extras`` section passed on to Ncclient
     ``manager.connect`` call.
+
+    **``extras` section non Ncclient specific argument**
+
+    ``raise_mode`` - valid values are None, "all" (default) or "errors",
+    defines how errors indicated by RPC handled by Ncclient:
+
+    - ``None`` - don't raise any type of `rpc-error` as exception
+    - ``errors`` - raise only when the `error-type` indicates it is an error
+    - ``all`` - don't look at the `error-type`, always raise
     """  # noqa
 
     def open(
@@ -57,6 +72,8 @@ class NcclientPlugin:
         configuration: Optional[Config] = None,
     ) -> None:
         extras = extras or {}
+
+        raise_mode = extras.pop("raise_mode", "all")
 
         parameters: Dict[str, Any] = {
             "host": hostname,
@@ -73,6 +90,14 @@ class NcclientPlugin:
         parameters.update(extras)
 
         self.connection = manager.connect(**parameters)
+
+        # apply raise mode settings to connection
+        self.connection.raise_mode = getattr(RaiseMode, str(raise_mode).upper())
+
+        log.debug(
+            f"Nornir-Salt:NcclientPlugin initiated connection with "
+            f"RaiseMode '{self.connection.raise_mode}'"
+        )
 
     def close(self) -> None:
         self.connection.close_session()
