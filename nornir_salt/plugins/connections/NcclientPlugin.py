@@ -48,10 +48,10 @@ class NcclientPlugin:
                 hostkey_verify: False
                 raise_mode: None
 
-    Anything under inventory ``extras`` section passed on to Ncclient
-    ``manager.connect`` call except for non Ncclient specific argument.
+    Everything under inventory ``extras`` section passed on to Ncclient
+    ``manager.connect`` call except for non Ncclient specific arguments.
 
-    **``extras`` section non Ncclient specific argument**
+    **``extras`` section non Ncclient specific arguments**
 
     ``raise_mode`` - valid values are None, "all" (default) or "errors",
     defines how errors indicated by RPC handled by Ncclient:

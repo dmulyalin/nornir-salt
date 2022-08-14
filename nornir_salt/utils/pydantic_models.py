@@ -334,6 +334,25 @@ class model_ncclient_call(BaseModel):
         extra = "allow"
 
 
+class model_puresnmp_call(BaseModel):
+    """Model for nornir_salt.plugins.tasks.puresnmp_call plugin arguments"""
+
+    task: Task
+    call: StrictStr
+    oid: Optional[StrictStr]
+    oids: Optional[List[StrictStr]]
+    mappings: Optional[Dict[StrictStr, Any]]
+    value: Optional[Union[StrictStr]]
+    bulk_size: Optional[StrictInt]
+    scalar_oids: Optional[List[StrictStr]]
+    repeating_oids: Optional[List[StrictStr]]
+    method_name: Optional[StrictStr]
+
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
+
+
 class model_netmiko_send_config(BaseModel):
     """Model for nornir_salt.plugins.tasks.netmiko_send_config plugin arguments"""
 
