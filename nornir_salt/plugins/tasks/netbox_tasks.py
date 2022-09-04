@@ -25,16 +25,16 @@ Sample code to run ``netbox_tasks`` task::
     )
 
 All netbox tasks return Nornir Result object with "result" set
-to string describint task results and wiht "status" key set to
+to string describing task results and with "status" key set to
 either True or False depending on task success.
 
 netbox_tasks returns
-=================
+====================
 
 Returns requests result string in XML or JSON format.
 
 netbox_tasks reference
-===================
+======================
 
 .. autofunction:: nornir_salt.plugins.tasks.netbox_tasks.netbox_tasks
 .. autofunction:: nornir_salt.plugins.tasks.netbox_tasks.sync_device_from_netbox
@@ -85,12 +85,12 @@ def _start_netbox_connection(netbox_instances: dict, via: str):
 def _remove_data_keys(data, remove_keys, skip=None):
     """
     Helper function to recursively remove given keys from netbox data,
-    this is because previously retrieved data from netbox contains read-only
-    parameters, need to remove tem prior to sending data back to Netbox.
+    this is because previously retrieved data from Netbox contains read-only
+    parameters, need to remove them prior to sending data back to Netbox.
 
-    :param data: (dict) Nested ditionary to remove keys from
+    :param data: (dict) Nested dictionary to remove keys from
     :param remove_keys: (list) list of keys to remove
-    :param skip: (list) list of data top keys to skip procesing for
+    :param skip: (list) list of data top keys to skip processing for
     """
     skip = skip or ["config_context", "custom_fields"]
 
@@ -105,7 +105,7 @@ def _remove_data_keys(data, remove_keys, skip=None):
 
 def _extract_data_values(data, keys):
     """
-    Helper function to exctract "value" for given "by_value_keys".
+    Helper function to extract "value" for given "by_value_keys".
 
     On retrieval Netbox returns data like this::
 
@@ -136,7 +136,7 @@ def sync_device_from_netbox(
     to retrieve respective Netbox device entry data.
 
     :param via: name of netbox instance connection parameters
-    :param data_key: Nornir invetnory data key name to save host's Netbox inventory
+    :param data_key: Nornir inventory data key name to save host's Netbox inventory
     :return dict: Nornir results object with operation resut and ``status`` attribute
         containing ``True`` if data synced and ``False`` if device not found
     """
@@ -177,7 +177,7 @@ def sync_device_to_netbox(
     Function to sync Nornir hosts inventory into Netbox device.
 
     :param via: name of netbox instance connection parameters
-    :param data_key: Nornir invetnory data key name with Netbox inventory
+    :param data_key: Nornir inventory data key name with Netbox inventory
 
     If no device with given name exists in Netbox, it will be created.
 
@@ -446,7 +446,7 @@ def sync_l2vpn_to_netbox():
 
 def sync_config_to_netbox():
     """
-    Function to parse entwork devices config and sync it to
+    Function to parse network devices config and sync it to
     Netbox device local config context.
     """
     pass
@@ -462,9 +462,9 @@ def sync_interfaces_to_netbox(
     """
     Function to sync device interfaces to Netbox.
 
-    :param via: name of netbox instance connection parameters
+    :param via: name of Netbox instance connection parameters
     :param custom_fields: if True populates custom fields described
-        below, also creates them if neccessary
+        below, also creates them if necessary
     :param use_ttp: uses TTP to parse show commands output to produce data to
         populate Netbox
     :param use_openconfig: uses OpenConfig models to extract interfaces data from
@@ -526,7 +526,7 @@ def netbox_tasks(
     **kwargs,
 ) -> Result:
     """
-    Task call netbox related task functions, used mainly by salt-nornir
+    Task call Netbox related task functions, used mainly by Salt-Nornir
     proxy minion module.
 
     :param task_name: name of task to run
