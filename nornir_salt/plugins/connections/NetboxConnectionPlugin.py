@@ -2,7 +2,7 @@
 NetboxConnectionPlugin
 ######################
 
-Netbox Connection plugin to cimmunicate with Netbox.
+Netbox Connection plugin to communicate with Netbox.
 
 NetboxConnectionPlugin reference
 ================================
@@ -84,12 +84,12 @@ class NetboxConnectionPlugin:
     `pynetbox.api documentation <https://pynetbox.readthedocs.io/en/latest/>`_
 
     Authentication - by default ``token`` takes precedence over ``auth``. If no ``token``
-    or ``auth`` defined in instance parameters, auth credentials automatically formed using
-    host's username and password attributes.
+    or ``auth`` defined in instance parameters, ``auth`` credentials automatically formed 
+    using host's username and password attributes.
 
     Alternatively, Netbox connection parameters can be stored in ``user_defined ``
     configuration instead of individual hosts, groups or defaults. Parameters
-    in ``user_defined`` configuration merged with extras confgiuration. Extras
+    in ``user_defined`` configuration merged with extras configuration. Extras
     configuration takes precedence over ``user_defined`` configuration.
 
     NetboxConnectionPlugin inventory extras parameters:

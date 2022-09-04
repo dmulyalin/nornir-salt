@@ -12,3 +12,5 @@ Connection plugins help to connect with devices. Reference `documentation <https
 .. automodule:: nornir_salt.plugins.connections.PyATSUnicon
 
 .. automodule:: nornir_salt.plugins.connections.PureSNMPPlugin
+
+.. automodule:: nornir_salt.plugins.connections.NetboxConnectionPlugin
