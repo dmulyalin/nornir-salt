@@ -4,6 +4,7 @@ from .PyGNMIPlugin import PyGNMIPlugin
 from .ConnectionsPool import ConnectionsPool
 from .PyATSUnicon import PyATSUnicon
 from .PureSNMPPlugin import PureSNMPPlugin
+from .NetboxConnectionPlugin import NetboxConnectionPlugin
 
 __all__ = (
     "NcclientPlugin",
@@ -12,4 +13,5 @@ __all__ = (
     "ConnectionsPool",
     "PyATSUnicon",
     "PureSNMPPlugin",
+    "NetboxConnectionPlugin",
 )

@@ -99,7 +99,7 @@ def netmiko_send_config(
     Default parameters supplied to ``netmiko_send_config`` function call::
 
         cmd_verify: False
-        exit_config_mode: False if batch provided else unmodified
+        exit_config_mode: False if batch provided or commit is True else unmodified
 
     Batch mode controlled by ``batch`` parameter, by default all configuration commands send
     at once, but that approach might lead to Netmiko timeout errors if device takes too long
@@ -119,7 +119,8 @@ def netmiko_send_config(
     kwargs.setdefault("cmd_verify", False)
     commit_final_delay = int(commit_final_delay)
     batch = max(0, int(batch))
-    task_result = Result(host=task.host, result=[], changed=True)
+    result = []
+    task_result = Result(host=task.host, result=None, changed=True)
     conn = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     config = cfg_form_commands(task=task, config=config)
 
@@ -130,28 +131,27 @@ def netmiko_send_config(
     if enable and conn.check_enable_mode() is False:
         conn.enable()
 
+    if batch or commit:
+        kwargs["exit_config_mode"] = False
+
     # push config to device in batches
     if batch:
-        kwargs["exit_config_mode"] = False
         for i in range(0, len(config), batch):
             chunk = config[i : i + batch]
-            task_result.result.append(
-                conn.send_config_set(config_commands=chunk, **kwargs)
-            )
-        task_result.result = "\n".join(task_result.result)
+            result.append(conn.send_config_set(config_commands=chunk, **kwargs))
     # push config all at once
     else:
-        task_result.result = conn.send_config_set(config_commands=config, **kwargs)
+        result.append(conn.send_config_set(config_commands=config, **kwargs))
 
     # check if need to commit
     if commit:
         commit = commit if isinstance(commit, dict) else {}
         try:
-            conn.commit(**commit)
+            result.append(conn.commit(**commit))
             # check if need to do second commit
             if commit_final_delay:
                 time.sleep(commit_final_delay)
-                conn.commit()
+                result.append(conn.commit())
         except AttributeError:
             pass
         except:
@@ -163,6 +163,8 @@ def netmiko_send_config(
 
     # check if need to exit configuration mode
     if conn.check_config_mode():
-        conn.exit_config_mode()
+        result.append(conn.exit_config_mode())
+
+    task_result.result = "\n".join(str(i) for i in result)
 
     return task_result

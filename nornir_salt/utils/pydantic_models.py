@@ -195,6 +195,7 @@ class model_salt_cfg_gen(BaseModel):
 
     task: Task
     config: Optional[StrictStr]
+    multiline: Optional[StrictBool]
 
     class Config:
         arbitrary_types_allowed = True

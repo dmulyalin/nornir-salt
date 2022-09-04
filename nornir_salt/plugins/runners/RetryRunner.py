@@ -578,6 +578,7 @@ def connector(
                 host.name, connection_name, params["connection_retry"], e
             )
             log.error(err_msg)
+            log.exception(e)
             if params["connection_retry"] < connect_retry:
                 params["connection_retry"] += 1
                 params["timestamp"] = time.time()

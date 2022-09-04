@@ -79,14 +79,18 @@ def HostsKeepalive(nr):
                     is_alive = conn_obj.connection.isalive()
                 elif "ncclient" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.connection.connected
-                elif "http" in str(type(conn_obj)).lower():
-                    is_alive = True
                 elif "pygnmi" in str(type(conn_obj)).lower():
                     is_alive = True
                 elif "pyats" in str(type(conn_obj)).lower():
                     is_alive = all(
                         [d.is_connected() for d in conn_obj.connection.devices.values()]
                     )
+                # enlist connection plugins that does not maintain connection open
+                elif any(
+                    i in str(type(conn_obj)).lower()
+                    for i in ["http", "puresnmp", "netbox"]
+                ):
+                    is_alive = True
                 else:
                     log.debug(
                         "nornir_salt:HostsKeepalive - uncknown connection '{}', type: '{}'".format(
