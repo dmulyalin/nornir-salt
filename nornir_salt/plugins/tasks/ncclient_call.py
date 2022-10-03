@@ -157,14 +157,17 @@ def _call_transaction(manager, *args, **kwargs):
     2. If server supports it - Discard previous changes if any
     3. Perform configuration edit using RPC specified in ``edit_rpc`` argument
     4. If server supports it - validate configuration if ``validate`` argument is True
-    5. If server supports it - do commit confirmed if ``confirmed`` argument is True
-       using ``confirm_delay`` timer with ``commit_arg`` argument
-    6. If confirmed commit requested, wait for ``commit_final_delay`` timer before
-       sending final commit, final commit does not use ``commit_arg`` arguments
-    7. If server supports it - do commit operation
-    8. Unlock target configuration datastore
-    9. If server supports it - discard all changes if any of steps 3, 4, 5 or 7 fail
-    10. Return results list of dictionaries keyed by step name
+    5. Do commit operation:
+
+        1. If server supports it - do commit operation if ``confirmed`` argument is False
+        2. If server supports it - do commit confirmed if ``confirmed`` argument is True
+           using ``confirm_delay`` timer with ``commit_arg`` argument
+        3. If confirmed commit requested, wait for ``commit_final_delay`` timer before
+           sending final commit, final commit does not use ``commit_arg`` arguments
+
+    6. Unlock target configuration datastore
+    7. If server supports it - discard all changes if any of steps 3, 4, 5 or 7 fail
+    8. Return results list of dictionaries keyed by step name
     """
     result = []
     failed = False

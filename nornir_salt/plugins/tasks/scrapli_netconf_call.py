@@ -58,6 +58,7 @@ transaction
 """
 import logging
 import traceback
+import time
 from fnmatch import fnmatchcase
 from nornir.core.task import Result, Task
 from nornir_salt.utils.pydantic_models import model_scrapli_netconf_call
@@ -109,28 +110,44 @@ def _call_transaction(conn, *args, **kwargs):
         ``target`` argument provided and device supports candidate datastore uses
         ``candidate`` datastore, uses ``running`` datastore otherwise
     :param config: (str) configuration to apply
+    :param confirmed: (bool) if True (default) uses commit confirmed
+    :param confirm_delay: (int) device commit confirmed rollback delay, default 60 seconds
+    :param commit_final_delay: (int) time to wait before doing final commit after
+        commit confirmed, default is 1 second
     :param validate: (bool) if True (default) validates candidate configuration before commit
     :returns result: (list) list of steps performed with details
 
     Function work flow:
 
     1. Lock target configuration datastore
-    2. Discard previous changes if any
-    3. Edit configuration
+    2. If server supports it - Discard previous changes if any
+    3. Perform configuration edit
     4. If server supports it - validate configuration if ``validate`` argument is True
-    5. If server supports it - do commit operation
+    5. Do commit operation:
+
+       1. If server supports it - do normal commit if ``confirmed`` argument is False
+       2. If server supports it - do commit confirmed if ``confirmed`` argument is True
+          using ``confirm_delay`` timer
+       3. If confirmed commit requested, wait for ``commit_final_delay`` timer before
+          sending final commit
+
     6. Unlock target configuration datastore
-    7. If steps 3, 4 or 5 fails, discard all changes
+    7. If server supports it - discard all changes if any of steps 3, 4, 5 or 6 fail
     8. Return results list of dictionaries keyed by step name
 
-    Scrapli-netconf implementation lacks of support for commit confirmed operation
-    as of creating this module.
+    .. warning:: Scrapli-Netconf supports commit confirmed feature starting with
+        version 2022.07.30. Moreover, only RFC6241 compatible devices supported.
+        For example Juniper Junos uses proprietary RPC for commit operation, as
+        a result commit confirmed not supported for Junos.
     """
     failed = False
     result = []
     can_validate = False
     can_commit_confirmed = False  # noqa: F841
     has_candidate_datastore = False
+    confirm_delay = str(kwargs.get("confirm_delay", 60))
+    commit_final_delay = int(kwargs.get("commit_final_delay", 1))
+    do_commit_confirmed = kwargs.get("confirmed", True)
 
     # get capabilities
     for i in conn.server_capabilities:
@@ -151,34 +168,62 @@ def _call_transaction(conn, *args, **kwargs):
         # lock target config/datastore
         r = conn.lock(target=kwargs["target"])
         if r.failed:
-            raise RuntimeError(r.result)
+            raise RuntimeError(f"lock failed: {r.result}")
         # discard previous changes if any
         if has_candidate_datastore and kwargs["target"] == "candidate":
             r = conn.discard()
             if r.failed:
-                raise RuntimeError(r.result)
+                raise RuntimeError(f"discard failed: {r.result}")
             result.append({"discard_changes": r.result})
         # apply configuration
         r = conn.edit_config(config=kwargs["config"], target=kwargs["target"])
         if r.failed:
-            raise RuntimeError(r.result)
+            raise RuntimeError(f"edit_config failed: {r.result}")
         result.append({"edit_config": r.result})
         # validate configuration
         if can_validate and kwargs.get("validate", True):
             r = conn.validate(source=kwargs["target"])
             if r.failed:
-                raise RuntimeError(r.result)
+                raise RuntimeError(f"validate failed: {r.result}")
             result.append({"validate": r.result})
         # run commit
         if kwargs["target"] == "candidate" and has_candidate_datastore:
-            r = conn.commit()
-            if r.failed:
-                raise RuntimeError(r.result)
-            result.append({"commit": r.result})
+            # run commit confirmed
+            if can_commit_confirmed and do_commit_confirmed:
+                pid = "dob04041989"
+                r = conn.commit(timeout=confirm_delay, confirmed=True, persist=pid)
+                if r.failed:
+                    # Juniper uses juniper custom RPC for commit and throws
+                    # syntax error for "persis" argument, do normal commit
+                    if "syntax error" in r.result:
+                        r = conn.commit()
+                        if r.failed:
+                            raise RuntimeError(f"commit failed: {r.result}")
+                        result.append({"commit": r.result})
+                    else:
+                        raise RuntimeError(
+                            f"commit_confermed commit failed: {r.result}"
+                        )
+                else:
+                    result.append({"commit_confirmed": r.result})
+                    # run final commit
+                    time.sleep(commit_final_delay)
+                    r = conn.commit(persist_id=pid)
+                    if r.failed:
+                        raise RuntimeError(
+                            f"commit_confermed final commit failed: {r.result}"
+                        )
+                    result.append({"commit": r.result})
+            # run normal commit
+            else:
+                r = conn.commit()
+                if r.failed:
+                    raise RuntimeError(f"commit failed: {r.result}")
+                result.append({"commit": r.result})
         # unlock target config/datastore
         r = conn.unlock(target=kwargs["target"])
         if r.failed:
-            raise RuntimeError(r.result)
+            raise RuntimeError(f"unlock failed: {r.result}")
     except:
         tb = traceback.format_exc()
         log.error("nornir_salt:scrapli_netconf_call transaction error: {}".format(tb))

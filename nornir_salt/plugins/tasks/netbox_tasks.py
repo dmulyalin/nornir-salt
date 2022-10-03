@@ -137,7 +137,7 @@ def sync_device_from_netbox(
 
     :param via: name of netbox instance connection parameters
     :param data_key: Nornir inventory data key name to save host's Netbox inventory
-    :return dict: Nornir results object with operation resut and ``status`` attribute
+    :return dict: Nornir results object with operation result and ``status`` attribute
         containing ``True`` if data synced and ``False`` if device not found
     """
     netbox_instances = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
@@ -162,7 +162,7 @@ def sync_device_from_netbox(
         status = True
     else:
         host_obj.data.update(dict(response))
-        result = f"Netbox device data synced to hosts's data"
+        result = "Netbox device data synced to hosts's data"
         status = True
 
     return Result(host=task.host, result=result, status=status)
@@ -409,7 +409,7 @@ def sync_device_to_netbox(
             status = True
         # create new device
         else:
-            response = nb.dcim.devices.create(nb_device_data)
+            _ = nb.dcim.devices.create(nb_device_data)
             result = f"Created Netbox device '{device_name}' using Nornir host's '{data_key}' data"
             status = True
 

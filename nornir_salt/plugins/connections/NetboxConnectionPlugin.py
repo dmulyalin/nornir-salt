@@ -84,7 +84,7 @@ class NetboxConnectionPlugin:
     `pynetbox.api documentation <https://pynetbox.readthedocs.io/en/latest/>`_
 
     Authentication - by default ``token`` takes precedence over ``auth``. If no ``token``
-    or ``auth`` defined in instance parameters, ``auth`` credentials automatically formed 
+    or ``auth`` defined in instance parameters, ``auth`` credentials automatically formed
     using host's username and password attributes.
 
     Alternatively, Netbox connection parameters can be stored in ``user_defined ``

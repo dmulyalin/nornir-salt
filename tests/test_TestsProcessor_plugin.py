@@ -41,11 +41,25 @@ hosts:
     hostname: 192.168.217.10
     platform: ios
     groups: [lab]
+    data:
+      interfaces:
+        - name: Eth1
+          description: Circuit CX54DF323
+          mtu: 1500
+          line: line protocol is up
+          admin: admin up
+        - name: Eth2
+          description: OOB Connection
+          mtu: 9200
+          line: line protocol is up
+          admin: admin up
+      version: xe1.2.3.4
   IOL2:
     hostname: 192.168.217.7
     platform: ios
     groups: [lab]
-
+    data:
+      version: xe1.2.3.4
 groups:
   lab:
     username: cisco
@@ -2734,3 +2748,186 @@ ntp server 7.7.7.7
                                                          'task': 'show run | inc ntp',
                                                          'test': 'contains'}}}
                                                          
+def grouped_task_for_test_jinja2_suite(task):
+    # run first subtask
+    task.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+Interface description Circuit CX54DF323
+Interface mtu 1500
+Interface line protocol is up
+Interface admin state - admin up
+        """
+        },
+        name="show interface Eth1",
+    )
+    # run second subtask
+    task.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+Interface description OOB Connection
+Interface mtu 9200
+Interface line protocol is up
+Interface admin state - admin up
+        """
+        },
+        name="show interface Eth2",
+    )
+    # run third subtask
+    task.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": "Version: xe1.2.3.4",
+            "IOL2": "Version: xe4.3.2.1",
+        },
+        name="show version",
+    )
+    return Result(host=task.host)
+    
+@skip_if_no_nornir
+def test_jinja2_suite():
+    """
+    IOL1 inventory has this data:
+    data:
+      interfaces:
+        - name: Eth1
+          description: Circuit CX54DF323
+          mtu: 1500
+          line: line protocol is up
+          admin: admin up
+        - name: Eth2
+          description: OOB Connection
+          mtu: 9200
+          line: line protocol is up
+          admin: admin up
+      version: xe1.2.3.4
+    IOL2 inventory has this data:
+    data:
+      version: xe1.2.3.4    
+    """
+    tests = [
+    """
+- task: "show version"
+  name: "Test {{ host.name }} version"
+  pattern: "{{ host.version }}"
+  test: contains
+{% for interface in host.interfaces %}
+- task: "show interface {{ interface.name }}"
+  name: "Test {{ host.name }} interface {{ interface.name }} MTU"
+  test: contains
+  pattern: {{ interface.mtu }}
+- task: "show interface {{ interface.name }}"
+  name: "Test {{ host.name }} interface {{ interface.name }} description"
+  test: contains
+  pattern: {{ interface.description }}
+{% endfor %}
+    """,
+    """
+{% for interface in host.interfaces %}
+- task: "show interface {{ interface.name }}"
+  name: "Test {{ host.name }} interface {{ interface.name }} status"
+  test: contains_lines
+  pattern: 
+  - {{ interface.line }}
+  - {{ interface.admin }}
+{% endfor %}
+    """
+    ]            
+    nr.data.reset_failed_hosts()
+    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)])
+    output = nr_with_tests.run(task=grouped_task_for_test_jinja2_suite)
+    res = ResultSerializer(output, add_details=True, to_dict=True)
+    pprint.pprint(res, width=150)
+    assert res["IOL1"]["Test IOL1 interface Eth1 MTU"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth2 MTU"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth1 description"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth2 description"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth1 status"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth2 status"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 version"]["result"] == "PASS"
+    assert res["IOL2"]["Test IOL2 version"]["result"] == "FAIL"
+    
+@skip_if_no_nornir
+def test_jinja2_suite_tests_data():
+    """
+    This tes add tests_data to testsprovessor, that data used to render tests suite
+    """
+    tests_data = {
+    "IOL1": {
+            "interfaces": [
+                {
+                    "name": "Eth1",
+                    "description": "Circuit CX54DF323",
+                    "mtu": 1500,
+                    "line": "line protocol is up",
+                    "admin": "admin up",
+                },
+                {
+                    "name": "Eth2",
+                    "description": "OOB Connection",
+                    "mtu": 9200,
+                    "line": "line protocol is up",
+                    "admin": "admin up",
+                },
+            ],
+            "version": "xe1.2.3.4"
+        },
+    "IOL2": {"version": "xe1.2.3.4"},
+    }
+    tests = [
+    """
+- task: "show version"
+  name: "Test {{ host.name }} version"
+  pattern: "{{ tests_data[host.name]['version'] }}"
+  test: contains
+{% if host.name == 'IOL1' %}
+{% for interface in tests_data[host.name]['interfaces'] %}
+- task: "show interface {{ interface.name }}"
+  name: "Test {{ host.name }} interface {{ interface.name }} MTU"
+  test: contains
+  pattern: {{ interface.mtu }}
+- task: "show interface {{ interface.name }}"
+  name: "Test {{ host.name }} interface {{ interface.name }} description"
+  test: contains
+  pattern: {{ interface.description }}
+{% endfor %}
+{% endif %}
+    """,
+    """
+{% if host.name == 'IOL1' %}
+{% for interface in tests_data[host.name]['interfaces'] %}
+- task: "show interface {{ interface.name }}"
+  name: "Test {{ host.name }} interface {{ interface.name }} status"
+  test: contains_lines
+  pattern: 
+  - {{ interface.line }}
+  - {{ interface.admin }}
+{% endfor %}
+{% endif %}
+    """
+    ]            
+    nr.data.reset_failed_hosts()
+    nr_with_tests = nr.with_processors(
+        [
+            TestsProcessor(
+                tests, 
+                remove_tasks=True, 
+                build_per_host_tests=True, 
+                tests_data=tests_data
+            )
+        ]
+    )
+    output = nr_with_tests.run(task=grouped_task_for_test_jinja2_suite)
+    res = ResultSerializer(output, add_details=True, to_dict=True)
+    pprint.pprint(res, width=150)
+    assert res["IOL1"]["Test IOL1 interface Eth1 MTU"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth2 MTU"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth1 description"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth2 description"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth1 status"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 interface Eth2 status"]["result"] == "PASS"
+    assert res["IOL1"]["Test IOL1 version"]["result"] == "PASS"
+    assert res["IOL2"]["Test IOL2 version"]["result"] == "FAIL"
+	

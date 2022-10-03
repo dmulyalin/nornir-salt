@@ -209,6 +209,113 @@ In above example path ``interfaces.*`` tells ``TestsProcessor`` to retrieve data
 results under ``interfaces`` key, single star ``*`` symbol tells to iterate over list
 items, instead of star, list item index can be given as well, e.g. ``interfaces.0``.
 
+Using Tests Suite Templates
+===========================
+
+Starting with Nornir-Salt version 0.16.0 support added to dynamically
+render hosts' tests suites from hosts' data using Jinja2 templates
+YAML formatted strings.
+
+.. warning:: Nornir-Salt tasks coded to make use of per-host
+    commands - ``netmiko_send_commands``, ``scrapli_send_commands``,
+    ``pyats_send_commands``, ``napalm_send_commands`` - custom task
+    plugins can make use of ``host.data["__task__"]["commands"]``
+    commands list to produce per host commands output. This is required
+    for TestsProcessor to work, as sub-task should be named after
+    cli commands they containing results for.
+
+Given hosts' Nornir inventory data content::
+
+    hosts:
+      IOL1:
+        data:
+          interfaces_test:
+          - admin_status: is up
+            description: Description
+            line_status: line protocol is up
+            mtu: IP MTU 9200
+            name: Ethernet1
+          - admin_status: is up
+            description: Description
+            line_status: line protocol is up
+            mtu: IP MTU 65535
+            name: Loopback1
+          software_version: cEOS
+      IOL2:
+        data:
+          software_version: cEOS
+
+Sample code to run test suite Jinja2 template::
+
+    import pprint
+
+    from nornir import InitNornir
+    from nornir_salt.plugins.processors import TestsProcessor
+    from nornir_salt.plugins.functions import ResultSerializer
+    from nornir_salt.plugins.tasks import netmiko_send_commands
+
+    nr = InitNornir(config_file="nornir.yaml")
+
+    tests = [
+        '''
+    - task: "show version"
+      test: contains
+      pattern: "{{ host.software_version }}"
+      name: check ceos version
+
+    {% for interface in host.interfaces_test %}
+    - task: "show interface {{ interface.name }}"
+      test: contains_lines
+      pattern:
+        - {{ interface.admin_status }}
+        - {{ interface.line_status }}
+        - {{ interface.mtu }}
+        - {{ interface.description }}
+      name: check interface {{ interface.name }} status
+    {% endfor %}
+    ''',
+        {
+            "name": "Test NTP config",
+            "task": "show run | inc ntp",
+            "test": "contains",
+            "pattern": "ntp server 7.7.7.8",
+        }
+    ]
+
+    nr_with_tests = nr.with_processors([
+        TestsProcessor(tests)
+    ])
+
+    results = nr_with_tests.run(
+        task=netmiko_send_commands
+    )
+
+    results_dictionary = ResultSerializer(results, to_dict=False, add_details=False)
+
+    pprint.pprint(results_dictionary)
+
+    # should print something like:
+
+    # [{'host': 'IOL1', 'name': 'show version', 'result': 'PASS'},
+    # {'host': 'IOL2', 'name': 'show version', 'result': 'PASS'},
+    # {'host': 'IOL1', 'name': 'show interface Ethernet1', 'result': 'PASS'},
+    # {'host': 'IOL1', 'name': 'show interface Ethernet2', 'result': 'PASS'},
+    # {'host': 'IOL1', 'name': 'show run | inc ntp', 'result': 'PASS'},
+    # {'host': 'IOL2', 'name': 'show run | inc ntp', 'result': 'PASS'}]
+
+Test suite template rendered using individual host's data
+forming per-host test suite. CLI show commands to collect
+from host device automatically extracted from per-host
+test suite. For example, for above data these are commands
+collected from devices:
+
+- **ceos1** - "show version", "show interface Ethernet1",
+  "show interface Ethernet2", "show run | inc ntp"
+- **ceos2** - "show version", "show run | inc ntp"
+
+Collected show commands output tested using rendered test
+suite on a per-host basis.
+
 Tests Reference
 ===============
 
@@ -226,7 +333,10 @@ import traceback
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
-from nornir_salt.utils.pydantic_models import modelTestsProcessorSuite
+from nornir_salt.utils.pydantic_models import (
+    modelTestsProcessorSuite,
+    modelTestsProcessorTests,
+)
 
 log = logging.getLogger(__name__)
 
@@ -237,6 +347,22 @@ try:
 except ImportError:
     log.debug("Failed to import Cerberus library, install: pip install cerberus")
     HAS_CERBERUS = False
+
+try:
+    import jinja2
+
+    HAS_JINJA2 = True
+except ImportError:
+    log.debug("Failed to import Jinja2 library, install: pip install Jinja2")
+    HAS_JINJA2 = False
+
+try:
+    import yaml
+
+    HAS_YAML = True
+except ImportError:
+    log.debug("Failed to import PyYAML library, install: pip install PyYAML")
+    HAS_YAML = False
 
 # return datum template dictionary
 test_result_template = {
@@ -473,7 +599,7 @@ def CustomFunctionTest(
     function_kwargs=None,
     globals_dictionary=None,
     add_host=False,
-    **kwargs
+    **kwargs,
 ):
     """
     Wrapper around calling custom function to perform results checks.
@@ -678,7 +804,7 @@ def ContainsLinesTest(
     count=None,
     revert=False,
     err_msg=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Function to check that all lines contained in result output.
@@ -731,7 +857,7 @@ def ContainsTest(
     count_le=None,
     revert=False,
     err_msg=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Function to check if pattern contained in output of given result.
@@ -852,7 +978,6 @@ test_functions_dispatcher = {
 
 
 class TestsProcessor:
-
     """
     TestsProcessor designed to run a series of tests for Nornir
     tasks results.
@@ -861,19 +986,141 @@ class TestsProcessor:
     :param remove_tasks: (bool) if True (default) removes tasks output from results
     :param kwargs: (any) if provided, ``**kwargs`` will form a single test item
     :param failed_only: (bool) if True, includes only failed tests in results, default is False
+    :param build_per_host_tests: (bool) if True, renders and forms per host tests and show commands
+    :param jinja_kwargs: (dict) Dictionary of arguments for ``jinja2.Template`` object,
+        default is ``{"trim_blocks": True, "lstrip_blocks": True}``
+    :param tests_data: (dict) dictionary of parameters to supply for test suite templates rendering
     """
 
-    def __init__(self, tests=None, remove_tasks=True, failed_only=False, **kwargs):
+    def __init__(
+        self,
+        tests=None,
+        remove_tasks=True,
+        failed_only=False,
+        jinja_kwargs=None,
+        tests_data=None,
+        build_per_host_tests=False,
+        **kwargs,
+    ):
         self.tests = tests if tests else [kwargs]
         self.remove_tasks = remove_tasks
-        self.len_tasks = 0
+        self.len_tasks = {}
         self.failed_only = failed_only
+        self.jinja_kwargs = jinja_kwargs or {"trim_blocks": True, "lstrip_blocks": True}
+        self.tests_data = tests_data or {}
+        self.build_per_host_tests = build_per_host_tests
 
-        # validate tests and other parameters
-        _ = modelTestsProcessorSuite(tests=self.tests)
+        # do preliminary tests suite validation
+        if build_per_host_tests:
+            _ = modelTestsProcessorTests(tests=self.tests)
+        # do full test suite validation
+        else:
+            _ = modelTestsProcessorSuite(tests=self.tests)
+
+    def _render(self, template, data: dict = None, load: bool = False):
+        """
+        Helper function to render test items and test tasks
+
+        :param template: string or list of strings to render
+        :param load: if True, loads rendered string using YAML module
+        :param data: dictionary with data to use for template rendering
+        :return: string or list of dictionaries
+        """
+        data = data or {}
+        ret = []
+
+        # render template string(s)
+        if isinstance(template, str):
+            template_obj = jinja2.Template(template, **self.jinja_kwargs)
+            ret = template_obj.render(data)
+        # run recursion if template is a list of strings
+        elif isinstance(template, list):
+            ret = [self._render(i, data) for i in template]
+
+        # process rendered string further
+        if isinstance(ret, str):
+            # check if test rendering produced empty string
+            if not ret.strip():
+                ret = None
+            # load rendered data from YAML string
+            elif load is True:
+                ret = yaml.safe_load(ret)
+                if not isinstance(ret, list):
+                    raise ValueError(
+                        f"Rendered string did not produce list but '{type(ret)}'"
+                    )
+
+        return ret
 
     def task_started(self, task: Task) -> None:
-        pass
+        """
+        This callback called on task start. This method forms per host
+        test suits, rendering any of test items if it is a string, extracts
+        per host show commands to collect from per-host tests suite items.
+        """
+        if not self.build_per_host_tests:
+            return
+
+        hosts = task.nornir.inventory.hosts
+
+        # form per host tests suite
+        for host in hosts.values():
+            host.data.setdefault("__task__", {})
+            host.data["__task__"]["tests_suite"] = []
+            host.data["__task__"]["commands"] = []
+            host_data = {
+                "host": host,
+                "task": task,
+                "job_data": host.data.get("job_data", {}),
+                "tests_data": self.tests_data,
+            }
+            # iterate over test suite items
+            for test in self.tests:
+                tests_ = []
+                # if test is a string render it using Jinja2 and load using YAML
+                if isinstance(test, str):
+                    tests_ = self._render(test, host_data, load=True)
+                    if tests_ is None:  # skip if not rendered
+                        continue
+                # if test item is a list, transform it to a dictionary
+                elif isinstance(test, list):
+                    test_ = {"test": test[1], "pattern": test[2]}
+                    test_["name"] = test[3] if len(test) == 4 else None
+                    test_["task"] = self._render(test[0], host_data)
+                    if test_["task"] is None:  # skip if not rendered
+                        continue
+                    if test_["test"] in ["eval", "EvalTest"]:
+                        test_["expr"] = test_.pop("pattern")
+                    tests_ = [test_]
+                # use test dict item as is but make a copy of it
+                elif isinstance(test, dict):
+                    test_ = test.copy()
+                    if test_.get("task"):
+                        test_["task"] = self._render(test_["task"], host_data)
+                        if test_["task"] is None:  # skip if not rendered
+                            continue
+                    tests_ = [test_]
+                else:
+                    raise ValueError(f"Unsupported test item type '{type(test)}'")
+
+                # process tests items further
+                for t in tests_:
+                    # form per-host commands skipping known tasks that are not a cli command
+                    if not t.get("task") or t["task"] in ["run_ttp"]:
+                        continue
+                    elif isinstance(t["task"], list):
+                        for cmd in t["task"]:
+                            if cmd not in host.data["__task__"]["commands"]:
+                                host.data["__task__"]["commands"].append(cmd)
+                    elif isinstance(t["task"], str):
+                        if t["task"] not in host.data["__task__"]["commands"]:
+                            host.data["__task__"]["commands"].append(t["task"])
+
+                # add formed tests to host's tests suite
+                host.data["__task__"]["tests_suite"].extend(tests_)
+
+            # validate host's tests suite content
+            _ = modelTestsProcessorSuite(tests=host.data["__task__"]["tests_suite"])
 
     def task_instance_started(self, task: Task, host: Host) -> None:
         pass
@@ -884,21 +1131,28 @@ class TestsProcessor:
         """
         Method to iterate over individual hosts' result after task/sub-tasks completion.
         """
-        # check if has failed tasks, do nothing in such a case
+        # check if has failed tasks, do nothing in such case
         if result.failed:
             log.error("nornir_salt:TestsProcessor has failed tasks, do nothing, return")
             return
 
         try:
-            # record the len of tasks to clean them up if required
+            # record the length of tasks to clean them up if required
             if self.remove_tasks:
-                self.len_tasks = len(result)
-            # do the tests
-            for test in self.tests:
-                # make a copy of test item to not iterfere with other hosts' testing
-                test = test.copy()
+                self.len_tasks[host.name] = len(result)
 
-                # if test item is a list, transform it to dictionary
+            # decide on tests content
+            if self.build_per_host_tests:
+                tests_suite = host.data["__task__"]["tests_suite"]
+            else:
+                tests_suite = self.tests
+
+            # do the tests
+            for test in tests_suite:
+                # make a copy of test item to not interfere with other hosts' testing
+                test = test if self.build_per_host_tests else test.copy()
+
+                # if test item is a list, transform it to a dictionary
                 if isinstance(test, list):
                     test = {
                         "task": test[0],
@@ -1037,11 +1291,18 @@ class TestsProcessor:
 
     def task_completed(self, task: Task, result: AggregatedResult) -> None:
 
+        # remove tests suite from host's data
+        for host in task.nornir.inventory.hosts.values():
+            _ = host.data.get("__task__", {}).pop("tests_suite", None)
+            _ = host.data.get("__task__", {}).pop("commands", None)
+
         # remove tasks with device's output
         if self.remove_tasks:
             for hostname, results in result.items():
-                if len(results) >= self.len_tasks:
-                    for i in range(0, self.len_tasks):
+                if hostname not in self.len_tasks:
+                    continue
+                if len(results) >= self.len_tasks[hostname]:
+                    for i in range(0, self.len_tasks[hostname]):
                         _ = results.pop(0)
 
         # remove non failed tasks if requested to do so
