@@ -115,6 +115,7 @@ Call Functions Reference
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._delete_host
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._load
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._list_hosts
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._list_hosts_platforms
 """
 import logging
 
@@ -321,6 +322,22 @@ def _list_hosts(nr, **kwargs):
     return list(hosts.inventory.hosts.keys())
 
 
+def _list_hosts_platforms(nr, **kwargs):
+    """
+    Function to return a dictionary keyed by host names containing platforms details.
+
+    Supports filtering using FFun function.
+
+    :param nr: (obj) Nornir object
+    :param kwargs: (dict) FFun function arguments to filter hosts
+    :return: (list) list of host names
+    """
+    hosts = FFun(nr, kwargs=kwargs)
+    return {
+        host_name: host.platform for host_name, host in hosts.inventory.hosts.items()
+    }
+
+
 fun_dispatcher = {
     "create_host": _create_host,
     "update_host": _update_host,
@@ -333,6 +350,7 @@ fun_dispatcher = {
     "read_inventory": _read_inventory,
     "load": _load,
     "list_hosts": _list_hosts,
+    "list_hosts_platforms": _list_hosts_platforms,
 }
 
 
@@ -354,5 +372,6 @@ def InventoryFun(nr, call, **kwargs):
     - ``load`` - calls ``_load``, to simplify calling multiple functions
     - ``read_inventory`` - calls ``_read_inventory``, read inventory content for groups, default and hosts
     - ``list_hosts`` - calls ``_list_hosts``, return a list of inventory's host names
+    - ``list_hosts_platforms`` - calls ``_list_hosts_platforms``, return a dictionary of hosts' platforms
     """
     return fun_dispatcher[call](nr, **kwargs)
