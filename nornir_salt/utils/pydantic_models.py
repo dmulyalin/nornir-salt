@@ -548,16 +548,32 @@ class modelTestsProcessorTest(BaseModel):
 
 
 class modelTestsProcessorTests(BaseModel):
-    tests: Union[List[List[StrictStr]], List[Dict], List[StrictStr]]
-
-
+    tests: Union[
+        List[List[StrictStr]], 
+        List[Dict], 
+        List[StrictStr],
+        Dict[StrictStr, List[Dict]]
+    ]
+    
 class modelTestsProcessorSuite(BaseModel):
-    """Model for TestsProcessor tests suite list"""
+    """Model for TestsProcessor tests suite"""
 
-    tests: List[
-        Union[
-            modelTestsProcessorTest,
-            conlist(StrictStr, min_items=3, max_items=4),
+    tests: Union[
+        List[
+            Union[
+                modelTestsProcessorTest,
+                conlist(StrictStr, min_items=3, max_items=4),
+                StrictStr,
+            ]
+        ],
+        Dict[
             StrictStr,
+            List[
+                Union[
+                    modelTestsProcessorTest,
+                    conlist(StrictStr, min_items=3, max_items=4),
+                    StrictStr,
+                ]
+            ]            
         ]
     ]

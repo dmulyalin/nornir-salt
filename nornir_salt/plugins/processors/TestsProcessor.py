@@ -330,6 +330,7 @@ Tests Reference
 import logging
 import re
 import traceback
+import fnmatch
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
@@ -337,6 +338,7 @@ from nornir_salt.utils.pydantic_models import (
     modelTestsProcessorSuite,
     modelTestsProcessorTests,
 )
+from nornir_salt.plugins.functions import FFun, FFun_functions
 
 log = logging.getLogger(__name__)
 
@@ -987,8 +989,12 @@ class TestsProcessor:
     :param kwargs: (any) if provided, ``**kwargs`` will form a single test item
     :param failed_only: (bool) if True, includes only failed tests in results, default is False
     :param build_per_host_tests: (bool) if True, renders and forms per host tests and show commands
+    :param render_tests: (bool) if True will use Jinja2 to render tests, rendering skipped otherwise
     :param jinja_kwargs: (dict) Dictionary of arguments for ``jinja2.Template`` object,
         default is ``{"trim_blocks": True, "lstrip_blocks": True}``
+    :param subset: (list or str) list or string with comma separated glob patterns to
+        match tests' names to execute. Patterns are not case-sensitive. Uses ``fnmatch`` 
+        Python built-in function to do glob patterns matching
     :param tests_data: (dict) dictionary of parameters to supply for test suite templates rendering
     """
 
@@ -1000,6 +1006,8 @@ class TestsProcessor:
         jinja_kwargs=None,
         tests_data=None,
         build_per_host_tests=False,
+        render_tests=True,
+        subset=None,
         **kwargs,
     ):
         self.tests = tests if tests else [kwargs]
@@ -1009,7 +1017,11 @@ class TestsProcessor:
         self.jinja_kwargs = jinja_kwargs or {"trim_blocks": True, "lstrip_blocks": True}
         self.tests_data = tests_data or {}
         self.build_per_host_tests = build_per_host_tests
-
+        self.render_tests = render_tests
+        self.subset = [
+            i.strip() for i in subset.split(",")
+        ] if isinstance(subset, str) else (subset or [])
+        
         # do preliminary tests suite validation
         if build_per_host_tests:
             _ = modelTestsProcessorTests(tests=self.tests)
@@ -1029,14 +1041,17 @@ class TestsProcessor:
         data = data or {}
         ret = []
 
-        # render template string(s)
-        if isinstance(template, str):
-            template_obj = jinja2.Template(template, **self.jinja_kwargs)
-            ret = template_obj.render(data)
-        # run recursion if template is a list of strings
-        elif isinstance(template, list):
-            ret = [self._render(i, data) for i in template]
-
+        if self.render_tests:
+            # render template string(s)
+            if isinstance(template, str):
+                template_obj = jinja2.Template(template, **self.jinja_kwargs)
+                ret = template_obj.render(data)
+            # run recursion if template is a list of strings
+            elif isinstance(template, list):
+                ret = [self._render(i, data) for i in template]
+        else:
+            ret = template
+            
         # process rendered string further
         if isinstance(ret, str):
             # check if test rendering produced empty string
@@ -1074,8 +1089,13 @@ class TestsProcessor:
                 "job_data": host.data.get("job_data", {}),
                 "tests_data": self.tests_data,
             }
+            #  retrieve tests list
+            if isinstance(self.tests, list):
+                host_tests = self.tests
+            elif isinstance(self.tests, dict):
+                host_tests = self.tests.get(host.name, [])
             # iterate over test suite items
-            for test in self.tests:
+            for test in host_tests:
                 tests_ = []
                 # if test is a string render it using Jinja2 and load using YAML
                 if isinstance(test, str):
@@ -1115,16 +1135,29 @@ class TestsProcessor:
                     elif isinstance(t["task"], str):
                         if t["task"] not in host.data["__task__"]["commands"]:
                             host.data["__task__"]["commands"].append(t["task"])
-
-                # add formed tests to host's tests suite
-                host.data["__task__"]["tests_suite"].extend(tests_)
-
+                
+                # filter tests
+                for t in tests_:
+                    # filter tests by using subset list
+                    if self.subset and not any(
+                        map(
+                            lambda m: fnmatch.fnmatch(t["name"], m), 
+                            self.subset
+                        )
+                    ):
+                        continue
+                    # filter tests by using Fx filters
+                    if "cli" in t:
+                        filtered_hosts = FFun(task.nornir, **t["cli"])
+                        if host.name not in filtered_hosts.inventory.hosts:
+                            continue
+                    host.data["__task__"]["tests_suite"].append(t)
             # validate host's tests suite content
             _ = modelTestsProcessorSuite(tests=host.data["__task__"]["tests_suite"])
 
     def task_instance_started(self, task: Task, host: Host) -> None:
         pass
-
+        
     def task_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
@@ -1136,11 +1169,9 @@ class TestsProcessor:
             log.error("nornir_salt:TestsProcessor has failed tasks, do nothing, return")
             return
 
+        test_results = []
+        
         try:
-            # record the length of tasks to clean them up if required
-            if self.remove_tasks:
-                self.len_tasks[host.name] = len(result)
-
             # decide on tests content
             if self.build_per_host_tests:
                 tests_suite = host.data["__task__"]["tests_suite"]
@@ -1213,7 +1244,7 @@ class TestsProcessor:
                     test["success"] = False
                     ret = {**test_result_template.copy(), **test}
                     _ = ret.pop("expr", None)
-                    result.append(Result(host=host, **ret))
+                    test_results.append(Result(host=host, **ret))
                     continue
 
                 # get test function and function kwargs
@@ -1267,11 +1298,11 @@ class TestsProcessor:
                     res = Result(host=host, **ret)
 
                 if isinstance(res, list):
-                    result.extend(res)
+                    test_results.extend(res)
                 else:
-                    result.append(res)
+                    test_results.append(res)
         except:
-            result.append(
+            test_results.append(
                 Result(
                     host=host,
                     exception=traceback.format_exc(),
@@ -1280,6 +1311,12 @@ class TestsProcessor:
                     name="nornir-salt:TestsProcessor task_instance_completed error",
                 )
             )
+        # remove tasks with device's output
+        if self.remove_tasks:
+            while result:
+                _ = result.pop()
+        # save test results
+        result.extend(test_results)
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
         pass
@@ -1295,15 +1332,6 @@ class TestsProcessor:
         for host in task.nornir.inventory.hosts.values():
             _ = host.data.get("__task__", {}).pop("tests_suite", None)
             _ = host.data.get("__task__", {}).pop("commands", None)
-
-        # remove tasks with device's output
-        if self.remove_tasks:
-            for hostname, results in result.items():
-                if hostname not in self.len_tasks:
-                    continue
-                if len(results) >= self.len_tasks[hostname]:
-                    for i in range(0, self.len_tasks[hostname]):
-                        _ = results.pop(0)
 
         # remove non failed tasks if requested to do so
         if self.failed_only:
