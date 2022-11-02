@@ -1124,20 +1124,8 @@ class TestsProcessor:
                     raise ValueError(f"Unsupported test item type '{type(test)}'")
 
                 # process tests items further
-                for t in tests_:
-                    # form per-host commands skipping known tasks that are not a cli command
-                    if not t.get("task") or t["task"] in ["run_ttp"]:
-                        continue
-                    elif isinstance(t["task"], list):
-                        for cmd in t["task"]:
-                            if cmd not in host.data["__task__"]["commands"]:
-                                host.data["__task__"]["commands"].append(cmd)
-                    elif isinstance(t["task"], str):
-                        if t["task"] not in host.data["__task__"]["commands"]:
-                            host.data["__task__"]["commands"].append(t["task"])
-                
-                # filter tests
-                for t in tests_:
+                while tests_:
+                    t = tests_.pop()
                     # filter tests by using subset list
                     if self.subset and not any(
                         map(
@@ -1151,7 +1139,20 @@ class TestsProcessor:
                         filtered_hosts = FFun(task.nornir, **t["cli"])
                         if host.name not in filtered_hosts.inventory.hosts:
                             continue
+                    # skip known tasks that are not a cli command
+                    if not t.get("task") or t["task"] in ["run_ttp"]:
+                        continue
+                    # form per-host commands
+                    elif isinstance(t["task"], list):
+                        for cmd in t["task"]:
+                            if cmd not in host.data["__task__"]["commands"]:
+                                host.data["__task__"]["commands"].append(cmd)
+                    elif isinstance(t["task"], str):
+                        if t["task"] not in host.data["__task__"]["commands"]:
+                            host.data["__task__"]["commands"].append(t["task"])
+
                     host.data["__task__"]["tests_suite"].append(t)
+
             # validate host's tests suite content
             _ = modelTestsProcessorSuite(tests=host.data["__task__"]["tests_suite"])
 
