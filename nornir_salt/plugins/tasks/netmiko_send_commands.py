@@ -112,6 +112,9 @@ def netmiko_send_commands(
             exception="No nornir_netmiko found, is it installed?",
         )
 
+    # increase read timeout to 30 from default 10 seconds
+    kwargs.setdefault("read_timeout", 30)
+    
     commands = cli_form_commands(
         task=task,
         commands=commands,

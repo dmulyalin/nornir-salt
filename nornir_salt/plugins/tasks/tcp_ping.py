@@ -42,12 +42,13 @@ tcp_ping reference
 
 .. autofunction:: nornir_salt.plugins.tasks.tcp_ping.tcp_ping
 """
-
+import logging
 import socket
 from typing import Optional, List
 
 from nornir.core.task import Result, Task
 
+log = logging.getLogger(__name__)
 
 def tcp_ping(
     task: Task, ports: List[int] = None, timeout: int = 1, host: Optional[str] = None
@@ -61,7 +62,7 @@ def tcp_ping(
     ports = ports or []
 
     if not ports:
-        ports = [task.host.port if task.host.port else 22]
+        ports = [int(task.host.port) if task.host.port else 22]
     elif isinstance(ports, int):
         ports = [ports]
 
