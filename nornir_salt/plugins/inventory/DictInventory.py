@@ -123,10 +123,10 @@ class DictInventory:
     :param defaults: dictionary with defaults data
     """
 
-    def __init__(self, hosts: Dict, groups: Dict, defaults: Dict) -> None:
-        self.hosts = hosts
-        self.groups = groups
-        self.defaults = defaults
+    def __init__(self, hosts: Dict = None, groups: Dict = None, defaults: Dict = None) -> None:
+        self.hosts = hosts or {}
+        self.groups = groups or {}
+        self.defaults = defaults or {}
 
     def load(self) -> Inventory:
         nr_defaults = _get_defaults(self.defaults)

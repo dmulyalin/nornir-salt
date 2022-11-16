@@ -64,22 +64,48 @@ defaults: {}
 lab_inventory_dict = yaml.safe_load(lab_inventory)
 
 
+lab_inventory_no_hosts = """
+groups:
+  lab:
+    username: cisco
+    password: cisco
+  global:
+    data:
+      domain: global.local
+      asn: 1
+  eu:
+    data:
+      asn: 65100
+  bma:
+    groups:
+        - eu
+        - global
+
+defaults: {}
+"""
+lab_inventory_dict_no_hosts = yaml.safe_load(lab_inventory_no_hosts)
+
+
 def init(opts):
     """
     Initiate nornir by calling InitNornir()
     """
     global skip_if_no_lab
 
+    options = {}
+    if "hosts" in opts:
+        options["hosts"] = opts["hosts"]
+    if "groups" in opts:
+        options["groups"] = opts["groups"]
+    if "defaults" in opts:
+        options["defaults"] = opts["defaults"]
+        
     nr = InitNornir(
         logging={"enabled": False},
         runner={"plugin": "serial"},
         inventory={
             "plugin": "DictInventory",
-            "options": {
-                "hosts": opts["hosts"],
-                "groups": opts.get("groups", {}),
-                "defaults": opts.get("defaults", {}),
-            },
+            "options": options
         },
     )
 
@@ -88,7 +114,6 @@ def init(opts):
 
 InventoryPluginRegister.register("DictInventory", DictInventory)
 
-nr = init(lab_inventory_dict)
 
 
 # ----------------------------------------------------------------------
@@ -98,9 +123,45 @@ nr = init(lab_inventory_dict)
 
 @skip_if_no_nornir
 def test_DictInvetnory_nested_groups():
+    nr = init(lab_inventory_dict)
     assert nr.inventory.hosts["IOL1"].get("asn") == 65100
     assert nr.inventory.hosts["IOL1"].get("domain") == "global.local"
     assert nr.inventory.hosts["IOL2"].get("asn") == 65100
     assert nr.inventory.hosts["IOL2"].get("domain") is None
 
 #test_DictInvetnory_nested_groups()
+
+@skip_if_no_nornir
+def test_DictInvetnory_no_hosts():
+    nr = init(lab_inventory_dict_no_hosts)
+    # import ipdb; ipdb.set_trace()
+    inventory = nr.inventory.dict()
+    assert inventory["hosts"] == {}
+    assert len(inventory["groups"]) > 0
+    assert len(inventory["defaults"]) > 0
+    
+# test_DictInvetnory_no_hosts()
+
+@skip_if_no_nornir
+def test_DictInvetnory_empty_inventory():
+    nr = init({})
+    # import ipdb; ipdb.set_trace()
+    inventory = nr.inventory.dict()
+    assert inventory["hosts"] == {}
+    assert inventory["groups"] == {}
+    assert all(v in [None, {}] for v in inventory["defaults"].values())
+    
+# test_DictInvetnory_empty_inventory()
+
+@skip_if_no_nornir
+def test_DictInvetnory_hosts_are_none():
+    inventory_data = yaml.safe_load(lab_inventory_no_hosts)
+    inventory_data["hosts"] = None
+    nr = init(inventory_data)
+    # import ipdb; ipdb.set_trace()
+    inventory = nr.inventory.dict()
+    assert inventory["hosts"] == {}
+    assert len(inventory["groups"]) > 0
+    assert len(inventory["defaults"]) > 0
+    
+# test_DictInvetnory_empty_inventory()
