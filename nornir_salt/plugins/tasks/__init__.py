@@ -20,7 +20,6 @@ from .pyats_send_commands import pyats_send_commands
 from .pyats_send_config import pyats_send_config
 from .pyats_genie_api import pyats_genie_api
 from .puresnmp_call import puresnmp_call
-from .netbox_tasks import netbox_tasks
 
 __all__ = (
     "tcp_ping",
@@ -52,5 +51,4 @@ __all__ = (
     "pyats_send_config",
     "pyats_genie_api",
     "puresnmp_call",
-    "netbox_tasks",
 )
