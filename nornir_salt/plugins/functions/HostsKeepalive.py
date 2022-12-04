@@ -87,8 +87,7 @@ def HostsKeepalive(nr):
                     )
                 # enlist connection plugins that does not maintain connection open
                 elif any(
-                    i in str(type(conn_obj)).lower()
-                    for i in ["http", "puresnmp", "netbox"]
+                    i in str(type(conn_obj)).lower() for i in ["http", "puresnmp"]
                 ):
                     is_alive = True
                 else:

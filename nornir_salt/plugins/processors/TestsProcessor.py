@@ -993,7 +993,7 @@ class TestsProcessor:
     :param jinja_kwargs: (dict) Dictionary of arguments for ``jinja2.Template`` object,
         default is ``{"trim_blocks": True, "lstrip_blocks": True}``
     :param subset: (list or str) list or string with comma separated glob patterns to
-        match tests' names to execute. Patterns are not case-sensitive. Uses ``fnmatch`` 
+        match tests' names to execute. Patterns are not case-sensitive. Uses ``fnmatch``
         Python built-in function to do glob patterns matching
     :param tests_data: (dict) dictionary of parameters to supply for test suite templates rendering
     """
@@ -1018,10 +1018,12 @@ class TestsProcessor:
         self.tests_data = tests_data or {}
         self.build_per_host_tests = build_per_host_tests
         self.render_tests = render_tests
-        self.subset = [
-            i.strip() for i in subset.split(",")
-        ] if isinstance(subset, str) else (subset or [])
-        
+        self.subset = (
+            [i.strip() for i in subset.split(",")]
+            if isinstance(subset, str)
+            else (subset or [])
+        )
+
         # do preliminary tests suite validation
         if build_per_host_tests:
             _ = modelTestsProcessorTests(tests=self.tests)
@@ -1051,7 +1053,7 @@ class TestsProcessor:
                 ret = [self._render(i, data) for i in template]
         else:
             ret = template
-            
+
         # process rendered string further
         if isinstance(ret, str):
             # check if test rendering produced empty string
@@ -1128,10 +1130,7 @@ class TestsProcessor:
                     t = tests_.pop()
                     # filter tests by using subset list
                     if self.subset and not any(
-                        map(
-                            lambda m: fnmatch.fnmatch(t["name"], m), 
-                            self.subset
-                        )
+                        map(lambda m: fnmatch.fnmatch(t["name"], m), self.subset)
                     ):
                         continue
                     # filter tests by using Fx filters
@@ -1158,7 +1157,7 @@ class TestsProcessor:
 
     def task_instance_started(self, task: Task, host: Host) -> None:
         pass
-        
+
     def task_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
@@ -1171,7 +1170,7 @@ class TestsProcessor:
             return
 
         test_results = []
-        
+
         try:
             # decide on tests content
             if self.build_per_host_tests:

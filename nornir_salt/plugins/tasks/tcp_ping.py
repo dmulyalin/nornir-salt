@@ -50,6 +50,7 @@ from nornir.core.task import Result, Task
 
 log = logging.getLogger(__name__)
 
+
 def tcp_ping(
     task: Task, ports: List[int] = None, timeout: int = 1, host: Optional[str] = None
 ) -> Result:

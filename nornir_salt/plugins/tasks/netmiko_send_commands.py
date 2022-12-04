@@ -114,7 +114,7 @@ def netmiko_send_commands(
 
     # increase read timeout to 30 from default 10 seconds
     kwargs.setdefault("read_timeout", 30)
-    
+
     commands = cli_form_commands(
         task=task,
         commands=commands,
