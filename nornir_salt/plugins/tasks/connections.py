@@ -54,6 +54,7 @@ API reference
 import time
 import traceback
 import logging
+import copy
 
 from typing import Optional, Any, Dict
 from nornir.core.task import Result
@@ -175,9 +176,53 @@ def conn_open(
               deprecated_creds:
                 password: foo
                 username: bar
+                extras:
+                  optional_args:
+                    key_file: False
               local_account:
                 password: nornir
                 username: nornir
+
+    Starting with nornir-salt version 0.19.0 support added to specify per-connection
+    parameters using ``connection_options`` argument::
+
+        default:
+          data:
+            credentials:
+              local_creds:
+                # these params are for Netmiko
+                username: nornir
+                password: nornir
+                platform: arista_eos
+                port: 22
+                extras:
+                  conn_timeout: 10
+                  auto_connect: True
+                  session_timeout: 60
+                connection_options:
+                  # Napalm specific parameters
+                  napalm:
+                    username: nornir
+                    platform: eos
+                    port: 80
+                    extras:
+                      optional_args:
+                        transport: http
+                        eos_autoComplete: None
+                  # Scrapli specific parameters
+                  scrapli:
+                    password: nornir
+                    platform: arista_eos
+                    port: 22
+                    extras:
+                      auth_strict_key: False
+                      ssh_config_file: False
+              local_creds_old:
+                username: nornir2
+                password: nornir2
+
+    ``connection_options`` parameters are preferred and override
+    higher level parameters.
     """
     reconnect = reconnect or []
     ret = {}
@@ -213,24 +258,34 @@ def conn_open(
         if not isinstance(param, dict):
             raise TypeError("'{}' parameters not found or invalid".format(param_name))
 
+        # extract connection_options and merge with params for non kwargs params
+        if index > 0:
+            param = copy.deepcopy(param)
+            param.update(param.pop("connection_options", {}).get(conn_name, {}))
+
         try:
+            if index == 0:
+                res_msg = f"{conn_name} connected with primary connection parameters"
+                log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' connecting with primary connection parameters"
+            elif isinstance(param_name, str):
+                res_msg = (
+                    f"{conn_name} connected with '{param_name}' connection parameters"
+                )
+                log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' re-connecting with '{param_name}' connection parameters"
+            else:
+                res_msg = f"{conn_name} connected with reconnect index '{index - 1}' connection parameters"
+                log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' re-connecting with index '{index - 1}' connection parameters"
+            log.info(log_msg)
+            # establish host connection
             host.open_connection(
                 **param, connection=conn_name, configuration=task.nornir.config
             )
-            if index == 0:
-                msg = "Connected with 'kwargs' parameters"
-            elif isinstance(param_name, str):
-                msg = "Connected with '{}' parameters, reconnect index '{}'".format(
-                    param_name, index - 1
-                )
-            else:
-                msg = "Connected with reconnect index '{}'".format(index - 1)
-            ret = {"result": msg}
+            ret = {"result": res_msg}
             break
         except:
             tb = traceback.format_exc()
             ret = {
-                "result": f"Connection failed\n\n{tb}",
+                "result": f"{conn_name} connection failed\n\n{tb}",
                 "exception": tb,
                 "failed": True,
             }

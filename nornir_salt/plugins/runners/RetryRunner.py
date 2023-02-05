@@ -367,14 +367,17 @@ Sample inventory with retry credentials::
           local_creds:
             username: nornir
             password: nornir
+            extras:
+              optional_args:
+                key_file: False
           dev_creds:
             username: devops
             password: foobar
 
 ``credentials`` defined within ``default`` data section, but can be defined
-inside host or groups data as well, the preference is ``host -> groups -> defaults``.
-Credentials definitions does not merged across different data section but searched
-in a ``host -> groups -> defaults`` order and first one encountered used.
+inside host or groups data. Credentials definitions does not merged across
+different data sections but searched in a ``host -> groups -> defaults`` order
+and first one encountered used.
 
 Sample code to use ``creds_retry``::
 
@@ -389,8 +392,10 @@ Sample code to use ``creds_retry``::
         }
     )
 
-Credentials will be tried in a sequence defined in ``creds_retry`` option
-as soon as connection using main credentials fail to establish.
+``creds_retry`` items parameters used as Nornir ``host.open_connection`` kwargs,
+as a result all arguments of
+`open_connection <https://nornir.readthedocs.io/en/latest/api/nornir/core/inventory.html#nornir.core.inventory.Host.open_connection>`_
+method are supported such as ``username``, ``password``, ``port``, ``extras`` etc.
 
 API Reference
 =============
@@ -553,6 +558,9 @@ def connector(
                     )
                 # retry various connection parameters
                 if run_creds_retry:
+                    log.info(
+                        f"nornir_salt:RetryRunner {host.name} - connecting with creds retry"
+                    )
                     conn_open(
                         task=task,
                         host=host,

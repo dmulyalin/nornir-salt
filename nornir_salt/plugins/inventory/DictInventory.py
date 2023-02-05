@@ -52,8 +52,9 @@ DictInventory reference
 .. autoclass:: nornir_salt.plugins.inventory.DictInventory.DictInventory
 """
 import logging
+import traceback
 from typing import Any, Dict, Type
-
+from nornir_salt.utils.pydantic_models import NornirInventory
 from nornir.core.inventory import (
     Inventory,
     Group,
@@ -129,6 +130,12 @@ class DictInventory:
         self.hosts = hosts or {}
         self.groups = groups or {}
         self.defaults = defaults or {}
+
+        # validate provided inventory data using Pydantic Model
+        _ = NornirInventory(
+            hosts=self.hosts, groups=self.groups, defaults=self.defaults
+        )
+        logger.info("nornir-salt.DictInventory inventory data validated")
 
     def load(self) -> Inventory:
         nr_defaults = _get_defaults(self.defaults)

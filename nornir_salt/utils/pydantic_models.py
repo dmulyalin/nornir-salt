@@ -575,3 +575,37 @@ class modelTestsProcessorSuite(BaseModel):
             ],
         ],
     ]
+
+
+class NornirInventoryConnection(BaseModel):
+    """Nornir Inventory Connection Options Model"""
+
+    hostname: Optional[StrictStr]
+    port: Optional[
+        Union[None, int]
+    ]  # using Union[None, StrictInt] throws error if port is None
+    username: Optional[StrictStr]
+    password: Optional[StrictStr]
+    platform: Optional[StrictStr]
+    extras: Optional[Dict]
+
+
+class NornirInventoryHost(BaseModel):
+    """Model for Nornir Inventory Host, Groups and Defaults"""
+
+    hostname: Optional[StrictStr]
+    port: Optional[Union[None, int]]
+    username: Optional[StrictStr]
+    password: Optional[StrictStr]
+    platform: Optional[StrictStr]
+    connection_options: Optional[Dict[StrictStr, NornirInventoryConnection]]
+    groups: Optional[List[StrictStr]]
+    data: Optional[Dict]
+
+
+class NornirInventory(BaseModel):
+    """Model for Nornir Inventory"""
+
+    hosts: Optional[Dict[StrictStr, NornirInventoryHost]]
+    groups: Optional[Dict[StrictStr, NornirInventoryHost]]
+    defaults: Optional[NornirInventoryHost]
