@@ -116,10 +116,46 @@ def conn_close(task, conn_name: str = "all") -> list:
     return Result(host=task.host, result=ret)
 
 
+def _redispatch_connection(
+    host, conn_param: dict, conn_name: str, redispatch_data: dict
+):
+    """Helper function to redispatch connection using Netmiko"""
+    from netmiko import ConnectHandler
+    from netmiko import redispatch as netmiko_redispatch
+
+    log.debug(
+        f"redispatching '{host.name}' '{conn_name}' connection through terminal server"
+    )
+    # open connection to console server
+    connection = ConnectHandler(
+        device_type="terminal_server",
+        host=conn_param["hostname"],
+        port=conn_param.get("port") or host.port,
+        username=conn_param.get("username") or host.username,
+        password=conn_param.get("password") or host.password,
+        fast_cli=False,  # https://github.com/ktbyers/netmiko/issues/2001
+    )
+
+    # redispatch connection to device
+    connection.username = redispatch_data.get("username") or host.username
+    connection.password = redispatch_data.get("password") or host.password
+    connection.telnet_login(
+        delay_factor=3
+    )  # https://github.com/ktbyers/netmiko/issues/2001
+    netmiko_redispatch(
+        connection,
+        device_type=redispatch_data.get("platform") or host.platform,
+        session_prep=False,
+    )
+
+    # save connection to host connections
+    host.connections[conn_name] = connection
+
+
 @ValidateFuncArgs(model_conn_open)
 def conn_open(
     task,
-    conn_name,
+    conn_name: str,
     host: Optional[Host] = None,
     hostname: Optional[str] = None,
     username: Optional[str] = None,
@@ -131,29 +167,44 @@ def conn_open(
     close_open: bool = False,
     reconnect: list = None,
     raise_on_error: bool = False,
-):
+    via: str = None,
+) -> Result:
     """
     Helper function to open connections to hosts. Supports reconnect
     logic retrying different connection parameters.
 
-    :param conn_name: name of connection to open
+    :param conn_name: name of configured connection plugin to use
+        to open connection e.g. ``netmiko``, ``napalm``, ``scrapli``
     :param hostname: hostname or ip address to connect to
     :param username: username to use to open the connection
     :param password: password to use to open the connection
     :param port: port to use to open the connection
     :param platform: platform name connection parameter
     :param extras: connection plugin extras parameters
-    :param default_to_host_attributes: on True uses host's inventory data for not supplied arguments
-    :param close_open: if True, closes already open connection and connects again
-    :param reconnect: list of parameters to use to try connecting to device if primary set of
-        parameters fails. If ``reconnect`` item is a dictionary, it is supplied as ``**kwargs``
-        to host open connection call. Alternatively, ``reconnect`` item can refer to a name
-        of credentials set from inventory data ``credentials`` section within host, groups or
-        defaults section.
-    :param raise_on_error: raises error if not able to establish connection even after trying
-        all ``reconnect`` parameters, used to signal exception to parent function e.g. RetryRunner
+    :param default_to_host_attributes: on True host's open connection  method
+        uses inventory data to suppliment not missing arguments like port or
+        platform
+    :param close_open: if True, closes already open connection
+        and connects again
+    :param reconnect: list of parameters to use to try connecting
+        to device if primary set of parameters fails. If ``reconnect``
+        item is a dictionary, it is supplied as ``**kwargs`` to
+        host open connection call. Alternatively, ``reconnect`` item
+        can refer to a name of credentials set from inventory data
+        ``credentials`` section within host, groups or defaults inventory.
+    :param raise_on_error: raises error if not able to establish
+        connection even after trying all ``reconnect`` parameters, used
+        to signal exception to parent function e.g. RetryRunner
     :param host: Nornir Host object supplied by RetryRunner
-    :return: boolean, True on success
+    :param via: host's ``connection_options`` parameter name to use for
+        opening connection for ``conn_name``, if ``via`` parameter provided,
+        ``close_open`` always set to `True`` to re-establish host connection.
+        ``reconnect`` not suppported with ``via``. ``default_to_host_attributes``
+        set to ``True`` if ``via`` argument provided.
+    :return: Nornir result object with connection establishment status
+
+    Device re-connects
+    ~~~~~~~~~~~~~~~~~~
 
     Sample ``reconnect`` list content::
 
@@ -183,14 +234,15 @@ def conn_open(
                 password: nornir
                 username: nornir
 
-    Starting with nornir-salt version 0.19.0 support added to specify per-connection
-    parameters using ``connection_options`` argument::
+    Starting with nornir-salt version 0.19.0 support added to reconnect
+    credetntials to specify per-connection parameters using
+    ``connection_options`` argument::
 
         default:
           data:
             credentials:
               local_creds:
-                # these params are for Netmiko
+                # these params will be used with Netmiko conn_name
                 username: nornir
                 password: nornir
                 platform: arista_eos
@@ -200,7 +252,7 @@ def conn_open(
                   auto_connect: True
                   session_timeout: 60
                 connection_options:
-                  # Napalm specific parameters
+                  # these params will be used with NAPALM conn_name
                   napalm:
                     username: nornir
                     platform: eos
@@ -209,7 +261,7 @@ def conn_open(
                       optional_args:
                         transport: http
                         eos_autoComplete: None
-                  # Scrapli specific parameters
+                  # these params will be used with Scrapli conn_name
                   scrapli:
                     password: nornir
                     platform: arista_eos
@@ -223,10 +275,91 @@ def conn_open(
 
     ``connection_options`` parameters are preferred and override
     higher level parameters.
+
+    Device via connections
+    ~~~~~~~~~~~~~~~~~~~~~~
+
+    Specifying ``via`` parameter allows to open connection to device
+    using certain connection options. This is useful when device has
+    multiple management IP addresses, for example - inband, out of
+    band or console.
+
+    If ``via`` parameter provided, connection always closed before
+    proceeding with re-opening it.
+
+    Given this host inventory::
+
+        hosts:
+          ceos1:
+            hostname: 10.0.1.3
+            platform: arista_eos
+            username: nornir
+            password: nornir
+            connection_options:
+              out_of_band:
+                hostname: 10.0.1.4
+                port: 22
+
+    setting ``via`` equal to ``out_of_band`` will result in connection
+    being open using ``out_of_band`` parameters.
+
+    Device connection redispatch
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Primary use case is to use ``via`` to open connection to console
+    server and use Netmiko redispatch functionality to access device
+    console.
+
+    .. warning: Only ``netmiko`` ``conn_name`` connection plugin
+        supported for connections redispatching.
+
+    Given this host inventory:
+
+        hosts:
+          ceos1:
+            hostname: 10.0.1.3
+            platform: arista_eos
+            username: nornir
+            password: nornir
+            connection_options:
+              console_port_rp0:
+                # console server parameters
+                hostname: 10.0.1.4
+                port: 1234
+                username: nornir123
+                password: nornir123
+                platform: terminal_server
+                extras:
+                  redispatch:
+                    # redispatch parameters for device connected to console
+                    username: nornir321
+                    password: nornir321
+                    platform: arista_eos
+              console_port_rp1:
+                # console server hostname:
+                hostname: 10.0.1.5
+                extras:
+                  redispatch: True
+
+    If ``via`` is equal to ``console_port_rp0``, this task plugin
+    will establish connection to terminal server and will authenticate
+    using ``console_port_rp0`` credentials, next Netmiko connection
+    will be redispatched using platform and credentials from
+    ``redispacth`` parameters.
+
+    If ``via`` is equal to ``console_port_rp1``, this task plugin will
+    establish connection to terminal server hostname and authenticating
+    with host's credentials, next Netmiko connection will be redispatched
+    using platform and credentials from host's parameters - ``nornir``
+    username and password and ``arista_eos`` as a platform.
+
+    For redispatch to work, ``hostname`` parameter must always be provided
+    in connection options.
     """
     reconnect = reconnect or []
     ret = {}
     host = host or task.host
+    close_open = True if via else close_open
 
     # check if need to close connection first
     if conn_name in host.connections:
@@ -235,20 +368,39 @@ def conn_open(
         else:
             return Result(host=host, result="Connection already open")
 
-    conn_params = [
-        {
-            "hostname": str(hostname) if hostname is not None else None,
-            "username": str(username) if username is not None else None,
-            "password": str(password) if password is not None else None,
-            "port": int(port) if port is not None else None,
-            "platform": str(platform) if platform is not None else None,
-            "extras": extras,
-            "default_to_host_attributes": default_to_host_attributes,
-        }
-    ] + reconnect
+    if via:
+        via_conn_opts = host._get_connection_options_recursively(via)
+        conn_params = [
+            {
+                "hostname": via_conn_opts.hostname,
+                "username": via_conn_opts.username,
+                "password": via_conn_opts.password,
+                "port": via_conn_opts.port,
+                "platform": via_conn_opts.platform,
+                "extras": via_conn_opts.extras or {},
+            }
+        ]
+        # check if via connection options exists
+        if conn_params[0]["hostname"] is None:
+            raise RuntimeError(
+                f"nornir_salt:conn_open {host.name} via '{via}' parameters not found"
+            )
+    else:
+        conn_params = [
+            {
+                "hostname": str(hostname) if hostname is not None else None,
+                "username": str(username) if username is not None else None,
+                "password": str(password) if password is not None else None,
+                "port": int(port) if port is not None else None,
+                "platform": str(platform) if platform is not None else None,
+                "extras": extras,
+                "default_to_host_attributes": default_to_host_attributes,
+            }
+        ] + reconnect
 
     for index, param in enumerate(conn_params):
         param_name = "kwargs" if index == 0 else index
+        redispatch = None
 
         # source parameters from inventory crdentials section
         if isinstance(param, str):
@@ -259,14 +411,21 @@ def conn_open(
             raise TypeError("'{}' parameters not found or invalid".format(param_name))
 
         # extract connection_options and merge with params for non kwargs params
-        if index > 0:
-            param = copy.deepcopy(param)
-            param.update(param.pop("connection_options", {}).get(conn_name, {}))
+        param = copy.deepcopy(param)
+        param.update(param.pop("connection_options", {}).get(conn_name, {}))
 
         try:
             if index == 0:
-                res_msg = f"{conn_name} connected with primary connection parameters"
+                res_msg = f"'{conn_name}' connected with primary connection parameters"
                 log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' connecting with primary connection parameters"
+                if via:
+                    res_msg = (
+                        f"'{conn_name}' connected via '{via}' connection parameters"
+                    )
+                    log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' connecting via '{via}' connection parameters"
+                    redispatch = param.get("extras", {}).pop("redispatch", None)
+                    if redispatch is True:
+                        redispatch = {}
             elif isinstance(param_name, str):
                 res_msg = (
                     f"{conn_name} connected with '{param_name}' connection parameters"
@@ -277,9 +436,17 @@ def conn_open(
                 log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' re-connecting with index '{index - 1}' connection parameters"
             log.info(log_msg)
             # establish host connection
-            host.open_connection(
-                **param, connection=conn_name, configuration=task.nornir.config
-            )
+            if redispatch is not None:
+                if conn_name != "netmiko":
+                    raise RuntimeError(
+                        f"Only 'netmiko' redispatch supported, '{conn_name}' redispatch not supported"
+                    )
+                _redispatch_connection(host, param, conn_name, redispatch)
+                res_msg = f"'{conn_name}' connected using '{via}' connection parameters redispatching connection"
+            else:
+                host.open_connection(
+                    **param, connection=conn_name, configuration=task.nornir.config
+                )
             ret = {"result": res_msg}
             break
         except:

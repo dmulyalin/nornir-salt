@@ -18,20 +18,44 @@ from typing import Union, Optional, List, Any, Dict, Callable, Tuple
 
 
 class model_ffun_fx_filters(BaseModel):
-    FO: Optional[Union[Dict, List[Dict]]] = Field(None, title="Filter Object")
-    FB: Optional[Union[List[str], str]] = Field(None, title="Filter gloB")
+    FO: Optional[Union[Dict, List[Dict]]] = Field(
+        None, title="Filter Object", description="Filter hosts using Filter Object"
+    )
+    FB: Optional[Union[List[str], str]] = Field(
+        None,
+        title="Filter gloB",
+        description="Filter hosts by name using Glob Patterns",
+    )
     FH: Optional[Union[List[StrictStr], StrictStr]] = Field(
-        None, title="Filter Hostname"
+        None, title="Filter Hostname", description="Filter hosts by hostname"
     )
-    FC: Optional[Union[List[str], str]] = Field(None, title="Filter Contains")
-    FR: Optional[Union[List[str], str]] = Field(None, title="Filter Regex")
-    FG: Optional[StrictStr] = Field(None, title="Filter Group")
-    FP: Optional[Union[List[StrictStr], StrictStr]] = Field(None, title="Filter Prefix")
-    FL: Optional[Union[List[StrictStr], StrictStr]] = Field(None, title="Filter List")
+    FC: Optional[Union[List[str], str]] = Field(
+        None,
+        title="Filter Contains",
+        description="Filter hosts by name contains patterns",
+    )
+    FR: Optional[Union[List[str], str]] = Field(
+        None,
+        title="Filter Regex",
+        description="Filter hosts by name using Regular Expressions",
+    )
+    FG: Optional[StrictStr] = Field(
+        None, title="Filter Group", description="Filter hosts by group"
+    )
+    FP: Optional[Union[List[StrictStr], StrictStr]] = Field(
+        None,
+        title="Filter Prefix",
+        description="Filter hosts by hostname using IP Prefix",
+    )
+    FL: Optional[Union[List[StrictStr], StrictStr]] = Field(
+        None, title="Filter List", description="Filter hosts by names list"
+    )
     FM: Optional[Union[List[StrictStr], StrictStr]] = Field(
-        None, title="Filter platforM"
+        None, title="Filter platforM", description="Filter hosts by platform"
     )
-    FX: Optional[Union[List[str], str]] = Field(None, title="Filter eXclude")
+    FX: Optional[Union[List[str], str]] = Field(
+        None, title="Filter eXclude", description="Filter hosts excluding them by name"
+    )
     FN: Optional[StrictBool] = Field(
         None, title="Filter Negate", description="Negate the match"
     )
@@ -71,7 +95,7 @@ class model_nr_test(BaseModel):
 
 
 class model_napalm_send_commands(BaseModel):
-    """Model for nornir_salt.plugins.tasks.netmiko_send_commands plugin arguments"""
+    """Model for nornir_salt.plugins.tasks.napalm_send_commands plugin arguments"""
 
     task: Task
     commands: Optional[Union[List[StrictStr], StrictStr]]
@@ -122,6 +146,7 @@ class model_conn_open(BaseModel):
     close_open: Optional[StrictBool]
     reconnect: Optional[List]
     raise_on_error: Optional[StrictBool]
+    via: Optional[StrictStr]
 
     class Config:
         arbitrary_types_allowed = True
