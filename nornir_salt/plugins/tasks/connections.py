@@ -70,6 +70,15 @@ from nornir_salt.utils.yangdantic import ValidateFuncArgs
 log = logging.getLogger(__name__)
 
 
+class RedispatchedConnection:
+    """Dummy connection class to save redispatched connection"""
+    def __init__(self, connection=None, **kwargs):
+        self.connection = connection
+    
+    def close(self):
+        self.connection.disconnect()
+            
+            
 @ValidateFuncArgs(model_conn_list)
 def conn_list(task, conn_name: str = "all") -> list:
     """
@@ -116,13 +125,11 @@ def conn_close(task, conn_name: str = "all") -> list:
     return Result(host=task.host, result=ret)
 
 
-def _redispatch_connection(
-    host, conn_param: dict, conn_name: str, redispatch_data: dict
-):
+def _redispatch_connection(host, conn_param: dict, conn_name: str, redispatch_data: dict):
     """Helper function to redispatch connection using Netmiko"""
     from netmiko import ConnectHandler
     from netmiko import redispatch as netmiko_redispatch
-
+    
     log.debug(
         f"redispatching '{host.name}' '{conn_name}' connection through terminal server"
     )
@@ -133,25 +140,23 @@ def _redispatch_connection(
         port=conn_param.get("port") or host.port,
         username=conn_param.get("username") or host.username,
         password=conn_param.get("password") or host.password,
-        fast_cli=False,  # https://github.com/ktbyers/netmiko/issues/2001
+        fast_cli=False, # https://github.com/ktbyers/netmiko/issues/2001
     )
-
+    
     # redispatch connection to device
     connection.username = redispatch_data.get("username") or host.username
-    connection.password = redispatch_data.get("password") or host.password
-    connection.telnet_login(
-        delay_factor=3
-    )  # https://github.com/ktbyers/netmiko/issues/2001
+    connection.password = redispatch_data.get("password") or host.password    
+    connection.telnet_login(delay_factor=3) # https://github.com/ktbyers/netmiko/issues/2001
     netmiko_redispatch(
-        connection,
+        connection, 
         device_type=redispatch_data.get("platform") or host.platform,
-        session_prep=False,
+        session_prep=False
     )
-
+    
     # save connection to host connections
-    host.connections[conn_name] = connection
-
-
+    host.connections[conn_name] = RedispatchedConnection(connection)
+    
+    
 @ValidateFuncArgs(model_conn_open)
 def conn_open(
     task,
@@ -181,22 +186,22 @@ def conn_open(
     :param port: port to use to open the connection
     :param platform: platform name connection parameter
     :param extras: connection plugin extras parameters
-    :param default_to_host_attributes: on True host's open connection  method
-        uses inventory data to suppliment not missing arguments like port or
+    :param default_to_host_attributes: on True host's open connection  method 
+        uses inventory data to suppliment not missing arguments like port or 
         platform
-    :param close_open: if True, closes already open connection
+    :param close_open: if True, closes already open connection 
         and connects again
-    :param reconnect: list of parameters to use to try connecting
-        to device if primary set of parameters fails. If ``reconnect``
-        item is a dictionary, it is supplied as ``**kwargs`` to
-        host open connection call. Alternatively, ``reconnect`` item
-        can refer to a name of credentials set from inventory data
+    :param reconnect: list of parameters to use to try connecting 
+        to device if primary set of parameters fails. If ``reconnect`` 
+        item is a dictionary, it is supplied as ``**kwargs`` to 
+        host open connection call. Alternatively, ``reconnect`` item 
+        can refer to a name of credentials set from inventory data 
         ``credentials`` section within host, groups or defaults inventory.
-    :param raise_on_error: raises error if not able to establish
-        connection even after trying all ``reconnect`` parameters, used
+    :param raise_on_error: raises error if not able to establish 
+        connection even after trying all ``reconnect`` parameters, used 
         to signal exception to parent function e.g. RetryRunner
     :param host: Nornir Host object supplied by RetryRunner
-    :param via: host's ``connection_options`` parameter name to use for
+    :param via: host's ``connection_options`` parameter name to use for 
         opening connection for ``conn_name``, if ``via`` parameter provided,
         ``close_open`` always set to `True`` to re-establish host connection.
         ``reconnect`` not suppported with ``via``. ``default_to_host_attributes``
@@ -205,7 +210,7 @@ def conn_open(
 
     Device re-connects
     ~~~~~~~~~~~~~~~~~~
-
+    
     Sample ``reconnect`` list content::
 
         [
@@ -234,8 +239,8 @@ def conn_open(
                 password: nornir
                 username: nornir
 
-    Starting with nornir-salt version 0.19.0 support added to reconnect
-    credetntials to specify per-connection parameters using
+    Starting with nornir-salt version 0.19.0 support added to reconnect 
+    credetntials to specify per-connection parameters using 
     ``connection_options`` argument::
 
         default:
@@ -275,20 +280,20 @@ def conn_open(
 
     ``connection_options`` parameters are preferred and override
     higher level parameters.
-
+    
     Device via connections
     ~~~~~~~~~~~~~~~~~~~~~~
-
+    
     Specifying ``via`` parameter allows to open connection to device
-    using certain connection options. This is useful when device has
+    using certain connection options. This is useful when device has 
     multiple management IP addresses, for example - inband, out of
     band or console.
-
+    
     If ``via`` parameter provided, connection always closed before
     proceeding with re-opening it.
-
+    
     Given this host inventory::
-
+    
         hosts:
           ceos1:
             hostname: 10.0.1.3
@@ -299,22 +304,22 @@ def conn_open(
               out_of_band:
                 hostname: 10.0.1.4
                 port: 22
-
+    
     setting ``via`` equal to ``out_of_band`` will result in connection
     being open using ``out_of_band`` parameters.
-
+    
     Device connection redispatch
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Primary use case is to use ``via`` to open connection to console
-    server and use Netmiko redispatch functionality to access device
+    Primary use case is to use ``via`` to open connection to console 
+    server and use Netmiko redispatch functionality to access device 
     console.
-
-    .. warning: Only ``netmiko`` ``conn_name`` connection plugin
+    
+    .. warning: Only ``netmiko`` ``conn_name`` connection plugin 
         supported for connections redispatching.
-
+    
     Given this host inventory:
-
+    
         hosts:
           ceos1:
             hostname: 10.0.1.3
@@ -333,26 +338,26 @@ def conn_open(
                   redispatch:
                     # redispatch parameters for device connected to console
                     username: nornir321
-                    password: nornir321
+                    password: nornir321    
                     platform: arista_eos
               console_port_rp1:
                 # console server hostname:
-                hostname: 10.0.1.5
+                hostname: 10.0.1.5 
                 extras:
-                  redispatch: True
-
-    If ``via`` is equal to ``console_port_rp0``, this task plugin
+                  redispatch: True   
+    
+    If ``via`` is equal to ``console_port_rp0``, this task plugin 
     will establish connection to terminal server and will authenticate
-    using ``console_port_rp0`` credentials, next Netmiko connection
+    using ``console_port_rp0`` credentials, next Netmiko connection 
     will be redispatched using platform and credentials from
     ``redispacth`` parameters.
 
-    If ``via`` is equal to ``console_port_rp1``, this task plugin will
+    If ``via`` is equal to ``console_port_rp1``, this task plugin will 
     establish connection to terminal server hostname and authenticating
-    with host's credentials, next Netmiko connection will be redispatched
+    with host's credentials, next Netmiko connection will be redispatched 
     using platform and credentials from host's parameters - ``nornir``
     username and password and ``arista_eos`` as a platform.
-
+    
     For redispatch to work, ``hostname`` parameter must always be provided
     in connection options.
     """
@@ -360,14 +365,14 @@ def conn_open(
     ret = {}
     host = host or task.host
     close_open = True if via else close_open
-
+    
     # check if need to close connection first
     if conn_name in host.connections:
         if close_open:
             host.close_connection(conn_name)
         else:
             return Result(host=host, result="Connection already open")
-
+    
     if via:
         via_conn_opts = host._get_connection_options_recursively(via)
         conn_params = [
@@ -396,12 +401,12 @@ def conn_open(
                 "extras": extras,
                 "default_to_host_attributes": default_to_host_attributes,
             }
-        ] + reconnect
-
+        ] + reconnect 
+    
     for index, param in enumerate(conn_params):
         param_name = "kwargs" if index == 0 else index
         redispatch = None
-
+        
         # source parameters from inventory crdentials section
         if isinstance(param, str):
             param_name = param
@@ -419,9 +424,7 @@ def conn_open(
                 res_msg = f"'{conn_name}' connected with primary connection parameters"
                 log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' connecting with primary connection parameters"
                 if via:
-                    res_msg = (
-                        f"'{conn_name}' connected via '{via}' connection parameters"
-                    )
+                    res_msg = f"'{conn_name}' connected via '{via}' connection parameters"
                     log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' connecting via '{via}' connection parameters"
                     redispatch = param.get("extras", {}).pop("redispatch", None)
                     if redispatch is True:
