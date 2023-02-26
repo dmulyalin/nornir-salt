@@ -111,6 +111,7 @@ Call Functions Reference
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._create_host
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._read_host
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._read_inventory
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._read_host_data
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._update_host
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._delete_host
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._load
@@ -338,6 +339,62 @@ def _list_hosts_platforms(nr, **kwargs):
     }
 
 
+def _read_host_data(nr, keys, default=None, **kwargs):
+    """
+    Function to return hosts data under certain keys.
+
+    :param nr: (obj) Nornir object
+    :param keys: list of strings each string a a dot seprated path to data
+    :param default: default value to return if key path item not present in host's data
+    :return: dictionary keyed by host name with databeing a dictionary keyed by paths
+
+    For example if host has this data::
+
+        hosts:
+          nrp1:
+            data:
+              config:
+                interfaces:
+                  Lo0:
+                    description: foobar
+                 bgp:
+                   asn: 1234
+
+    if ``keys=["config.interfaces.Lo0", "config.bgp", "ntp.config"]`` this function
+    will return::
+
+        {
+            "nrp1": {
+                "config.interfaces.Lo0": {"description": "foobar"},
+                "config.bgp": {"asn": 1234},
+                "ntp.config": None
+            }
+        }
+
+    .. warning:: This function does not support retrievieng individual list items,
+        each item in keys path should refer to a data dictionary key.
+    """
+    ret = {}
+    # filter hosts
+    hosts = FFun(nr, kwargs=kwargs)
+    # iterate over host objects
+    for host_name, host_data in hosts.inventory.hosts.items():
+        ret[host_name] = {}
+        # iterate over path keys
+        for key_path in keys:
+            reference = host_data
+            # iterate over individual key in the path
+            for key in [i.strip() for i in key_path.split(".")]:
+                reference = reference.get(key, default)
+                # stop if encountered default item
+                if reference == default:
+                    break
+            # reference now points to desired piece of data
+            ret[host_name][key_path] = reference
+
+    return ret
+
+
 fun_dispatcher = {
     "create_host": _create_host,
     "update_host": _update_host,
@@ -348,6 +405,7 @@ fun_dispatcher = {
     "delete": _delete_host,
     "read": _read_host,
     "read_inventory": _read_inventory,
+    "read_host_data": _read_host_data,
     "load": _load,
     "list_hosts": _list_hosts,
     "list_hosts_platforms": _list_hosts_platforms,
@@ -371,6 +429,7 @@ def InventoryFun(nr, call, **kwargs):
     - ``delete_host`` or ``delete`` - calls ``_delete_host``, deletes host object from Nornir Inventory
     - ``load`` - calls ``_load``, to simplify calling multiple functions
     - ``read_inventory`` - calls ``_read_inventory``, read inventory content for groups, default and hosts
+    - ``read_host_data`` - calls ``_read_host_data`` to return host's data under provided path keys
     - ``list_hosts`` - calls ``_list_hosts``, return a list of inventory's host names
     - ``list_hosts_platforms`` - calls ``_list_hosts_platforms``, return a dictionary of hosts' platforms
     """
