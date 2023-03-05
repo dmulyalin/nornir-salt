@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir_salt"
-version = "0.18.0"
+version = "0.19.0"
 description = "Nornir plugins used with SaltStack Salt-Nornir Proxy Minion"
 authors = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
 maintainers = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
@@ -53,6 +53,7 @@ xmltodict = { version = "0.13.0", optional = true }
 lxml = { version = "4.9.1", optional = true }
 textfsm = { version = "1.1.2", optional = true }
 jinja2 = { version = "3.1.2", optional = true }
+dnspython = { version = "2.3.0", optional = true }
 
 # docs dependencies for extras definition
 readthedocs-sphinx-search = { version = "0.1.1", optional = true }
@@ -93,7 +94,7 @@ prodmin = [
     "ttp-templates",
     "xmltodict",
     "jinja2",
-    "textfsm",
+    "textfsm"
 ]
 prodmax = [
     "cerberus",
@@ -121,6 +122,7 @@ prodmax = [
     "xmltodict",
     "jinja2",
     "textfsm",
+	"dnspython"
 ]
 docs = [
     "readthedocs-sphinx-search",

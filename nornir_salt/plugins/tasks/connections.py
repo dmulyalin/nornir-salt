@@ -324,7 +324,7 @@ def conn_open(
     .. warning: Only ``netmiko`` ``conn_name`` connection plugin
         supported for connections redispatching.
 
-    Given this host inventory:
+    Given this host inventory::
 
         hosts:
           ceos1:

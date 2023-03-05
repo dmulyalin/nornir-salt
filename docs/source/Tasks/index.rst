@@ -15,6 +15,7 @@ Task plugins define tasks to run against hosts. Reference `documentation <https:
    netmiko_send_command_ps
    netmiko_send_commands
    netmiko_send_config
+   network
    nr_test
    puresnmp_call
    pygnmi_call

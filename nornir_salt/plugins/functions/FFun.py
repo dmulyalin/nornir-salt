@@ -8,7 +8,7 @@ to certain hosts/devices.
 
 Filtering order::
 
-    FO -> FB -> FH -> FC -> FR -> FG -> FP -> FL -> FM -> FX -> FN
+    FO -> FB -> FH -> FC -> FR -> FG -> FP -> FL -> FM -> FX -> FT -> FN
 
 .. note:: If multiple filters provided, hosts must pass all checks - ``AND`` logic - to succeed.
 
@@ -159,6 +159,21 @@ FFun passes through all the ``Fx`` functions filtering hosts normally, ``FN``
 function called at the end to form a set of non matched hosts, that set used
 with ``FL`` function to provide final match result.
 
+FT - Filter Tags
+------------------
+
+Filter hosts by tags using host's data::
+
+    # will match all hosts with any of core or access tags
+    filtered_hosts = FFun(NornirObj, FL="core, access")
+
+Sample host inventory data with tags definition::
+
+    hosts:
+      R1:
+        data:
+          tags: [core, access]
+
 FFun sample usage
 =================
 
@@ -297,6 +312,9 @@ def FFun(nr, check_if_has_filter=False, **kwargs):
         has_filter = True
     if "FX" in kwargs:
         ret = _filter_FX(ret, kwargs.pop("FX"))
+        has_filter = True
+    if "FT" in kwargs:
+        ret = _filter_FT(ret, kwargs.pop("FT"))
         has_filter = True
     if "FN" in kwargs:
         ret = _filter_FN(ret, nr, kwargs.pop("FN"))
@@ -492,3 +510,20 @@ def _filter_FX(ret, pattern):
         )
     else:
         return ret.filter(filter_func=lambda h: not fnmatchcase(h.name, str(pattern)))
+
+
+def _filter_FT(ret, tags_list):
+    """
+    Function to filter hosts by tags
+    """
+    tags_list = (
+        [i.strip() for i in tags_list.split(",")]
+        if isinstance(tags_list, str)
+        else tags_list
+    )
+    tags_set = set(tags_list)
+    return ret.filter(
+        filter_func=lambda h: True
+        if set(h.get("tags") or []).intersection(tags_set)
+        else False
+    )

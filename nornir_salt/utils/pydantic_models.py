@@ -634,3 +634,28 @@ class NornirInventory(BaseModel):
     hosts: Optional[Dict[StrictStr, NornirInventoryHost]]
     groups: Optional[Dict[StrictStr, NornirInventoryHost]]
     defaults: Optional[NornirInventoryHost]
+
+
+class model_network(BaseModel):
+    """Model for Nornir network task plugin"""
+
+    task: Task
+    call: Optional[StrictStr]
+
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
+
+
+class model_network_resolve_dns(BaseModel):
+    """Model for Nornir network resolve_dns task plugin"""
+
+    task: Task
+    servers: Optional[Union[List[StrictStr], StrictStr]]
+    use_host_name: Optional[StrictBool]
+    timeout: Optional[StrictFloat]
+    ipv4: Optional[StrictBool]
+    ipv6: Optional[StrictBool]
+
+    class Config:
+        arbitrary_types_allowed = True
