@@ -273,7 +273,7 @@ def test_InventoryFun_load():
     
     res = InventoryFun(nr, "load", data=data)
     
-    assert res == True
+    assert res == [True, True, True, True]
     # check hosts deleted/created
     assert "IOL2" not in nr.inventory.hosts
     assert "IOL3" in nr.inventory.hosts

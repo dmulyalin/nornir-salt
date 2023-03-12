@@ -303,10 +303,10 @@ def _load(nr, data):
     of function to call, rest of the dictionary used as a ``**kwargs`` with
     specidfied call function.
     """
-    for item in data:
-        fun_name = item.pop("call")
-        fun_dispatcher[fun_name](nr, **item)
-    return True
+    return [
+        fun_dispatcher[item.pop("call")](nr, **item)
+        for item in data
+    ]
 
 
 def _list_hosts(nr, **kwargs):
