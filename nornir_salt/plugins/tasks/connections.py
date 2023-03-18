@@ -388,7 +388,7 @@ def conn_open(
                 "password": via_conn_opts.password,
                 "port": via_conn_opts.port,
                 "platform": via_conn_opts.platform,
-                "extras": via_conn_opts.extras or {},
+                "extras": copy.deepcopy(via_conn_opts.extras) or {},
             }
         ]
         # check if via connection options exists
@@ -422,9 +422,11 @@ def conn_open(
             raise TypeError("'{}' parameters not found or invalid".format(param_name))
 
         # extract connection_options and merge with params for non kwargs params
-        param = copy.deepcopy(param)
-        param.update(param.pop("connection_options", {}).get(conn_name, {}))
-
+        # do not deepcopy kwaergs params as they might contain Jumphost socket 
+        if index > 0:
+            param = copy.deepcopy(param)
+            param.update(param.pop("connection_options", {}).get(conn_name, {}))
+            
         try:
             if index == 0:
                 res_msg = f"'{conn_name}' connected with primary connection parameters"
