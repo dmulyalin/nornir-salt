@@ -185,7 +185,7 @@ def conn_open(
     logic retrying different connection parameters.
 
     :param conn_name: name of configured connection plugin to use
-        to open connection e.g. ``netmiko``, ``napalm``, ``scrapli``
+      to open connection e.g. ``netmiko``, ``napalm``, ``scrapli``
     :param hostname: hostname or ip address to connect to
     :param username: username to use to open the connection
     :param password: password to use to open the connection
@@ -193,29 +193,28 @@ def conn_open(
     :param platform: platform name connection parameter
     :param extras: connection plugin extras parameters
     :param default_to_host_attributes: on True host's open connection  method
-        uses inventory data to suppliment not missing arguments like port or
-        platform
+      uses inventory data to suppliment not missing arguments like port or
+      platform
     :param close_open: if True, closes already open connection
-        and connects again
+      and connects again
     :param reconnect: list of parameters to use to try connecting
-        to device if primary set of parameters fails. If ``reconnect``
-        item is a dictionary, it is supplied as ``**kwargs`` to
-        host open connection call. Alternatively, ``reconnect`` item
-        can refer to a name of credentials set from inventory data
-        ``credentials`` section within host, groups or defaults inventory.
+      to device if primary set of parameters fails. If ``reconnect``
+      item is a dictionary, it is supplied as ``**kwargs`` to
+      host open connection call. Alternatively, ``reconnect`` item
+      can refer to a name of credentials set from inventory data
+      ``credentials`` section within host, groups or defaults inventory.
     :param raise_on_error: raises error if not able to establish
-        connection even after trying all ``reconnect`` parameters, used
-        to signal exception to parent function e.g. RetryRunner
+      connection even after trying all ``reconnect`` parameters, used
+      to signal exception to parent function e.g. RetryRunner
     :param host: Nornir Host object supplied by RetryRunner
     :param via: host's ``connection_options`` parameter name to use for
-        opening connection for ``conn_name``, if ``via`` parameter provided,
-        ``close_open`` always set to `True`` to re-establish host connection.
-        ``reconnect`` not suppported with ``via``. ``default_to_host_attributes``
-        set to ``True`` if ``via`` argument provided.
+      opening connection for ``conn_name``, if ``via`` parameter provided,
+      ``close_open`` always set to `True`` to re-establish host connection.
+      ``reconnect`` not suppported with ``via``. ``default_to_host_attributes``
+      set to ``True`` if ``via`` argument provided.
     :return: Nornir result object with connection establishment status
 
-    Device re-connects
-    ~~~~~~~~~~~~~~~~~~
+    **Device re-connects**
 
     Sample ``reconnect`` list content::
 
@@ -287,8 +286,7 @@ def conn_open(
     ``connection_options`` parameters are preferred and override
     higher level parameters.
 
-    Device via connections
-    ~~~~~~~~~~~~~~~~~~~~~~
+    **Device via connections**
 
     Specifying ``via`` parameter allows to open connection to device
     using certain connection options. This is useful when device has
@@ -314,8 +312,7 @@ def conn_open(
     setting ``via`` equal to ``out_of_band`` will result in connection
     being open using ``out_of_band`` parameters.
 
-    Device connection redispatch
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **Device connection redispatch**
 
     Primary use case is to use ``via`` to open connection to console
     server and use Netmiko redispatch functionality to access device
@@ -422,11 +419,11 @@ def conn_open(
             raise TypeError("'{}' parameters not found or invalid".format(param_name))
 
         # extract connection_options and merge with params for non kwargs params
-        # do not deepcopy kwaergs params as they might contain Jumphost socket 
+        # do not deepcopy kwaergs params as they might contain Jumphost socket
         if index > 0:
             param = copy.deepcopy(param)
             param.update(param.pop("connection_options", {}).get(conn_name, {}))
-            
+
         try:
             if index == 0:
                 res_msg = f"'{conn_name}' connected with primary connection parameters"

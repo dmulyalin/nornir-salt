@@ -117,6 +117,7 @@ Call Functions Reference
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._load
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._list_hosts
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._list_hosts_platforms
+.. autofunction:: nornir_salt.plugins.functions.InventoryFun._update_defaults
 """
 import logging
 
@@ -303,10 +304,7 @@ def _load(nr, data):
     of function to call, rest of the dictionary used as a ``**kwargs`` with
     specidfied call function.
     """
-    return [
-        fun_dispatcher[item.pop("call")](nr, **item)
-        for item in data
-    ]
+    return [fun_dispatcher[item.pop("call")](nr, **item) for item in data]
 
 
 def _list_hosts(nr, **kwargs):
@@ -395,6 +393,61 @@ def _read_host_data(nr, keys, default=None, **kwargs):
     return ret
 
 
+def _update_defaults(
+    nr,
+    connection_options: dict = None,
+    data: dict = None,
+    password: str = None,
+    platform: str = None,
+    port: int = None,
+    username: str = None,
+    **kwargs
+) -> bool:
+    """
+    Function to update defaults inventory.
+
+    :param nr: (obj) Nornir object
+    :param connection_options: (dict) dictionary with defaults's
+        connection options data to update. Should be keyed by
+        connection name with value being a dictionary of connection
+        attributes - hostname, port, username, password, platform
+        and extras dictionary
+    :param data: (dict) dictionary with defaults's data to update
+    :param kwargs: (dict) additional key-value pairs to add into
+        defaults data
+    :return: True on success
+
+    Replaces existing values for top keys similar to dictionary
+    ``update`` method, no recursive merge performed.
+    """
+    data = data or {}
+    data = {**data, **kwargs}
+
+    # update defaults data
+    if connection_options:
+        for name, opts in connection_options.items():
+            nr.inventory.defaults.connection_options[name] = ConnectionOptions(
+                hostname=opts.get("hostname"),
+                port=opts.get("port"),
+                username=opts.get("username"),
+                password=opts.get("password"),
+                platform=opts.get("platform"),
+                extras=opts.get("extras"),
+            )
+    if data:
+        nr.inventory.defaults.data.update(data)
+    if password is not None:
+        nr.inventory.defaults.password = password
+    if port is not None:
+        nr.inventory.defaults.port = port
+    if platform is not None:
+        nr.inventory.defaults.platform = platform
+    if username is not None:
+        nr.inventory.defaults.username = username
+
+    return True
+
+
 fun_dispatcher = {
     "create_host": _create_host,
     "update_host": _update_host,
@@ -409,6 +462,7 @@ fun_dispatcher = {
     "load": _load,
     "list_hosts": _list_hosts,
     "list_hosts_platforms": _list_hosts_platforms,
+    "update_defaults": _update_defaults,
 }
 
 
@@ -432,5 +486,6 @@ def InventoryFun(nr, call, **kwargs):
     - ``read_host_data`` - calls ``_read_host_data`` to return host's data under provided path keys
     - ``list_hosts`` - calls ``_list_hosts``, return a list of inventory's host names
     - ``list_hosts_platforms`` - calls ``_list_hosts_platforms``, return a dictionary of hosts' platforms
+    - ``update_defaults`` - calls ``_update_defaults``, non recursively update defaults attributes
     """
     return fun_dispatcher[call](nr, **kwargs)
