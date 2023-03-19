@@ -413,6 +413,10 @@ def _update_defaults(
         attributes - hostname, port, username, password, platform
         and extras dictionary
     :param data: (dict) dictionary with defaults's data to update
+    :param password: default passowrd string value
+    :param username: default username string value
+    :param port: default port integer value
+    :param platform: default platform string value    
     :param kwargs: (dict) additional key-value pairs to add into
         defaults data
     :return: True on success
