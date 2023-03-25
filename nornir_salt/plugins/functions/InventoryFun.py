@@ -397,10 +397,10 @@ def _update_defaults(
     nr,
     connection_options: dict = None,
     data: dict = None,
-    password: str = None,
-    platform: str = None,
-    port: int = None,
-    username: str = None,
+    password: str = ...,
+    platform: str = ...,
+    port: int = ...,
+    username: str = ...,
     **kwargs
 ) -> bool:
     """
@@ -440,13 +440,13 @@ def _update_defaults(
             )
     if data:
         nr.inventory.defaults.data.update(data)
-    if password is not None:
+    if password is not ...:
         nr.inventory.defaults.password = password
-    if port is not None:
+    if port is not ...:
         nr.inventory.defaults.port = port
-    if platform is not None:
+    if platform is not ...:
         nr.inventory.defaults.platform = platform
-    if username is not None:
+    if username is not ...:
         nr.inventory.defaults.username = username
 
     return True
