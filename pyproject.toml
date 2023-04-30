@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir_salt"
-version = "0.19.1"
+version = "0.19.2"
 description = "Nornir plugins used with SaltStack Salt-Nornir Proxy Minion"
 authors = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
 maintainers = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
@@ -32,27 +32,31 @@ genie = { version = "22.1", markers = "sys_platform != 'win32'", optional = true
 jmespath = { version = "1.0.1", optional = true }
 napalm = { version = "4.0.0", optional = true }
 ncclient = { version = "0.6.13", optional = true }
-netmiko = { version = "4.1.1", optional = true }
+netmiko = { version = "4.1.2", optional = true }
 nornir-napalm = { version = "0.3.0", optional = true }
 nornir-netmiko = { version = "0.2.0", optional = true }
 nornir-scrapli = { version = "2022.07.30", optional = true }
 ntc-templates = { version = "^3.0.0", optional = true }
-paramiko = { version = "2.11.0", optional = true }
+paramiko = { version = "2.12.0", optional = true }
 pyats = { version = "22.1", markers = "sys_platform != 'win32'", optional = true, extras = ['full'] }
 pygnmi = { version = "0.8.9", optional = true }
-pyyaml = { version = "6.0", optional = true }
+pynetbox = { version = "7.0.0", optional = true }
+pyyaml = { version = "5.4.1", optional = true }
 puresnmp = { version = "2.0.0", optional = true, extras = ['crypto'] }
-requests = { version = "2.28.1", optional = true }
+requests = { version = "2.25.1", optional = true }
 scrapli = { version = "2022.07.30", optional = true }
 scrapli-community = { version = "2022.07.30", optional = true }
 scrapli-netconf = { version = "2022.07.30", optional = true }
-tabulate = { version = "0.8.10", optional = true }
+tabulate = { version = "0.9.0", optional = true }
 ttp = { version = "0.9.*", optional = true }
 ttp-templates = { version = "0.3.*", optional = true }
 xmltodict = { version = "0.13.0", optional = true }
-lxml = { version = "4.9.1", optional = true }
+lxml = { version = "4.9.2", optional = true }
 textfsm = { version = "1.1.2", optional = true }
 jinja2 = { version = "3.1.2", optional = true }
+rich = { version = "12.6.0", optional = true }
+N2G = { version = "0.3.*", optional = true }
+robotframework = { version = "6.0.2", optional = true }
 dnspython = { version = "2.3.0", optional = true }
 
 # docs dependencies for extras definition
@@ -75,20 +79,32 @@ flake8 = "4.0.*"
 pre-commit = "2.15.*"
 pyenchant = "3.2.*"
 pylint = "2.12.*"
-pytest = { version = "^7.1.*", markers = "python_version >= '3.7'" }
+pytest = { version = ">=7.1", markers = "python_version >= '3.7'" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.extras]
-prodmin = [
+prodminmaster = [
+    "rich",
+    "tabulate"
+]
+prodmaxmaster = [
+    "pynetbox",
+    "rich",
+    "tabulate",
+    "ttp",
+    "ttp-templates",
+    "N2G",
+	"robotframework"
+]
+prodminminion = [
     "ncclient",
     "netmiko",
     "nornir-netmiko",
     "paramiko",
     "requests",
-    "rich",
     "tabulate",
     "ttp",
     "ttp-templates",
@@ -96,7 +112,7 @@ prodmin = [
     "jinja2",
     "textfsm"
 ]
-prodmax = [
+prodmaxminion = [
     "cerberus",
     "genie",
     "jmespath",
@@ -110,6 +126,7 @@ prodmax = [
     "paramiko",
     "pyats",
     "pygnmi",
+    "pynetbox",
     "pyyaml",
     "puresnmp",
     "requests",

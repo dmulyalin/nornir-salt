@@ -168,7 +168,7 @@ def _create_host(nr, name, groups=None, connection_options=None, **kwargs):
         **kwargs
     )
 
-    return True
+    return {name: True}
 
 
 def _read_host(nr, **kwargs):
@@ -275,7 +275,7 @@ def _update_host(
         elif groups_action == "remove" and group_name in existing_groups:
             host_obj.groups.remove(nr.inventory.groups[group_name])
 
-    return True
+    return {host_obj.name: True}
 
 
 def _delete_host(nr, name):
@@ -286,10 +286,14 @@ def _delete_host(nr, name):
     :param name: (str or list) host name or a list of host names to delete
     :return: True on success
     """
+    ret = {}
     names = [name] if isinstance(name, str) else name
+
     for n in names:
         _ = nr.inventory.hosts.pop(n, None)
-    return True
+        ret[name] = True
+
+    return ret
 
 
 def _load(nr, data):
@@ -413,10 +417,6 @@ def _update_defaults(
         attributes - hostname, port, username, password, platform
         and extras dictionary
     :param data: (dict) dictionary with defaults's data to update
-    :param password: default passowrd string value
-    :param username: default username string value
-    :param port: default port integer value
-    :param platform: default platform string value    
     :param kwargs: (dict) additional key-value pairs to add into
         defaults data
     :return: True on success
