@@ -24,14 +24,14 @@ Nornir-Salt comes with these installation extras.
      - Description
    * - ``dev``
      - Installs libraries required for development e.g. pytest, black, pre-commit etc.
-   * - ``prodmin``
+   * - ``prodminminion``
      - Production ready minimum set. Installs Netmiko, Ncclient and requests libraries
        to provide support for managing devices over SSH, NETCONF and RESTCONF. In addition,
-       installs libraries to extended Salt-Nornir functionality such as Tabulate, Rich, TTP
+       installs libraries to extended Nornir-Salt functionality such as Tabulate, Rich, TTP
        etc. All libraries have versions fixed to produce tested and working environment.
-   * - ``prodmax``
+   * - ``prodmaxminion``
      - Production ready maximum set. Installs all ``prodmin`` libraries together with
-       additional modules required to support complete Salt-Nornir feature set such as
+       additional modules required to support complete Nornir-Salt feature set such as
        PyGNMI, PyATS, Scrapli, NAPALM etc. All libraries have versions fixed to produce
        tested and working environment.
    * - ``netmiko``
@@ -55,18 +55,18 @@ Nornir-Salt comes with these installation extras.
 To install Nornir-Salt with its core dependencies (Nornir and Pydantic) only,
 without any additional libraries::
 
-    pip install salt-nornir
+    pip install Nornir-Salt
 
 To install minimum production set::
 
-    pip install salt-nornir[prodmin]
+    pip install Nornir-Salt[prodminminion]
 
 To install maximum production set::
 
-    pip install salt-nornir[prodmax]
+    pip install Nornir-Salt[prodmaxminion]
 
 **Why different extras?** - to simplify dependency installation for different requirements. It might
-make sense to start testing Nornir-Salt using prodmax set, but later on narrow down to using Netmiko
+make sense to start testing Nornir-Salt using ``prodmaxminion`` set, but later on narrow down to using Netmiko
 and Ncclient only, in that case prodmin set would make sense as it helps to save some hard drive space
 and improve installation speed.
 
