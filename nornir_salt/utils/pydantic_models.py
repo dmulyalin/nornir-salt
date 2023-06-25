@@ -514,7 +514,23 @@ class TestsProcessorTestFunctions(str, Enum):
     CustomFunctionTest = "CustomFunctionTest"
     EvalTest = "EvalTest"
 
-
+class EnumSaltTestAllowedExecFunctions(str, Enum):
+    nr_cli = "nr.cli"
+    nr_tping = "nr.tping"
+    nr_task = "nr.task"
+    nr_hrrp = "nr.http"
+    nr_nc = "nr.nc"
+    nr_gnmi = "nr.gnmi"
+    nr_network = "nr.network"
+    nr_file = "nr.file"
+    nr_snmp = "nr.snmp"
+    
+class modelSaltTestsArgs(BaseModel):
+    function: Optional[EnumSaltTestAllowedExecFunctions]
+    
+    class Config:
+        extra = "allow"
+        
 class modelTestsProcessorTest(BaseModel):
     """Model for TestsProcessor single test dictionary item"""
 
@@ -546,7 +562,9 @@ class modelTestsProcessorTest(BaseModel):
     # EvalTest parameters
     expr: Optional[StrictStr]
     globs: Optional[Dict]
-
+    # SALT related argumetns
+    salt: Optional[modelSaltTestsArgs] 
+    
     class Config:
         extra = "allow"
 
@@ -576,8 +594,7 @@ class modelTestsProcessorTests(BaseModel):
     tests: Union[
         List[List[StrictStr]], List[Dict], List[StrictStr], Dict[StrictStr, List[Dict]]
     ]
-
-
+        
 class modelTestsProcessorSuite(BaseModel):
     """Model for TestsProcessor tests suite"""
 
@@ -600,8 +617,7 @@ class modelTestsProcessorSuite(BaseModel):
             ],
         ],
     ]
-
-
+        
 class NornirInventoryConnection(BaseModel):
     """Nornir Inventory Connection Options Model"""
 
