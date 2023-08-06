@@ -65,15 +65,15 @@ class model_netmiko_send_commands(BaseModel):
     """Model for nornir_salt.plugins.tasks.netmiko_send_commands plugin arguments"""
 
     task: Task
-    commands: Optional[Union[List[StrictStr], StrictStr]]
-    interval: Optional[Union[StrictFloat, StrictInt]]
-    use_ps: Optional[StrictBool]
-    split_lines: Optional[StrictBool]
-    new_line_char: Optional[StrictStr]
-    repeat: Optional[StrictInt]
-    stop_pattern: Optional[StrictStr]
-    repeat_interval: Optional[StrictInt]
-    return_last: Optional[StrictInt]
+    commands: Optional[Union[List[StrictStr], StrictStr]] = None
+    interval: Optional[Union[StrictFloat, StrictInt]] = None
+    use_ps: Optional[StrictBool] = None
+    split_lines: Optional[StrictBool] = None
+    new_line_char: Optional[StrictStr] = None
+    repeat: Optional[StrictInt] = None
+    stop_pattern: Optional[StrictStr] = None
+    repeat_interval: Optional[StrictInt] = None
+    return_last: Optional[StrictInt] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -84,10 +84,10 @@ class model_nr_test(BaseModel):
     """Model for nornir_salt.plugins.tasks.nr_test plugin arguments"""
 
     task: Task
-    ret_data_per_host: Optional[Dict[StrictStr, Any]]
-    ret_data: Optional[Any]
-    excpt: Optional[Union[StrictBool, Callable]]
-    excpt_msg: Optional[StrictStr]
+    ret_data_per_host: Optional[Dict[StrictStr, Any]] = None
+    ret_data: Optional[Any] = None
+    excpt: Optional[Union[StrictBool, Callable]] = None
+    excpt_msg: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -98,10 +98,10 @@ class model_napalm_send_commands(BaseModel):
     """Model for nornir_salt.plugins.tasks.napalm_send_commands plugin arguments"""
 
     task: Task
-    commands: Optional[Union[List[StrictStr], StrictStr]]
-    interval: Optional[Union[StrictFloat, StrictInt]]
-    new_line_char: Optional[StrictStr]
-    split_lines: Optional[StrictBool]
+    commands: Optional[Union[List[StrictStr], StrictStr]] = None
+    interval: Optional[Union[StrictFloat, StrictInt]] = None
+    new_line_char: Optional[StrictStr] = None
+    split_lines: Optional[StrictBool] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -112,7 +112,7 @@ class model_conn_list(BaseModel):
     """Model for nornir_salt.plugins.tasks.connections.conn_list plugin arguments"""
 
     task: Task
-    conn_name: Optional[StrictStr]
+    conn_name: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -123,7 +123,7 @@ class model_conn_close(BaseModel):
     """Model for nornir_salt.plugins.tasks.connections.conn_close plugin arguments"""
 
     task: Task
-    conn_name: Optional[StrictStr]
+    conn_name: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -135,18 +135,18 @@ class model_conn_open(BaseModel):
 
     task: Task
     conn_name: StrictStr
-    host: Optional[Host]
-    hostname: Optional[StrictStr]
-    username: Optional[StrictStr]
-    password: Optional[StrictStr]
-    port: Optional[StrictInt]
-    platform: Optional[StrictStr]
-    extras: Optional[Dict[StrictStr, Any]]
-    default_to_host_attributes: Optional[StrictBool]
-    close_open: Optional[StrictBool]
-    reconnect: Optional[List]
-    raise_on_error: Optional[StrictBool]
-    via: Optional[StrictStr]
+    host: Optional[Host] = None
+    hostname: Optional[StrictStr] = None
+    username: Optional[StrictStr] = None
+    password: Optional[StrictStr] = None
+    port: Optional[StrictInt] = None
+    platform: Optional[StrictStr] = None
+    extras: Optional[Dict[StrictStr, Any]] = None
+    default_to_host_attributes: Optional[StrictBool] = None
+    close_open: Optional[StrictBool] = None
+    reconnect: Optional[List] = None
+    raise_on_error: Optional[StrictBool] = None
+    via: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -174,14 +174,14 @@ class model_scrapli_send_commands(BaseModel):
     """Model for nornir_salt.plugins.tasks.scrapli_send_commands plugin arguments"""
 
     task: Task
-    commands: Optional[Union[List[StrictStr], StrictStr]]
-    interval: Optional[Union[StrictFloat, StrictInt]]
-    split_lines: Optional[StrictBool]
-    new_line_char: Optional[StrictStr]
-    repeat: Optional[StrictInt]
-    stop_pattern: Optional[StrictStr]
-    repeat_interval: Optional[StrictInt]
-    return_last: Optional[StrictInt]
+    commands: Optional[Union[List[StrictStr], StrictStr]] = None
+    interval: Optional[Union[StrictFloat, StrictInt]] = None
+    split_lines: Optional[StrictBool] = None
+    new_line_char: Optional[StrictStr] = None
+    repeat: Optional[StrictInt] = None
+    stop_pattern: Optional[StrictStr] = None
+    repeat_interval: Optional[StrictInt] = None
+    return_last: Optional[StrictInt] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -192,12 +192,12 @@ class model_pyats_send_commands(BaseModel):
     """Model for nornir_salt.plugins.tasks.pyats_send_commands plugin arguments"""
 
     task: Task
-    commands: Optional[Union[List[StrictStr], StrictStr]]
-    interval: Optional[Union[StrictFloat, StrictInt]]
-    new_line_char: Optional[StrictStr]
-    split_lines: Optional[StrictBool]
-    via: Optional[StrictStr]
-    parse: Optional[StrictBool]
+    commands: Optional[Union[List[StrictStr], StrictStr]] = None
+    interval: Optional[Union[StrictFloat, StrictInt]] = None
+    new_line_char: Optional[StrictStr] = None
+    split_lines: Optional[StrictBool] = None
+    via: Optional[StrictStr] = None
+    parse: Optional[StrictBool] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -219,8 +219,8 @@ class model_salt_cfg_gen(BaseModel):
     """Model for nornir_salt.plugins.tasks.salt_cfg_gen plugin arguments"""
 
     task: Task
-    config: Optional[StrictStr]
-    multiline: Optional[StrictBool]
+    config: Optional[StrictStr] = None
+    multiline: Optional[StrictBool] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -246,7 +246,7 @@ class model_file_list(BaseModel):
     """Model for nornir_salt.plugins.tasks.file_list plugin arguments"""
 
     task: Task
-    filegroup: Optional[Union[StrictStr, List[StrictStr]]]
+    filegroup: Optional[Union[StrictStr, List[StrictStr]]] = None
     base_url: Optional[StrictStr] = "/var/nornir-salt/"
     index: Optional[StrictStr] = "common"
 
@@ -262,7 +262,7 @@ class model_file_remove(BaseModel):
     filegroup: Union[StrictStr, List[StrictStr], StrictBool]
     base_url: Optional[StrictStr] = "/var/nornir-salt/"
     index: Optional[StrictStr] = "common"
-    tf_index_lock: Optional[Any]
+    tf_index_lock: Optional[Any] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -275,8 +275,8 @@ class model_file_diff(BaseModel):
     task: Task
     filegroup: Union[StrictStr, List[StrictStr]]
     base_url: Optional[StrictStr] = "/var/nornir-salt/"
-    task_name: Optional[StrictStr]
-    last: Optional[Union[StrictInt, List[StrictInt], StrictStr]]
+    task_name: Optional[StrictStr] = None
+    last: Optional[Union[StrictInt, List[StrictInt], StrictStr]] = None
     index: Optional[StrictStr] = "common"
 
     class Config:
@@ -310,7 +310,7 @@ class model_http_call(BaseModel):
 
     task: Task
     method: StrictStr
-    url: Optional[StrictStr]
+    url: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -321,7 +321,7 @@ class model_napalm_configure(BaseModel):
     """Model for nornir_salt.plugins.tasks.napalm_configure plugin arguments"""
 
     task: Task
-    config: Optional[Union[StrictStr, List[StrictStr]]]
+    config: Optional[Union[StrictStr, List[StrictStr]]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -338,22 +338,22 @@ class model_ncclient_call(BaseModel):
 
     task: Task
     call: StrictStr
-    edit_rpc: Optional[NclientEditRPCnames]
-    confirm_delay: Optional[StrictInt]
-    target: Optional[StrictStr]
-    config: Optional[Union[StrictStr, List[StrictStr]]]
-    format_: Optional[StrictStr] = Field(alias="format")
-    confirmed: Optional[StrictBool]
-    commit_final_delay: Optional[StrictInt]
-    confirm_delay: Optional[StrictInt]
-    validate_: Optional[StrictBool] = Field(alias="validate")
-    edit_rpc: Optional[StrictStr]
-    edit_arg: Optional[Dict]
-    commit_arg: Optional[Dict]
-    capab_filter: Optional[StrictStr]
-    method_name: Optional[StrictStr]
-    rpc: Optional[StrictStr]
-    filter_: Optional[StrictStr]
+    edit_rpc: Optional[NclientEditRPCnames] = None
+    confirm_delay: Optional[StrictInt] = None
+    target: Optional[StrictStr] = None
+    config: Optional[Union[StrictStr, List[StrictStr]]] = None
+    format_: Optional[StrictStr] = Field(None, alias="format")
+    confirmed: Optional[StrictBool] = None
+    commit_final_delay: Optional[StrictInt] = None
+    confirm_delay: Optional[StrictInt] = None
+    validate_: Optional[StrictBool] = Field(None, alias="validate")
+    edit_rpc: Optional[StrictStr] = None
+    edit_arg: Optional[Dict] = None
+    commit_arg: Optional[Dict] = None
+    capab_filter: Optional[StrictStr] = None
+    method_name: Optional[StrictStr] = None
+    rpc: Optional[StrictStr] = None
+    filter_: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -365,14 +365,14 @@ class model_puresnmp_call(BaseModel):
 
     task: Task
     call: StrictStr
-    oid: Optional[StrictStr]
-    oids: Optional[List[StrictStr]]
-    mappings: Optional[Dict[StrictStr, Any]]
-    value: Optional[Union[StrictStr]]
-    bulk_size: Optional[StrictInt]
-    scalar_oids: Optional[List[StrictStr]]
-    repeating_oids: Optional[List[StrictStr]]
-    method_name: Optional[StrictStr]
+    oid: Optional[StrictStr] = None
+    oids: Optional[List[StrictStr]] = None
+    mappings: Optional[Dict[StrictStr, Any]] = None
+    value: Optional[Union[StrictStr]] = None
+    bulk_size: Optional[StrictInt] = None
+    scalar_oids: Optional[List[StrictStr]] = None
+    repeating_oids: Optional[List[StrictStr]] = None
+    method_name: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -383,11 +383,11 @@ class model_netmiko_send_config(BaseModel):
     """Model for nornir_salt.plugins.tasks.netmiko_send_config plugin arguments"""
 
     task: Task
-    config: Optional[Union[StrictStr, List[StrictStr]]]
-    commit: Optional[Union[Dict, StrictBool]]
-    commit_final_delay: Optional[StrictInt]
-    batch: Optional[StrictInt]
-    enable: Optional[StrictBool]
+    config: Optional[Union[StrictStr, List[StrictStr]]] = None
+    commit: Optional[Union[Dict, StrictBool]] = None
+    commit_final_delay: Optional[StrictInt] = None
+    batch: Optional[StrictInt] = None
+    enable: Optional[StrictBool] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -398,7 +398,7 @@ class model_pyats_send_config(BaseModel):
     """Model for nornir_salt.plugins.tasks.pyats_send_config plugin arguments"""
 
     task: Task
-    config: Optional[Union[StrictStr, List[StrictStr]]]
+    config: Optional[Union[StrictStr, List[StrictStr]]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -410,7 +410,7 @@ class model_pygnmi_call(BaseModel):
 
     task: Task
     call: StrictStr
-    name_arg: Optional[StrictStr]
+    name_arg: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -448,7 +448,7 @@ class model_salt_clear_hcache(BaseModel):
     """Model for nornir_salt.plugins.tasks.salt_clear_hcache plugin arguments"""
 
     task: Task
-    cache_keys: Optional[List[StrictStr]]
+    cache_keys: Optional[List[StrictStr]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -470,7 +470,7 @@ class model_scrapli_send_config(BaseModel):
     """Model for nornir_salt.plugins.tasks.scrapli_send_config plugin arguments"""
 
     task: Task
-    config: Optional[Union[StrictStr, List[StrictStr]]]
+    config: Optional[Union[StrictStr, List[StrictStr]]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -481,8 +481,8 @@ class model_sleep(BaseModel):
     """Model for nornir_salt.plugins.tasks.sleep plugin arguments"""
 
     task: Task
-    sleep_for: Optional[StrictInt]
-    sleep_random: Optional[Union[StrictInt, List[StrictInt], Tuple[StrictInt]]]
+    sleep_for: Optional[StrictInt] = None
+    sleep_random: Optional[Union[StrictInt, List[StrictInt], Tuple[StrictInt]]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -526,7 +526,7 @@ class EnumSaltTestAllowedExecFunctions(str, Enum):
     nr_snmp = "nr.snmp"
     
 class modelSaltTestsArgs(BaseModel):
-    function: Optional[EnumSaltTestAllowedExecFunctions]
+    function: Optional[EnumSaltTestAllowedExecFunctions] = None
     
     class Config:
         extra = "allow"
@@ -535,35 +535,35 @@ class modelTestsProcessorTest(BaseModel):
     """Model for TestsProcessor single test dictionary item"""
 
     test: TestsProcessorTestFunctions
-    name: Optional[StrictStr]
-    task: Optional[Union[StrictStr, List[StrictStr]]]
-    err_msg: Optional[StrictStr]
-    path: Optional[StrictStr]
-    report_all: Optional[StrictBool]
-    use_all_tasks: Optional[StrictBool]
+    name: Optional[StrictStr] = None
+    task: Optional[Union[StrictStr, List[StrictStr]]] = None
+    err_msg: Optional[StrictStr] = None
+    path: Optional[StrictStr] = None
+    report_all: Optional[StrictBool] = None
+    use_all_tasks: Optional[StrictBool] = None
     # Contains and Equal tests parameters
-    pattern: Optional[Union[StrictStr, Any]]
-    use_re: Optional[StrictBool]
-    count: Optional[StrictInt]
-    count_ge: Optional[StrictInt]
-    count_le: Optional[StrictInt]
-    revert: Optional[StrictBool]
+    pattern: Optional[Union[StrictStr, Any]] = None
+    use_re: Optional[StrictBool] = None
+    count: Optional[StrictInt] = None
+    count_ge: Optional[StrictInt] = None
+    count_le: Optional[StrictInt] = None
+    revert: Optional[StrictBool] = None
     # CustomFunctionTest parameters
-    function_file: Optional[StrictStr]
-    function_text: Optional[StrictStr]
-    function_call: Optional[Callable]
-    function_name: Optional[StrictStr]
-    function_kwargs: Optional[Dict]
-    globals_dictionary: Optional[Dict]
-    add_host: Optional[StrictBool]
+    function_file: Optional[StrictStr] = None
+    function_text: Optional[StrictStr] = None
+    function_call: Optional[Callable] = None
+    function_name: Optional[StrictStr] = None
+    function_kwargs: Optional[Dict] = None
+    globals_dictionary: Optional[Dict] = None
+    add_host: Optional[StrictBool] = None
     # CerberusTest parameters
-    _schema: Optional[StrictStr] = Field(alias="schema")
-    allow_unknown: Optional[StrictBool]
+    _schema: Optional[StrictStr] = Field(None, alias="schema")
+    allow_unknown: Optional[StrictBool] = None
     # EvalTest parameters
-    expr: Optional[StrictStr]
-    globs: Optional[Dict]
+    expr: Optional[StrictStr] = None
+    globs: Optional[Dict] = None
     # SALT related argumetns
-    salt: Optional[modelSaltTestsArgs] 
+    salt: Optional[modelSaltTestsArgs] = None
     
     class Config:
         extra = "allow"
@@ -602,7 +602,7 @@ class modelTestsProcessorSuite(BaseModel):
         List[
             Union[
                 modelTestsProcessorTest,
-                conlist(StrictStr, min_items=3, max_items=4),
+                List[StrictStr],
                 StrictStr,
             ]
         ],
@@ -611,7 +611,7 @@ class modelTestsProcessorSuite(BaseModel):
             List[
                 Union[
                     modelTestsProcessorTest,
-                    conlist(StrictStr, min_items=3, max_items=4),
+                    List[StrictStr],
                     StrictStr,
                 ]
             ],
@@ -621,42 +621,42 @@ class modelTestsProcessorSuite(BaseModel):
 class NornirInventoryConnection(BaseModel):
     """Nornir Inventory Connection Options Model"""
 
-    hostname: Optional[StrictStr]
+    hostname: Optional[StrictStr] = None
     port: Optional[
         Union[None, int]
-    ]  # using Union[None, StrictInt] throws error if port is None
-    username: Optional[StrictStr]
-    password: Optional[StrictStr]
-    platform: Optional[StrictStr]
-    extras: Optional[Dict]
+    ] = None # using Union[None, StrictInt] throws error if port is None
+    username: Optional[StrictStr] = None
+    password: Optional[StrictStr] = None
+    platform: Optional[StrictStr] = None
+    extras: Optional[Dict] = None
 
 
 class NornirInventoryHost(BaseModel):
     """Model for Nornir Inventory Host, Groups and Defaults"""
 
-    hostname: Optional[StrictStr]
-    port: Optional[Union[None, int]]
-    username: Optional[StrictStr]
-    password: Optional[StrictStr]
-    platform: Optional[StrictStr]
-    connection_options: Optional[Dict[StrictStr, NornirInventoryConnection]]
-    groups: Optional[List[StrictStr]]
-    data: Optional[Dict]
+    hostname: Optional[StrictStr] = None
+    port: Optional[Union[None, int]] = None
+    username: Optional[StrictStr] = None
+    password: Optional[StrictStr] = None
+    platform: Optional[StrictStr] = None
+    connection_options: Optional[Dict[StrictStr, NornirInventoryConnection]] = None
+    groups: Optional[List[StrictStr]] = None
+    data: Optional[Dict] = None
 
 
 class NornirInventory(BaseModel):
     """Model for Nornir Inventory"""
 
-    hosts: Optional[Dict[StrictStr, NornirInventoryHost]]
-    groups: Optional[Dict[StrictStr, NornirInventoryHost]]
-    defaults: Optional[NornirInventoryHost]
+    hosts: Optional[Dict[StrictStr, NornirInventoryHost]] = None
+    groups: Optional[Dict[StrictStr, NornirInventoryHost]] = None
+    defaults: Optional[NornirInventoryHost] = None
 
 
 class model_network(BaseModel):
     """Model for Nornir network task plugin"""
 
     task: Task
-    call: Optional[StrictStr]
+    call: Optional[StrictStr] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -667,11 +667,11 @@ class model_network_resolve_dns(BaseModel):
     """Model for Nornir network resolve_dns task plugin"""
 
     task: Task
-    servers: Optional[Union[List[StrictStr], StrictStr]]
-    use_host_name: Optional[StrictBool]
-    timeout: Optional[StrictFloat]
-    ipv4: Optional[StrictBool]
-    ipv6: Optional[StrictBool]
+    servers: Optional[Union[List[StrictStr], StrictStr]] = None
+    use_host_name: Optional[StrictBool] = None
+    timeout: Optional[StrictFloat] = None
+    ipv4: Optional[StrictBool] = None
+    ipv6: Optional[StrictBool] = None
 
     class Config:
         arbitrary_types_allowed = True
