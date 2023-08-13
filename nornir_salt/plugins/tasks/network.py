@@ -39,6 +39,13 @@ try:
 except ImportError:
     HAS_DNS = False
 
+try:
+    import pythonping
+
+    HAS_PYTHONPING = True
+except ImportError:
+    HAS_PYTHONPING = False
+
 from typing import Optional, Any, Dict, Union
 from nornir.core.task import Result
 from nornir_salt.utils.pydantic_models import model_network, model_network_resolve_dns
@@ -65,7 +72,7 @@ def resolve_dns(
 
     :param server: list or comma separated string of IP addresses or FQDNs
         of DNS servers to use
-    :param use_host_name: if True resolves host's name instead of host's hostname
+    :param use_host_name: if True resolves host's ``name`` instead of host's ``hostname``
     :param timeout: number of seconds to wait for response from DNS server
     :param ipv4: resolve 'A' record
     :param ipv6: resolve 'AAAA' record
@@ -123,6 +130,42 @@ def resolve_dns(
     )
 
 
+def icmp_ping(task, use_host_name: bool = False, **kwargs) -> Result:
+    """
+    Functiont to ping host using ICMP.
+
+    Requires `pythonping <https://github.com/alessandromaggio/pythonping>_`
+    library.
+
+    :param use_host_name: if True pings host's ``name`` instead of host's ``hostname``
+    :param kwargs: any additional arguments for ``pythonping.ping`` call
+    """
+    ret = {}
+    task.name = "ping"
+
+    if not HAS_PYTHONPING:
+        return Result(
+            host=task.host,
+            failed=True,
+            result="Failed importing pythonping, is it installed?",
+        )
+
+    # source target to ping
+    if use_host_name:
+        target = task.host.name
+    else:
+        target = task.host.hostname
+
+    try:
+        ret["result"] = pythonping.ping(target, **kwargs)
+    except:
+        ret["result"] = None
+        ret["failed"] = True
+        ret["exception"] = traceback.format_exc()
+
+    return Result(host=task.host, **ret)
+
+
 @ValidateFuncArgs(model_network)
 def network(task, call, **kwargs) -> Result:
     """
@@ -138,8 +181,8 @@ def network(task, call, **kwargs) -> Result:
     """
     dispatcher = {
         "resolve_dns": resolve_dns,
+        "ping": icmp_ping,
         # "reverse_dns": reverse_dns,
-        # "ping": ping,
         # traceroute
         # connect
     }

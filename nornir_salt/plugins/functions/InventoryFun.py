@@ -291,7 +291,7 @@ def _delete_host(nr, name):
 
     for n in names:
         _ = nr.inventory.hosts.pop(n, None)
-        ret[name] = True
+        ret[n] = True
 
     return ret
 

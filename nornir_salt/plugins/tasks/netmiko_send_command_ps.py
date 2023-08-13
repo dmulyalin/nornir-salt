@@ -90,15 +90,15 @@ log = logging.getLogger(__name__)
 def send_command_ps(
     self,
     command_string: str,
-    read_timeout:int=30,
-    timeout:int=120,
-    inter_loop_sleep:float=0.1,
-    initial_sleep:float=0.1,
-    strip_prompt:bool=True,
-    strip_command:bool=True,
-    normalize:bool=True,
-    cutoff:float=0.6,
-    nowait:bool=False,
+    read_timeout: int = 30,
+    timeout: int = 120,
+    inter_loop_sleep: float = 0.1,
+    initial_sleep: float = 0.1,
+    strip_prompt: bool = True,
+    strip_command: bool = True,
+    normalize: bool = True,
+    cutoff: float = 0.6,
+    nowait: bool = False,
 ):
     """
     Execute command_string_ps on the SSH channel using promptless (ps) approach. Can be used

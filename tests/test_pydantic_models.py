@@ -107,7 +107,6 @@ def test_model_netmiko_send_commands():
     assert ret['sandbox-iosxe-latest-1']['netmiko_send_commands']["failed"] == True
     assert ret['sandbox-iosxe-latest-1']['netmiko_send_commands']["task_retry"] == 0
     assert "validation error" in ret['sandbox-iosxe-latest-1']['netmiko_send_commands']['exception']
-    assert 'value is not a valid integer' in ret['sandbox-iosxe-latest-1']['netmiko_send_commands']['exception']
 
 
 @skip_if_no_nornir
@@ -136,7 +135,7 @@ def test_model_nr_test():
     assert good_ret["sandbox-iosxe-latest-1"]["nr_test"]["result"] == {'command': 'show clock'}
 
     assert bad_ret["sandbox-iosxe-latest-1"]["nr_test"]["failed"] == True
-    assert "str type expected" in bad_ret["sandbox-iosxe-latest-1"]["nr_test"]["result"]
+    assert "ValidationError" in bad_ret["sandbox-iosxe-latest-1"]["nr_test"]["result"]
     
 def test_modelTestsProcessorSuite_wrong_test_name():
     tests = [

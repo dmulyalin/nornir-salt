@@ -33,7 +33,7 @@ skip_if_no_internet = pytest.mark.skipif(
     reason="Have no Internet access",
 )
 
-always_on_query = requests.get("https://sandbox-iosxe-latest-1.cisco.com/restconf/", verify=False, auth=("developer", "C1sco12345"))
+always_on_query = requests.get("https://sandbox-iosxe-recomm-1.cisco.com/restconf/", verify=False, auth=("developer", "lastorangerestoreball8876"))
 skip_if_no_always_on_access = pytest.mark.skipif(
     always_on_query.ok == False,
     reason="Have no access to Cisco IOS XE always on lab",
@@ -77,7 +77,7 @@ lab_inventory_dict = yaml.safe_load(lab_inventory)
 cisco_always_on_sandpox = """
 hosts:
   sandbox-iosxe-recomm-1:
-    hostname: sandbox-iosxe-latest-1.cisco.com
+    hostname: sandbox-iosxe-recomm-1.cisco.com
     platform: ios
     groups: [lab]
 
@@ -90,7 +90,7 @@ groups:
         port: 443
         extras:
           transport: https
-          base_url: "https://sandbox-iosxe-latest-1.cisco.com/restconf/"
+          base_url: "https://sandbox-iosxe-recomm-1.cisco.com/restconf/"
           verify: False
     """
 cisco_always_on_sandpox_inventory = yaml.safe_load(cisco_always_on_sandpox)

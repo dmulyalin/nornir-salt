@@ -39,22 +39,22 @@ skip_if_no_nornir = pytest.mark.skipif(
 # ---------------------------------------------------
 cisco_iosxe_always_on_router = """
 hosts:
-  sandbox-iosxe-latest-1:
-    hostname: "sandbox-iosxe-latest-1.cisco.com"
+  sandbox-iosxe-recomm-1:
+    hostname: "sandbox-iosxe-recomm-1.cisco.com"
     platform: ios
     username: developer
-    password: C1sco12345
+    password: lastorangerestoreball8876
 """
 s = socket.socket()
 s.settimeout(1)
-status = s.connect_ex(("sandbox-iosxe-latest-1.cisco.com", 22))
+status = s.connect_ex(("sandbox-iosxe-recomm-1.cisco.com", 22))
 if status == 0:
     has_connection_to_cisco_iosxe_always_on_router = True
 else:
     has_connection_to_cisco_iosxe_always_on_router = False
 skip_if_has_no_cisco_iosxe_always_on_router = pytest.mark.skipif(
     has_connection_to_cisco_iosxe_always_on_router == False,
-    reason="Has no connection to sandbox-iosxe-latest-1.cisco.com router",
+    reason="Has no connection to sandbox-iosxe-recomm-1.cisco.com router",
 )
 
 cisco_iosxe_always_on_router_dict = yaml.safe_load(cisco_iosxe_always_on_router)
@@ -118,7 +118,7 @@ Cisco IOS XE Software, Version {{ iose_xe_version }}
 
     pprint.pprint(dict_result)
     # prints:
-    # {'sandbox-iosxe-latest-1': {'run_ttp': [[{'arp_cache': [{'age': '0',
+    # {'sandbox-iosxe-recomm-1': {'run_ttp': [[{'arp_cache': [{'age': '0',
     #                                                          'interface': 'GigabitEthernet1',
     #                                                          'ip': '10.10.20.28',
     #                                                          'mac': '0050.56bf.f0be'},
@@ -143,8 +143,8 @@ Cisco IOS XE Software, Version {{ iose_xe_version }}
     #                                                          'ip': '172.16.255.1',
     #                                                          'mac': '0050.56bf.ea76'}]},
     #                                          {'facts': {'version': {'iose_xe_version': '16.09.03'}}}]]}}
-    assert "arp_cache" in dict_result['sandbox-iosxe-latest-1']["run_ttp"][0][0]
-    assert "facts" in dict_result['sandbox-iosxe-latest-1']["run_ttp"][0][1]
-    assert len(dict_result['sandbox-iosxe-latest-1']["run_ttp"][0][0]["arp_cache"]) > 0
+    assert "arp_cache" in dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][0]
+    assert "facts" in dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][1]
+    assert len(dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][0]["arp_cache"]) > 0
 
 # test_run_ttp_docs()

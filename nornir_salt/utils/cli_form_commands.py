@@ -50,8 +50,15 @@ def cli_form_commands(
         commands = task.host.data["__task__"]["filename"]
 
     # normalize commands to a list
-    if isinstance(commands, str) and split_lines:
-        commands = commands.splitlines()
+    if split_lines:
+        if isinstance(commands, str):
+            commands = commands.splitlines()
+        # handle a list of multiline command strings
+        elif isinstance(commands, list):
+            temp = []
+            for i in commands:
+                temp.extend(i.splitlines())
+            commands = temp
     elif isinstance(commands, str) and not split_lines:
         commands = [commands]
 

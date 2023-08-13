@@ -93,6 +93,7 @@ def conn_list(task, conn_name: str = "all") -> list:
         {
             "connection_name": conn,
             "connection_plugin": str(type(conn_obj)).split(" ")[1].strip(">"),
+            "connection_action": "list",
         }
         for conn, conn_obj in task.host.connections.items()
         if conn_name == "all" or conn == conn_name
@@ -115,7 +116,7 @@ def conn_close(task, conn_name: str = "all") -> list:
     for conn in list(task.host.connections.keys()):
         if conn_name != "all" and conn != conn_name:
             continue
-        ret.append({"connection_name": conn})
+        ret.append({"connection_name": conn, "connection_action": "close"})
         try:
             task.host.close_connection(conn)
         except:
@@ -365,6 +366,11 @@ def conn_open(
     in connection options.
     """
     reconnect = reconnect or []
+    info = {
+        "connection_name": conn_name,
+        "connection_options": via or conn_name,
+        "connection_action": "open",
+    }
     ret = {}
     host = host or task.host
     close_open = True if via else close_open
@@ -374,7 +380,7 @@ def conn_open(
         if close_open:
             host.close_connection(conn_name)
         else:
-            return Result(host=host, result="Connection already open")
+            return Result(host=host, result="Connection already open", **info)
 
     if via:
         via_conn_opts = host._get_connection_options_recursively(via)
@@ -472,7 +478,7 @@ def conn_open(
     if ret.get("exception") and raise_on_error:
         raise RuntimeError(ret["exception"])
 
-    return Result(host=host, **ret)
+    return Result(host=host, **info, **ret)
 
 
 @ValidateFuncArgs(model_connections)
@@ -491,11 +497,7 @@ def connections(task, call, **kwargs):
     * close - calls conn_close task
     * open - calls conn_open task
     """
-    if "conn_name" in kwargs:
-        task.name = "connections:{}:{}".format(call, kwargs["conn_name"])
-    else:
-        task.name = "connections:{}".format(call)
-
+    task.name = "connections"
     dispatcher = {"ls": conn_list, "close": conn_close, "open": conn_open}
 
     return dispatcher[call](task, **kwargs)

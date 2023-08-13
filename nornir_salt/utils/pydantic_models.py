@@ -514,6 +514,7 @@ class TestsProcessorTestFunctions(str, Enum):
     CustomFunctionTest = "CustomFunctionTest"
     EvalTest = "EvalTest"
 
+
 class EnumSaltTestAllowedExecFunctions(str, Enum):
     nr_cli = "nr.cli"
     nr_tping = "nr.tping"
@@ -524,13 +525,15 @@ class EnumSaltTestAllowedExecFunctions(str, Enum):
     nr_network = "nr.network"
     nr_file = "nr.file"
     nr_snmp = "nr.snmp"
-    
+
+
 class modelSaltTestsArgs(BaseModel):
     function: Optional[EnumSaltTestAllowedExecFunctions] = None
-    
+
     class Config:
         extra = "allow"
-        
+
+
 class modelTestsProcessorTest(BaseModel):
     """Model for TestsProcessor single test dictionary item"""
 
@@ -564,7 +567,7 @@ class modelTestsProcessorTest(BaseModel):
     globs: Optional[Dict] = None
     # SALT related argumetns
     salt: Optional[modelSaltTestsArgs] = None
-    
+
     class Config:
         extra = "allow"
 
@@ -594,7 +597,8 @@ class modelTestsProcessorTests(BaseModel):
     tests: Union[
         List[List[StrictStr]], List[Dict], List[StrictStr], Dict[StrictStr, List[Dict]]
     ]
-        
+
+
 class modelTestsProcessorSuite(BaseModel):
     """Model for TestsProcessor tests suite"""
 
@@ -617,14 +621,15 @@ class modelTestsProcessorSuite(BaseModel):
             ],
         ],
     ]
-        
+
+
 class NornirInventoryConnection(BaseModel):
     """Nornir Inventory Connection Options Model"""
 
     hostname: Optional[StrictStr] = None
     port: Optional[
         Union[None, int]
-    ] = None # using Union[None, StrictInt] throws error if port is None
+    ] = None  # using Union[None, StrictInt] throws error if port is None
     username: Optional[StrictStr] = None
     password: Optional[StrictStr] = None
     platform: Optional[StrictStr] = None
