@@ -560,7 +560,7 @@ class modelTestsProcessorTest(BaseModel):
     globals_dictionary: Optional[Dict] = None
     add_host: Optional[StrictBool] = None
     # CerberusTest parameters
-    _schema: Optional[StrictStr] = Field(None, alias="schema")
+    cerberus_schema: Optional[StrictStr] = Field(None, alias="schema")
     allow_unknown: Optional[StrictBool] = None
     # EvalTest parameters
     expr: Optional[StrictStr] = None

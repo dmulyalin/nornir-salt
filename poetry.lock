@@ -3527,6 +3527,18 @@ asyncio-client = ["aiohttp (>=3.4)", "websockets (>=7.0)"]
 client = ["requests (>=2.21.0)", "websocket-client (>=0.54.0)"]
 
 [[package]]
+name = "pythonping"
+version = "1.1.4"
+description = "A simple way to ping in Python"
+category = "main"
+optional = true
+python-versions = "*"
+files = [
+    {file = "pythonping-1.1.4-py3-none-any.whl", hash = "sha256:dedd690e36cb8c69703175610cf6ce01ff0c2070b447cc64c31a82951c9a53f6"},
+    {file = "pythonping-1.1.4.tar.gz", hash = "sha256:acef84640fee6f20b725f2a1d2392771f2845554cfabcef30b1fdea5030161af"},
+]
+
+[[package]]
 name = "pytz"
 version = "2023.3"
 description = "World timezone definitions, modern and historical"
@@ -4767,7 +4779,7 @@ napalm = ["napalm", "nornir-napalm"]
 netconf = ["ncclient", "scrapli-netconf"]
 netmiko = ["netmiko", "nornir-netmiko"]
 prodmaxmaster = ["N2G", "pynetbox", "rich", "robotframework", "tabulate", "ttp", "ttp-templates"]
-prodmaxminion = ["cerberus", "dnspython", "genie", "jinja2", "jmespath", "napalm", "ncclient", "netmiko", "nornir-napalm", "nornir-netmiko", "nornir-scrapli", "ntc-templates", "paramiko", "puresnmp", "pyats", "pygnmi", "pynetbox", "pyyaml", "requests", "scrapli", "scrapli-community", "scrapli-netconf", "tabulate", "textfsm", "ttp", "ttp-templates", "xmltodict"]
+prodmaxminion = ["cerberus", "dnspython", "genie", "jinja2", "jmespath", "napalm", "ncclient", "netmiko", "nornir-napalm", "nornir-netmiko", "nornir-scrapli", "ntc-templates", "paramiko", "puresnmp", "pyats", "pygnmi", "pynetbox", "pythonping", "pyyaml", "requests", "scrapli", "scrapli-community", "scrapli-netconf", "tabulate", "textfsm", "ttp", "ttp-templates", "xmltodict"]
 prodminmaster = ["rich", "tabulate"]
 prodminminion = ["jinja2", "ncclient", "netmiko", "nornir-netmiko", "paramiko", "requests", "tabulate", "textfsm", "ttp", "ttp-templates", "xmltodict"]
 pyats = ["genie", "pyats"]
@@ -4777,4 +4789,4 @@ scrapli = ["scrapli", "scrapli-community"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4.0"
-content-hash = "251865f9e51ed709e825c73abec5f792fb041223b66f9d3b4ea064b5e3920b7f"
+content-hash = "8325e7a4108b61b7a51674827976163476cb223a21e8c07300a759947b9ba413"
