@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir_salt"
-version = "0.20.1"
+version = "0.20.2"
 description = "Nornir plugins used with SaltStack Salt-Nornir Proxy Minion"
 authors = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
 maintainers = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
@@ -24,7 +24,7 @@ classifiers = [
 # mandatory dependencies
 python = ">=3.7,<4.0"
 nornir = "3.3.0"
-pydantic = ">=1.10.2,<=2.1.1"
+pydantic = ">=1.10.2,<=2.3.0"
 
 # optional dependencies for extras definition
 cerberus = { version = "1.3.4", optional = true }
