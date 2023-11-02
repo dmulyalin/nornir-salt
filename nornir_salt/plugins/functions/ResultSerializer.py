@@ -276,7 +276,7 @@ def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=None):
                     ret[-1].setdefault("result", str(i.result))
                     ret[-1]["failed"] = True if exception else i.failed
                     ret[-1]["exception"] = exception
-                    ret[-1]["host"] = i.host.name
+                    ret[-1]["host"] = hostname
                 # form results for the rest of tasks
                 else:
                     ret.append(
