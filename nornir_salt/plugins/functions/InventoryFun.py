@@ -135,7 +135,6 @@ def _create_bulk_hosts(nr, hosts_dict):
         'username', 'password', 'platform', 'data'.
 
     This function iterates over the hosts_dict dictionary and calls the _create_host function for each host.
-    If a host data dictionary includes a 'groups' list with a group that does not exist, no error is raised, the group is simply skipped.
     The function does not return a value.
 
     Example usage:
