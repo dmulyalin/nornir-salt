@@ -11,7 +11,8 @@ from pydantic import (
     StrictFloat,
     StrictStr,
     conlist,
-    root_validator,
+#    root_validator,
+    model_validator,
     Field,
 )
 from typing import Union, Optional, List, Any, Dict, Callable, Tuple
@@ -571,7 +572,8 @@ class modelTestsProcessorTest(BaseModel):
     class Config:
         extra = "allow"
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_commands_given(cls, values):
         test = values["test"]
         # verify that test has task defined except for when use_all_tasks is True

@@ -199,3 +199,34 @@ def test_task_sleep_random_digit():
     assert "Slept for" in result["IOL2"]["sleep"]
 
 # test_task_sleep_random_digit()
+
+
+@skip_if_no_nornir
+def test_nr_test_ret_task_data():
+    # add __task__data
+    for host_name, host_object in nr.inventory.hosts.items():
+        _ = host_object.data.pop("__task__", None) # rewrite task data
+        host_object.data["__task__"] = {"cmds": ["foo", "bar"]}
+    output = nr.run(
+        task=nr_test,
+        use_task_data=True
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result)
+    assert result == {'IOL1': {'nr_test': {'cmds': ['foo', 'bar']}},
+                      'IOL2': {'nr_test': {'cmds': ['foo', 'bar']}}}
+ 
+@skip_if_no_nornir
+def test_nr_test_ret_task_data_key():
+    # add __task__data
+    for host_name, host_object in nr.inventory.hosts.items():
+        _ = host_object.data.pop("__task__", None) # rewrite task data
+        host_object.data["__task__"] = {"cmds": ["foo", "bar"]}
+    output = nr.run(
+        task=nr_test,
+        use_task_data="cmds"
+    )
+    result = ResultSerializer(output)
+    pprint.pprint(result)
+    assert result == {'IOL1': {'nr_test': ['foo', 'bar']}, 'IOL2': {'nr_test': ['foo', 'bar']}}
+    

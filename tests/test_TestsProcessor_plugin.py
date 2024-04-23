@@ -236,7 +236,7 @@ def test_contains_check_list_of_lists():
         ["show run | inc ntp", "contains", "ntp server 7.7.7.7"],
     ]
     nr.data.reset_failed_hosts()
-    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
+    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)])
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
@@ -1988,7 +1988,7 @@ def test_eval_when_tests_are_list_of_lists():
         ["show run | inc ntp", "eval", "'7.7.7.7' in result"],
     ]
     nr.data.reset_failed_hosts()
-    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
+    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)])
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={

@@ -37,6 +37,7 @@ def nr_test(
     ret_data="__undefined_value__",
     excpt=None,
     excpt_msg="",
+    use_task_data=False,
     **kwargs
 ):
     """
@@ -50,7 +51,9 @@ def nr_test(
     :return result: ``ret_data`` or ``**kwargs`` passed to the task
     :param excpt: (obj or True) exception object to raise; if True, raises ``RuntimeError``
     :param excpt_msg: (str) message to use with exception
-
+    :param use_task_data: (bool, str) use host's ``__task__`` data as a return result, 
+        if string returns ``host.data["__task__"][use_task_data]`` value
+    
     Order of preference of return data:
 
     1. If ``ret_data_per_host`` present, it is used to form results
@@ -60,7 +63,15 @@ def nr_test(
     """
     ret_data_per_host = ret_data_per_host or {}
 
-    if ret_data_per_host:
+    if use_task_data is True:
+        return Result(
+            host=task.host, result=task.host.get("__task__", None)
+        )        
+    elif use_task_data and isinstance(use_task_data, str):
+        return Result(
+            host=task.host, result=task.host.get("__task__", {}).get(use_task_data, "")
+        )          
+    elif ret_data_per_host:
         return Result(
             host=task.host, result=ret_data_per_host.get(task.host.name, None)
         )

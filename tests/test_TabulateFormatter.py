@@ -150,7 +150,7 @@ def test_tabulate_from_aggregatedresult_brief():
         ["show run | inc ntp", "contains", "7.7.7.8"],
         ["show run | inc ntp", "contains", "7.7.7.7"],
     ]
-    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
+    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)])
     output = nr_with_tests.run(
         task=nr_test, ret_data="""ntp server 7.7.7.8""", name="show run | inc ntp"
     )
