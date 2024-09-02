@@ -14,6 +14,7 @@ from pydantic import (
 #    root_validator,
     model_validator,
     Field,
+    ConfigDict,
 )
 from typing import Union, Optional, List, Any, Dict, Callable, Tuple
 
@@ -76,9 +77,10 @@ class model_netmiko_send_commands(BaseModel):
     repeat_interval: Optional[StrictInt] = None
     return_last: Optional[StrictInt] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(
+        arbitrary_types_allowed = True,
         extra = "allow"
+    )       
 
 
 class model_nr_test(BaseModel):

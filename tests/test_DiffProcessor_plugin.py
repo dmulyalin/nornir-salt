@@ -144,7 +144,7 @@ ntp server 9.9.9.9
 
     res = ResultSerializer(output, add_details=True)
 
-    # pprint.pprint(res)
+    pprint.pprint(res)
     # {'IOL1': {'show run | inc ntp': {'changed': False,
     #                                  'diff': '',
     #                                  'exception': None,
