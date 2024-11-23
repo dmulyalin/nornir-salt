@@ -531,6 +531,7 @@ def connector(
     jumphosts_connections: dict,
     run_creds_retry: list,
     run_connect_timeout: int,
+    run_connect_check: bool,
 ):
     while not stop_event.is_set():
         try:
@@ -558,11 +559,12 @@ def connector(
                         host, jumphosts_connections
                     )
                 # check connection
-                host_connection_check = conn_check(
-                    task, host, connection_name, timeout=run_connect_timeout
-                )
-                if host_connection_check.failed is True:
-                    raise Exception(host_connection_check.exception)
+                if run_connect_check:
+                    host_connection_check = conn_check(
+                        task, host, connection_name, timeout=run_connect_timeout
+                    )
+                    if host_connection_check.failed is True:
+                        raise Exception(host_connection_check.exception)
                 # retry various connection parameters
                 if run_creds_retry:
                     log.info(
@@ -742,6 +744,9 @@ class RetryRunner:
     :param task_stop_errors: list of glob patterns to stop retrying if seen in task exception string,
         these patterns not applicable to errors encountered during connection establishment. Error
         ``*validation error*`` pattern always included in these list.
+    :param connect_check: if True tries to open test TCP connection with hostname before opening actual
+        connection, raises error if fails. This is mechanism to fail fast hosts that are not reachable.
+    :param connect_timeout: timeout in seconds to wait for test TCP connection to establish
     """
 
     def __init__(
@@ -758,6 +763,7 @@ class RetryRunner:
         task_timeout: int = 600,
         creds_retry: list = None,
         task_stop_errors: list = None,
+        connect_check: bool = True,
         connect_timeout: int = None,
     ) -> None:
         self.num_workers = num_workers
@@ -774,6 +780,7 @@ class RetryRunner:
         self.creds_retry = creds_retry or []
         self.task_stop_errors = task_stop_errors or []
         self.connect_timeout = connect_timeout or 5
+        self.connect_check = connect_check
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
         connectors_q = queue.Queue()
@@ -795,6 +802,7 @@ class RetryRunner:
         run_connect_timeout = task.params.pop(
             "run_connect_timeout", self.connect_timeout
         )
+        run_connect_check = task.params.pop("run_connect_check", self.connect_check)
         run_reconnect_on_fail = task.params.pop(
             "run_reconnect_on_fail", self.reconnect_on_fail
         )
@@ -843,6 +851,7 @@ class RetryRunner:
                     self.jumphosts_connections,
                     run_creds_retry,
                     run_connect_timeout,
+                    run_connect_check,
                 ),
             )
             t.start()
