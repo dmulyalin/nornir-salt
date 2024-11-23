@@ -33,7 +33,13 @@ from nornir_salt.plugins.inventory import DictInventory
 from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors import ToFileProcessor
 from nornir_salt.plugins.processors import DataProcessor
-from nornir_salt.plugins.tasks import file_read, file_remove, file_list, file_diff, files
+from nornir_salt.plugins.tasks import (
+    file_read,
+    file_remove,
+    file_list,
+    file_diff,
+    files,
+)
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -104,6 +110,7 @@ def clean_up_folder():
             os.remove("./tofile_outputs/" + filen)
         os.rmdir("./tofile_outputs/")
 
+
 def nr_test_grouped_subtasks(task, task_1, task_2):
     """
     Test grouped task
@@ -112,21 +119,22 @@ def nr_test_grouped_subtasks(task, task_1, task_2):
     task.run(**task_2)
     return Result(host=task.host, skip_results=True)
 
+
 def generate_files(tf):
     """
     Helper function to generate files by running task
     """
     iol1_res_ntp = [
-{"ntp": "1.1.1.1"},
+        {"ntp": "1.1.1.1"},
     ]
     iol2_res_ntp = [
-{"ntp": "2.2.2.2"},
+        {"ntp": "2.2.2.2"},
     ]
     iol1_res_log = [
-{"log": "3.3.3.3"},
+        {"log": "3.3.3.3"},
     ]
     iol2_res_log = [
-{"log": "4.4.4.4"},
+        {"log": "4.4.4.4"},
     ]
 
     # run test to generate the file
@@ -154,6 +162,7 @@ def generate_files(tf):
             "name": "show run | inc logging",
         },
     )
+
 
 # ----------------------------------------------------------------------
 # tests that need Nornir
@@ -231,24 +240,32 @@ ntp server 7.7.7.9
         task=file_diff,
         base_url="./tofile_outputs/",
         filegroup="device_config",
-        task_name="show run | inc ntp"
+        task_name="show run | inc ntp",
     )
 
     res_task_diff = ResultSerializer(output, add_details=True)
 
     pprint.pprint(res_task_diff, width=150)
 
-    assert """-ntp server 7.7.7.8
+    assert (
+        """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
  ntp server 7.7.7.7
-+ntp server 1.1.1.1""" in res_task_diff["IOL1"]["device_config"]["result"]
++ntp server 1.1.1.1"""
+        in res_task_diff["IOL1"]["device_config"]["result"]
+    )
     assert res_task_diff["IOL1"]["device_config"]["result"].count("device_config") == 2
 
-    assert """-ntp server 7.7.7.7
-+ntp server 7.7.7.9""" in res_task_diff["IOL2"]["device_config"]["result"]
+    assert (
+        """-ntp server 7.7.7.7
++ntp server 7.7.7.9"""
+        in res_task_diff["IOL2"]["device_config"]["result"]
+    )
     assert res_task_diff["IOL2"]["device_config"]["result"].count("device_config") == 2
 
+
 # test_file_diff_certain_task_name()
+
 
 @skip_if_no_nornir
 def test_file_diff_whole_result_non_exist_filegroup():
@@ -306,5 +323,6 @@ ntp server 7.7.7.9
     assert "non_existing files not found" in res["IOL1"]["non_existing"]["exception"]
     assert res["IOL2"]["non_existing"]["failed"] == True
     assert "non_existing files not found" in res["IOL2"]["non_existing"]["exception"]
+
 
 # test_file_diff_whole_result_non_exist_filegroup()

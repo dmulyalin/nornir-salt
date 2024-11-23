@@ -197,16 +197,16 @@ ntp server 7.7.7.7
 
 @skip_if_no_nornir
 def test_to_file_struct_data():
-    """ test that structured data saves as a json """
+    """test that structured data saves as a json"""
     clean_up_folder()
 
     iol1_res = [
-{"ip": "1.2.3.4", "interface": "Gi123"},
-{"ip": "2.2.2.2", "interface": "Gi2"},
-{"ip": "3.3.3.3", "interface": "Gi3"},
+        {"ip": "1.2.3.4", "interface": "Gi123"},
+        {"ip": "2.2.2.2", "interface": "Gi2"},
+        {"ip": "3.3.3.3", "interface": "Gi3"},
     ]
     iol2_res = [
-{"ip": "4.4.4.4", "interface": "Gi2"},
+        {"ip": "4.4.4.4", "interface": "Gi2"},
     ]
 
     # run test to generate the file
@@ -229,7 +229,9 @@ def test_to_file_struct_data():
         if "tf_index_common.json" in filname:
             with open(filname, "r") as f:
                 tf_index_common_content = f.read()
-                assert tf_index_common_content.count('"content_type": "json"') == 2, "Not all files converted to json"
+                assert (
+                    tf_index_common_content.count('"content_type": "json"') == 2
+                ), "Not all files converted to json"
         elif "IOL1" in filname:
             with open(filname, "r") as f:
                 content = json.loads(f.read())
@@ -238,5 +240,6 @@ def test_to_file_struct_data():
             with open(filname, "r") as f:
                 content = json.loads(f.read())
                 assert content == iol2_res
+
 
 # test_to_file_struct_data()

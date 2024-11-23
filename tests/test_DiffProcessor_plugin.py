@@ -212,7 +212,11 @@ ntp server 7.7.7.7
 
     # run the test to make difference
     nr_with_tests = nr.with_processors(
-        [DiffProcessor(diff="config_for_diff", base_url="./tofile_outputs/", in_diff=True)]
+        [
+            DiffProcessor(
+                diff="config_for_diff", base_url="./tofile_outputs/", in_diff=True
+            )
+        ]
     )
     output = nr_with_tests.run(
         task=nr_test,
@@ -275,5 +279,6 @@ ntp server 9.9.9.9
 +ntp server 9.9.9.9"""
         in res["IOL2"]["show run | inc ntp"]["diff"]
     )
+
 
 # test_diff_processor_in_diff_is_true()

@@ -99,21 +99,17 @@ def init(opts):
         options["groups"] = opts["groups"]
     if "defaults" in opts:
         options["defaults"] = opts["defaults"]
-        
+
     nr = InitNornir(
         logging={"enabled": False},
         runner={"plugin": "serial"},
-        inventory={
-            "plugin": "DictInventory",
-            "options": options
-        },
+        inventory={"plugin": "DictInventory", "options": options},
     )
 
     return nr
 
 
 InventoryPluginRegister.register("DictInventory", DictInventory)
-
 
 
 # ----------------------------------------------------------------------
@@ -129,7 +125,9 @@ def test_DictInvetnory_nested_groups():
     assert nr.inventory.hosts["IOL2"].get("asn") == 65100
     assert nr.inventory.hosts["IOL2"].get("domain") is None
 
-#test_DictInvetnory_nested_groups()
+
+# test_DictInvetnory_nested_groups()
+
 
 @skip_if_no_nornir
 def test_DictInvetnory_no_hosts():
@@ -139,8 +137,10 @@ def test_DictInvetnory_no_hosts():
     assert inventory["hosts"] == {}
     assert len(inventory["groups"]) > 0
     assert len(inventory["defaults"]) > 0
-    
+
+
 # test_DictInvetnory_no_hosts()
+
 
 @skip_if_no_nornir
 def test_DictInvetnory_empty_inventory():
@@ -150,8 +150,10 @@ def test_DictInvetnory_empty_inventory():
     assert inventory["hosts"] == {}
     assert inventory["groups"] == {}
     assert all(v in [None, {}] for v in inventory["defaults"].values())
-    
+
+
 # test_DictInvetnory_empty_inventory()
+
 
 @skip_if_no_nornir
 def test_DictInvetnory_hosts_are_none():
@@ -163,5 +165,6 @@ def test_DictInvetnory_hosts_are_none():
     assert inventory["hosts"] == {}
     assert len(inventory["groups"]) > 0
     assert len(inventory["defaults"]) > 0
-    
+
+
 # test_DictInvetnory_empty_inventory()

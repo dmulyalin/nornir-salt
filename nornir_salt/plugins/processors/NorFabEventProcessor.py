@@ -28,10 +28,7 @@ class NorFabEventProcessor:
     """
 
     def __init__(
-        self,
-        worker,
-        tmstp_ftr="%d-%b-%Y %H:%M:%S.%f",
-        norfab_task: str=None
+        self, worker, tmstp_ftr="%d-%b-%Y %H:%M:%S.%f", norfab_task: str = None
     ):
         self.worker = worker
         self.tmstp_ftr = tmstp_ftr
@@ -51,7 +48,7 @@ class NorFabEventProcessor:
             "task_type": "task",
             "hosts": list(task.nornir.inventory.hosts.keys()),
             "status": "RUNNING",
-            "message": f"{task.name} Nornir task started", 
+            "message": f"{task.name} Nornir task started",
         }
         self.worker.event(data=data)
 
@@ -64,7 +61,7 @@ class NorFabEventProcessor:
             "task_type": "task",
             "hosts": list(task.nornir.inventory.hosts.keys()),
             "status": "FAILED" if task.results.failed else "COMPLETED",
-            "message": f"{task.name} Nornir task completed", 
+            "message": f"{task.name} Nornir task completed",
         }
         self.worker.event(data=data)
 
@@ -77,7 +74,7 @@ class NorFabEventProcessor:
             "task_event": "started",
             "task_type": "task_instance",
             "status": "RUNNING",
-            "message": f"{task.name} Nornir task instance started", 
+            "message": f"{task.name} Nornir task instance started",
         }
         self.worker.event(data=data)
 
@@ -92,7 +89,7 @@ class NorFabEventProcessor:
             "task_event": "completed",
             "task_type": "task_instance",
             "status": "FAILED" if task.results.failed else "COMPLETED",
-            "message": f"{task.name} Nornir task instance completed", 
+            "message": f"{task.name} Nornir task instance completed",
         }
         self.worker.event(data=data)
 
@@ -105,7 +102,7 @@ class NorFabEventProcessor:
             "task_event": "started",
             "task_type": "subtask",
             "status": "RUNNING",
-            "message": f"{task.name} Nornir sub-task instance started", 
+            "message": f"{task.name} Nornir sub-task instance started",
         }
         self.worker.event(data=data)
 
@@ -120,6 +117,6 @@ class NorFabEventProcessor:
             "task_event": "completed",
             "task_type": "subtask",
             "status": "FAILED" if task.results.failed else "COMPLETED",
-            "message": f"{task.name} Nornir sub-task instance completed", 
+            "message": f"{task.name} Nornir sub-task instance completed",
         }
         self.worker.event(data=data)

@@ -34,6 +34,7 @@ def clean_up_folder():
             os.remove("./tofile_outputs/" + filen)
         os.rmdir("./tofile_outputs/")
 
+
 # ----------------------------------------------------------------------
 # Initialize Nornir
 # ----------------------------------------------------------------------
@@ -106,6 +107,7 @@ nr = init(lab_inventory_dict)
 # ----------------------------------------------------------------------
 # tests that need Nornir
 # ----------------------------------------------------------------------
+
 
 @skip_if_no_nornir
 def test_result_serializer_to_dict_with_details():
@@ -272,7 +274,14 @@ ntp server 7.7.7.7
     )
     serialized_output = ResultSerializer(output, add_details=False, to_dict=False)
     # pprint.pprint(serialized_output)
-    DumpResults(serialized_output, filegroup="ntp_config_full_results", base_url="./tofile_outputs/", max_files=3, index="common", proxy_id="untitled")
+    DumpResults(
+        serialized_output,
+        filegroup="ntp_config_full_results",
+        base_url="./tofile_outputs/",
+        max_files=3,
+        index="common",
+        proxy_id="untitled",
+    )
 
     files = list(os.listdir("./tofile_outputs/"))
     assert "tf_index_common.json" in files
@@ -280,7 +289,11 @@ ntp server 7.7.7.7
     for file in files:
         if "tf_index_common.json" not in file:
             with open("./tofile_outputs/{}".format(file), "r") as f:
-                assert f.read() == pprint.pformat(serialized_output, indent=2, width=150) + "\n"
+                assert (
+                    f.read()
+                    == pprint.pformat(serialized_output, indent=2, width=150) + "\n"
+                )
+
 
 # test_DumpResults_dictionary_result()
 
@@ -301,7 +314,14 @@ ntp server 7.7.7.7
         },
         name="check ntp config",
     )
-    DumpResults(output, filegroup="ntp_config_full_results", base_url="./tofile_outputs/", max_files=3, index="common", proxy_id="untitled")
+    DumpResults(
+        output,
+        filegroup="ntp_config_full_results",
+        base_url="./tofile_outputs/",
+        max_files=3,
+        index="common",
+        proxy_id="untitled",
+    )
 
     files = list(os.listdir("./tofile_outputs/"))
     assert "tf_index_common.json" in files
@@ -311,7 +331,9 @@ ntp server 7.7.7.7
             with open("./tofile_outputs/{}".format(file), "r") as f:
                 assert f.read() == pprint.pformat(output, indent=2, width=150) + "\n"
 
+
 # test_DumpResults_AggregatedResult_result()
+
 
 def test_DumpResults_string_result():
     clean_up_folder()
@@ -331,7 +353,14 @@ ntp server 7.7.7.7
     )
     serialized_output = ResultSerializer(output, add_details=False, to_dict=False)
     # pprint.pprint(serialized_output)
-    DumpResults(str(serialized_output), filegroup="ntp_config_full_results", base_url="./tofile_outputs/", max_files=3, index="common", proxy_id="untitled")
+    DumpResults(
+        str(serialized_output),
+        filegroup="ntp_config_full_results",
+        base_url="./tofile_outputs/",
+        max_files=3,
+        index="common",
+        proxy_id="untitled",
+    )
 
     files = list(os.listdir("./tofile_outputs/"))
     assert "tf_index_common.json" in files
@@ -341,7 +370,9 @@ ntp server 7.7.7.7
             with open("./tofile_outputs/{}".format(file), "r") as f:
                 assert f.read() == str(serialized_output) + "\n"
 
+
 # test_DumpResults_string_result()
+
 
 def test_DumpResults_max_files():
     clean_up_folder()
@@ -361,10 +392,38 @@ ntp server 7.7.7.7
     )
     serialized_output = ResultSerializer(output, add_details=False, to_dict=False)
     # pprint.pprint(serialized_output)
-    DumpResults(str(serialized_output), filegroup="ntp_config_full_results", base_url="./tofile_outputs/", max_files=2, index="common", proxy_id="untitled")
-    DumpResults(str(serialized_output), filegroup="ntp_config_full_results", base_url="./tofile_outputs/", max_files=2, index="common", proxy_id="untitled")
-    DumpResults(str(serialized_output), filegroup="ntp_config_full_results", base_url="./tofile_outputs/", max_files=2, index="common", proxy_id="untitled")
-    DumpResults(str(serialized_output), filegroup="ntp_config_full_results", base_url="./tofile_outputs/", max_files=2, index="common", proxy_id="untitled")
+    DumpResults(
+        str(serialized_output),
+        filegroup="ntp_config_full_results",
+        base_url="./tofile_outputs/",
+        max_files=2,
+        index="common",
+        proxy_id="untitled",
+    )
+    DumpResults(
+        str(serialized_output),
+        filegroup="ntp_config_full_results",
+        base_url="./tofile_outputs/",
+        max_files=2,
+        index="common",
+        proxy_id="untitled",
+    )
+    DumpResults(
+        str(serialized_output),
+        filegroup="ntp_config_full_results",
+        base_url="./tofile_outputs/",
+        max_files=2,
+        index="common",
+        proxy_id="untitled",
+    )
+    DumpResults(
+        str(serialized_output),
+        filegroup="ntp_config_full_results",
+        base_url="./tofile_outputs/",
+        max_files=2,
+        index="common",
+        proxy_id="untitled",
+    )
 
     files = list(os.listdir("./tofile_outputs/"))
     assert "tf_index_common.json" in files
@@ -379,5 +438,6 @@ ntp server 7.7.7.7
 
     # pprint.pprint(index_data)
     assert len(index_data["ntp_config_full_results"]["untitled"]) == 2
+
 
 # test_DumpResults_max_files()

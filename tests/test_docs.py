@@ -60,7 +60,6 @@ skip_if_has_no_cisco_iosxe_always_on_router = pytest.mark.skipif(
 cisco_iosxe_always_on_router_dict = yaml.safe_load(cisco_iosxe_always_on_router)
 
 
-
 def init(opts):
     """
     Initiate nornir by calling InitNornir()
@@ -80,13 +79,14 @@ def init(opts):
 
     return nr
 
+
 @skip_if_has_no_cisco_iosxe_always_on_router
 @skip_if_no_nornir
 def test_run_ttp_docs():
     nr = init(cisco_iosxe_always_on_router_dict)
 
     # define TTP template with inputs having commands attributes
-    template = '''
+    template = """
 <input name="arp">
 commands = ["show arp"]
 </input>
@@ -102,12 +102,12 @@ Internet  {{ ip }}   {{ age }}   {{ mac }}  ARPA   {{ interface }}
 <group name="facts.version" input="version">
 Cisco IOS XE Software, Version {{ iose_xe_version }}
 </group>
-    '''
+    """
 
     # add data processor with run_ttp function
-    nr_with_dp = nr.with_processors([DataProcessor(
-        [{"fun": "run_ttp", "template": template}]
-    )])
+    nr_with_dp = nr.with_processors(
+        [DataProcessor([{"fun": "run_ttp", "template": template}])]
+    )
 
     # run task; commands for task will be dynamically populated by DataProcessor
     # run_ttp function with commands defined within TTP template inputs
@@ -143,8 +143,9 @@ Cisco IOS XE Software, Version {{ iose_xe_version }}
     #                                                          'ip': '172.16.255.1',
     #                                                          'mac': '0050.56bf.ea76'}]},
     #                                          {'facts': {'version': {'iose_xe_version': '16.09.03'}}}]]}}
-    assert "arp_cache" in dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][0]
-    assert "facts" in dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][1]
-    assert len(dict_result['sandbox-iosxe-recomm-1']["run_ttp"][0][0]["arp_cache"]) > 0
+    assert "arp_cache" in dict_result["sandbox-iosxe-recomm-1"]["run_ttp"][0][0]
+    assert "facts" in dict_result["sandbox-iosxe-recomm-1"]["run_ttp"][0][1]
+    assert len(dict_result["sandbox-iosxe-recomm-1"]["run_ttp"][0][0]["arp_cache"]) > 0
+
 
 # test_run_ttp_docs()

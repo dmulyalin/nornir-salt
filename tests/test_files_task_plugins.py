@@ -23,7 +23,13 @@ from nornir_salt.plugins.inventory import DictInventory
 from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors import ToFileProcessor
 from nornir_salt.plugins.processors import DataProcessor
-from nornir_salt.plugins.tasks import file_read, file_remove, file_list, file_diff, files
+from nornir_salt.plugins.tasks import (
+    file_read,
+    file_remove,
+    file_list,
+    file_diff,
+    files,
+)
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -94,6 +100,7 @@ def clean_up_folder():
             os.remove("./tofile_outputs/" + filen)
         os.rmdir("./tofile_outputs/")
 
+
 def nr_test_grouped_subtasks(task, task_1, task_2):
     """
     Test grouped task
@@ -102,21 +109,22 @@ def nr_test_grouped_subtasks(task, task_1, task_2):
     task.run(**task_2)
     return Result(host=task.host, skip_results=True)
 
+
 def generate_files(tf):
     """
     Helper function to generate files by running task
     """
     iol1_res_ntp = [
-{"ntp": "1.1.1.1"},
+        {"ntp": "1.1.1.1"},
     ]
     iol2_res_ntp = [
-{"ntp": "2.2.2.2"},
+        {"ntp": "2.2.2.2"},
     ]
     iol1_res_log = [
-{"log": "3.3.3.3"},
+        {"log": "3.3.3.3"},
     ]
     iol2_res_log = [
-{"log": "4.4.4.4"},
+        {"log": "4.4.4.4"},
     ]
 
     # run test to generate the file
@@ -144,6 +152,7 @@ def generate_files(tf):
             "name": "show run | inc logging",
         },
     )
+
 
 # ----------------------------------------------------------------------
 # tests that need Nornir
@@ -203,6 +212,7 @@ ntp server 7.7.7.7
     #                                  'result': '\nntp server 7.7.7.7\n        \n'}}}
     assert res["IOL1"]["show run | inc ntp"]["result"] == iol1_res
     assert res["IOL2"]["show run | inc ntp"]["result"] == iol2_res
+
 
 # test_file_read_task()
 
@@ -270,7 +280,9 @@ ntp server 7.7.7.7
     assert res1["IOL1"]["show run | inc ntp"]["result"] == iol1_res + "IOL1 12345"
     assert res1["IOL2"]["show run | inc ntp"]["result"] == iol2_res + "IOL2 12345"
 
+
 # test_file_read_task_last2()
+
 
 @skip_if_no_nornir
 def test_file_read_result_with_subtasks():
@@ -365,12 +377,13 @@ logging host 5.5.5.5
     assert res["IOL2"]["show run | inc ntp"]["result"] == iol2_res_ntp
     assert res["IOL2"]["show run | inc logging"]["result"] == iol2_res_log
 
+
 # test_file_read_result_with_subtasks()
 
 
 @skip_if_no_nornir
 def test_file_read_result_with_subtasks_task_name():
-    """ Should return task results for one task only """
+    """Should return task results for one task only"""
     clean_up_folder()
 
     iol1_res_ntp = """
@@ -421,7 +434,7 @@ logging host 5.5.5.5
         task=file_read,
         filegroup="config_for_read",
         base_url="./tofile_outputs/",
-        task_name="show run | inc logging"
+        task_name="show run | inc logging",
     )
 
     res = ResultSerializer(res, add_details=True)
@@ -448,21 +461,22 @@ logging host 5.5.5.5
     assert "show run | inc ntp" not in res["IOL2"]
     assert res["IOL2"]["show run | inc logging"]["result"] == iol2_res_log
 
+
 # test_file_read_result_with_subtasks_task_name()
 
 
 @skip_if_no_nornir
 def test_file_read_task_struct_data():
-    """ test that structured data save as a json and read back in struct """
+    """test that structured data save as a json and read back in struct"""
     clean_up_folder()
 
     iol1_res = [
-{"ip": "1.2.3.4", "interface": "Gi123"},
-{"ip": "2.2.2.2", "interface": "Gi2"},
-{"ip": "3.3.3.3", "interface": "Gi3"},
+        {"ip": "1.2.3.4", "interface": "Gi123"},
+        {"ip": "2.2.2.2", "interface": "Gi2"},
+        {"ip": "3.3.3.3", "interface": "Gi3"},
     ]
     iol2_res = [
-{"ip": "4.4.4.4", "interface": "Gi2"},
+        {"ip": "4.4.4.4", "interface": "Gi2"},
     ]
 
     # run test to generate the file
@@ -487,26 +501,35 @@ def test_file_read_task_struct_data():
 
     res = ResultSerializer(res, add_details=True)
     # pprint.pprint(res)
-    _ = res["IOL1"]['show run | inc ntp'].pop("timestamp")
-    _ = res["IOL2"]['show run | inc ntp'].pop("timestamp")
-    assert res == {'IOL1': {'show run | inc ntp': {'changed': False,
-                                                   'diff': '',
-                                                   'exception': None,
-                                                   'failed': False,
-                                                   'filegroup': 'config_for_read',
-                                                   'result': [{'interface': 'Gi123',
-                                                               'ip': '1.2.3.4'},
-                                                              {'interface': 'Gi2',
-                                                               'ip': '2.2.2.2'},
-                                                              {'interface': 'Gi3',
-                                                               'ip': '3.3.3.3'}]}},
-                   'IOL2': {'show run | inc ntp': {'changed': False,
-                                                   'diff': '',
-                                                   'exception': None,
-                                                   'failed': False,
-                                                   'filegroup': 'config_for_read',
-                                                   'result': [{'interface': 'Gi2',
-                                                               'ip': '4.4.4.4'}]}}}
+    _ = res["IOL1"]["show run | inc ntp"].pop("timestamp")
+    _ = res["IOL2"]["show run | inc ntp"].pop("timestamp")
+    assert res == {
+        "IOL1": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [
+                    {"interface": "Gi123", "ip": "1.2.3.4"},
+                    {"interface": "Gi2", "ip": "2.2.2.2"},
+                    {"interface": "Gi3", "ip": "3.3.3.3"},
+                ],
+            }
+        },
+        "IOL2": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"interface": "Gi2", "ip": "4.4.4.4"}],
+            }
+        },
+    }
+
 
 # test_file_read_task_struct_data()
 
@@ -516,20 +539,20 @@ def test_file_read_task_struct_data_last2():
     clean_up_folder()
 
     iol1_res = [
-{"ip": "1.2.3.4", "interface": "Gi123"},
-{"ip": "2.2.2.2", "interface": "Gi2"},
-{"ip": "3.3.3.3", "interface": "Gi3"},
+        {"ip": "1.2.3.4", "interface": "Gi123"},
+        {"ip": "2.2.2.2", "interface": "Gi2"},
+        {"ip": "3.3.3.3", "interface": "Gi3"},
     ]
     iol2_res = [
-{"ip": "4.4.4.4", "interface": "Gi2"},
+        {"ip": "4.4.4.4", "interface": "Gi2"},
     ]
     iol1_res_1 = [
-{"ip": "1.2.3.4", "interface": "Gi123"},
-{"ip": "3.3.3.3", "interface": "Gi3"},
+        {"ip": "1.2.3.4", "interface": "Gi123"},
+        {"ip": "3.3.3.3", "interface": "Gi3"},
     ]
     iol2_res_1 = [
-{"ip": "4.4.4.4", "interface": "Gi2"},
-{"ip": "2.2.2.2", "interface": "Gi2"},
+        {"ip": "4.4.4.4", "interface": "Gi2"},
+        {"ip": "2.2.2.2", "interface": "Gi2"},
     ]
 
     # run test to generate the file
@@ -575,46 +598,65 @@ def test_file_read_task_struct_data_last2():
 
     pprint.pprint(res_last_1)
     pprint.pprint(res_last_2)
-    _ = res_last_1["IOL1"]['show run | inc ntp'].pop("timestamp")
-    _ = res_last_1["IOL2"]['show run | inc ntp'].pop("timestamp")
-    _ = res_last_2["IOL1"]['show run | inc ntp'].pop("timestamp")
-    _ = res_last_2["IOL2"]['show run | inc ntp'].pop("timestamp")
-    assert res_last_1 == {'IOL1': {'show run | inc ntp': {'changed': False,
-                                                    'diff': '',
-                                                    'exception': None,
-                                                    'failed': False,
-                                                    'filegroup': 'config_for_read',
-                                                    'result': [{'interface': 'Gi123',
-                                                                'ip': '1.2.3.4'},
-                                                               {'interface': 'Gi3',
-                                                                'ip': '3.3.3.3'}]}},
-                    'IOL2': {'show run | inc ntp': {'changed': False,
-                                                    'diff': '',
-                                                    'exception': None,
-                                                    'failed': False,
-                                                    'filegroup': 'config_for_read',
-                                                    'result': [{'interface': 'Gi2',
-                                                                'ip': '4.4.4.4'},
-                                                               {'interface': 'Gi2',
-                                                                'ip': '2.2.2.2'}]}}}
-    assert res_last_2 == {'IOL1': {'show run | inc ntp': {'changed': False,
-                                                    'diff': '',
-                                                    'exception': None,
-                                                    'failed': False,
-                                                    'filegroup': 'config_for_read',
-                                                    'result': [{'interface': 'Gi123',
-                                                                'ip': '1.2.3.4'},
-                                                               {'interface': 'Gi2',
-                                                                'ip': '2.2.2.2'},
-                                                               {'interface': 'Gi3',
-                                                                'ip': '3.3.3.3'}]}},
-                    'IOL2': {'show run | inc ntp': {'changed': False,
-                                                    'diff': '',
-                                                    'exception': None,
-                                                    'failed': False,
-                                                    'filegroup': 'config_for_read',
-                                                    'result': [{'interface': 'Gi2',
-                                                                'ip': '4.4.4.4'}]}}}
+    _ = res_last_1["IOL1"]["show run | inc ntp"].pop("timestamp")
+    _ = res_last_1["IOL2"]["show run | inc ntp"].pop("timestamp")
+    _ = res_last_2["IOL1"]["show run | inc ntp"].pop("timestamp")
+    _ = res_last_2["IOL2"]["show run | inc ntp"].pop("timestamp")
+    assert res_last_1 == {
+        "IOL1": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [
+                    {"interface": "Gi123", "ip": "1.2.3.4"},
+                    {"interface": "Gi3", "ip": "3.3.3.3"},
+                ],
+            }
+        },
+        "IOL2": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [
+                    {"interface": "Gi2", "ip": "4.4.4.4"},
+                    {"interface": "Gi2", "ip": "2.2.2.2"},
+                ],
+            }
+        },
+    }
+    assert res_last_2 == {
+        "IOL1": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [
+                    {"interface": "Gi123", "ip": "1.2.3.4"},
+                    {"interface": "Gi2", "ip": "2.2.2.2"},
+                    {"interface": "Gi3", "ip": "3.3.3.3"},
+                ],
+            }
+        },
+        "IOL2": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"interface": "Gi2", "ip": "4.4.4.4"}],
+            }
+        },
+    }
+
 
 # test_file_read_task_struct_data_last2()
 
@@ -624,16 +666,16 @@ def test_file_read_task_struct_data_result_with_subtasks():
     clean_up_folder()
 
     iol1_res_ntp = [
-{"ntp": "1.1.1.1"},
+        {"ntp": "1.1.1.1"},
     ]
     iol2_res_ntp = [
-{"ntp": "2.2.2.2"},
+        {"ntp": "2.2.2.2"},
     ]
     iol1_res_log = [
-{"log": "3.3.3.3"},
+        {"log": "3.3.3.3"},
     ]
     iol2_res_log = [
-{"log": "4.4.4.4"},
+        {"log": "4.4.4.4"},
     ]
 
     # run test to generate the file
@@ -672,54 +714,69 @@ def test_file_read_task_struct_data_result_with_subtasks():
     res = ResultSerializer(res, add_details=True)
 
     # pprint.pprint(res)
-    _ = res["IOL1"]['show run | inc ntp'].pop("timestamp")
-    _ = res["IOL2"]['show run | inc ntp'].pop("timestamp")
-    _ = res["IOL1"]['show run | inc logging'].pop("timestamp")
-    _ = res["IOL2"]['show run | inc logging'].pop("timestamp")
-    assert res == {'IOL1': {'show run | inc logging': {'changed': False,
-                                                       'diff': '',
-                                                       'exception': None,
-                                                       'failed': False,
-                                                       'filegroup': 'config_for_read',
-                                                       'result': [{'log': '3.3.3.3'}]},
-                            'show run | inc ntp': {'changed': False,
-                                                   'diff': '',
-                                                   'exception': None,
-                                                   'failed': False,
-                                                   'filegroup': 'config_for_read',
-                                                   'result': [{'ntp': '1.1.1.1'}]}},
-                   'IOL2': {'show run | inc logging': {'changed': False,
-                                                       'diff': '',
-                                                       'exception': None,
-                                                       'failed': False,
-                                                       'filegroup': 'config_for_read',
-                                                       'result': [{'log': '4.4.4.4'}]},
-                            'show run | inc ntp': {'changed': False,
-                                                   'diff': '',
-                                                   'exception': None,
-                                                   'failed': False,
-                                                   'filegroup': 'config_for_read',
-                                                   'result': [{'ntp': '2.2.2.2'}]}}}
+    _ = res["IOL1"]["show run | inc ntp"].pop("timestamp")
+    _ = res["IOL2"]["show run | inc ntp"].pop("timestamp")
+    _ = res["IOL1"]["show run | inc logging"].pop("timestamp")
+    _ = res["IOL2"]["show run | inc logging"].pop("timestamp")
+    assert res == {
+        "IOL1": {
+            "show run | inc logging": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"log": "3.3.3.3"}],
+            },
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"ntp": "1.1.1.1"}],
+            },
+        },
+        "IOL2": {
+            "show run | inc logging": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"log": "4.4.4.4"}],
+            },
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"ntp": "2.2.2.2"}],
+            },
+        },
+    }
+
 
 # test_file_read_task_struct_data_result_with_subtasks()
 
 
 @skip_if_no_nornir
 def test_file_read_result_struct_data_with_subtasks_task_name():
-    """ Should return task results for one task only """
+    """Should return task results for one task only"""
     clean_up_folder()
 
     iol1_res_ntp = [
-{"ntp": "1.1.1.1"},
+        {"ntp": "1.1.1.1"},
     ]
     iol2_res_ntp = [
-{"ntp": "2.2.2.2"},
+        {"ntp": "2.2.2.2"},
     ]
     iol1_res_log = [
-{"log": "3.3.3.3"},
+        {"log": "3.3.3.3"},
     ]
     iol2_res_log = [
-{"log": "4.4.4.4"},
+        {"log": "4.4.4.4"},
     ]
 
     # run test to generate the file
@@ -753,42 +810,53 @@ def test_file_read_result_struct_data_with_subtasks_task_name():
         task=file_read,
         filegroup="config_for_read",
         base_url="./tofile_outputs/",
-        task_name="show run | inc logging"
+        task_name="show run | inc logging",
     )
 
     res = ResultSerializer(res, add_details=True)
 
     # pprint.pprint(res)
-    _ = res["IOL1"]['show run | inc logging'].pop("timestamp")
-    _ = res["IOL2"]['show run | inc logging'].pop("timestamp")
-    assert res == {'IOL1': {'show run | inc logging': {'changed': False,
-                                                       'diff': '',
-                                                       'exception': None,
-                                                       'failed': False,
-                                                       'filegroup': 'config_for_read',
-                                                       'result': [{'log': '3.3.3.3'}]}},
-                   'IOL2': {'show run | inc logging': {'changed': False,
-                                                       'diff': '',
-                                                       'exception': None,
-                                                       'failed': False,
-                                                       'filegroup': 'config_for_read',
-                                                       'result': [{'log': '4.4.4.4'}]}}}
+    _ = res["IOL1"]["show run | inc logging"].pop("timestamp")
+    _ = res["IOL2"]["show run | inc logging"].pop("timestamp")
+    assert res == {
+        "IOL1": {
+            "show run | inc logging": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"log": "3.3.3.3"}],
+            }
+        },
+        "IOL2": {
+            "show run | inc logging": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"log": "4.4.4.4"}],
+            }
+        },
+    }
+
 
 # test_file_read_result_struct_data_with_subtasks_task_name()
 
 
 @skip_if_no_nornir
 def test_file_read_struct_data_with_DataProcessor_lod_filter():
-    """ test tofile write and after that read passing via lod filter """
+    """test tofile write and after that read passing via lod filter"""
     clean_up_folder()
 
     iol1_res = [
-{"ip": "1.2.3.4", "interface": "Gi123"},
-{"ip": "1.2.2.2", "interface": "Gi2"},
-{"ip": "1.3.3.3", "interface": "Gi3"},
+        {"ip": "1.2.3.4", "interface": "Gi123"},
+        {"ip": "1.2.2.2", "interface": "Gi2"},
+        {"ip": "1.3.3.3", "interface": "Gi3"},
     ]
     iol2_res = [
-{"ip": "1.2.4.4", "interface": "Gi2"},
+        {"ip": "1.2.4.4", "interface": "Gi2"},
     ]
 
     # run task to generate the file
@@ -805,9 +873,9 @@ def test_file_read_struct_data_with_DataProcessor_lod_filter():
     )
 
     # retrieve file content passing it through data processor
-    nr_with_dp = nr.with_processors([DataProcessor(
-        [{"fun": "lod_filter", "ip": "1.2.*", "interface": "Gi[23]"}]
-    )])
+    nr_with_dp = nr.with_processors(
+        [DataProcessor([{"fun": "lod_filter", "ip": "1.2.*", "interface": "Gi[23]"}])]
+    )
 
     res = nr_with_dp.run(
         task=file_read,
@@ -818,27 +886,38 @@ def test_file_read_struct_data_with_DataProcessor_lod_filter():
     res = ResultSerializer(res, add_details=True)
 
     # pprint.pprint(res)
-    _ = res["IOL1"]['show run | inc ntp'].pop("timestamp")
-    _ = res["IOL2"]['show run | inc ntp'].pop("timestamp")
-    assert res == {'IOL1': {'show run | inc ntp': {'changed': False,
-                                                   'diff': '',
-                                                   'exception': None,
-                                                   'failed': False,
-                                                   'filegroup': 'config_for_read',
-                                                   'result': [{'interface': 'Gi2',
-                                                               'ip': '1.2.2.2'}]}},
-                   'IOL2': {'show run | inc ntp': {'changed': False,
-                                                   'diff': '',
-                                                   'exception': None,
-                                                   'failed': False,
-                                                   'filegroup': 'config_for_read',
-                                                   'result': [{'interface': 'Gi2',
-                                                               'ip': '1.2.4.4'}]}}}
+    _ = res["IOL1"]["show run | inc ntp"].pop("timestamp")
+    _ = res["IOL2"]["show run | inc ntp"].pop("timestamp")
+    assert res == {
+        "IOL1": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"interface": "Gi2", "ip": "1.2.2.2"}],
+            }
+        },
+        "IOL2": {
+            "show run | inc ntp": {
+                "changed": False,
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "filegroup": "config_for_read",
+                "result": [{"interface": "Gi2", "ip": "1.2.4.4"}],
+            }
+        },
+    }
+
+
 # test_file_read_struct_data_with_DataProcessor_lod_filter()
+
 
 @skip_if_no_nornir
 def test_file_list_get_all_files():
-    """ produces list of files """
+    """produces list of files"""
     clean_up_folder()
 
     generate_files(tf="interfaces")
@@ -863,12 +942,13 @@ def test_file_list_get_all_files():
     assert len(res["IOL2"]["file_list"]["result"]) == 4
     assert res["IOL2"]["file_list"]["exception"] == None
 
+
 # test_file_list_get_all_files()
 
 
 @skip_if_no_nornir
 def test_file_list_get_one_filegroup():
-    """ produces list of files """
+    """produces list of files"""
     clean_up_folder()
 
     generate_files(tf="interfaces")
@@ -877,11 +957,7 @@ def test_file_list_get_one_filegroup():
     generate_files(tf="interfaces")
 
     # retrieve files list
-    res = nr.run(
-        task=file_list,
-        base_url="./tofile_outputs/",
-        filegroup="ip"
-    )
+    res = nr.run(task=file_list, base_url="./tofile_outputs/", filegroup="ip")
 
     res = ResultSerializer(res, add_details=True)
 
@@ -896,7 +972,9 @@ def test_file_list_get_one_filegroup():
     assert res["IOL2"]["file_list"]["result"][0]["filegroup"] == "ip"
     assert res["IOL2"]["file_list"]["exception"] == None
 
+
 # test_file_list_get_one_filegroup()
+
 
 @skip_if_no_nornir
 def test_file_remove_all():
@@ -929,11 +1007,7 @@ def test_file_remove_all():
     assert len(res["IOL2"]["file_remove"]["result"]) == 4
 
     # retrieve files list
-    files_list = nr.run(
-        task=file_list,
-        base_url="./tofile_outputs/",
-        filegroup="ip"
-    )
+    files_list = nr.run(task=file_list, base_url="./tofile_outputs/", filegroup="ip")
     files_list = ResultSerializer(files_list, add_details=True)
     # pprint.pprint(files_list)
     assert len(files_list["IOL1"]["file_list"]["result"]) == 0
@@ -942,7 +1016,9 @@ def test_file_remove_all():
     # try to generate more files to check if it will not fail
     generate_files(tf="interfaces")
 
+
 # test_file_remove_all()
+
 
 @skip_if_no_nornir
 def test_file_remove_filegroup():
@@ -959,11 +1035,7 @@ def test_file_remove_filegroup():
 
     # run task to delete all data files
     # retrieve files list
-    res = nr.run(
-        task=file_remove,
-        base_url="./tofile_outputs/",
-        filegroup="interfaces"
-    )
+    res = nr.run(task=file_remove, base_url="./tofile_outputs/", filegroup="interfaces")
     res = ResultSerializer(res, add_details=True)
 
     # check if folder is cleaned
@@ -979,12 +1051,13 @@ def test_file_remove_filegroup():
     with open(index_file, "r") as f:
         index_data = json.loads(f.read())
 
-    assert index_data["interfaces"] == {}, "interfaces files data not removed from index"
+    assert (
+        index_data["interfaces"] == {}
+    ), "interfaces files data not removed from index"
     assert len(index_data["ip"]) == 2, "ip files data removed from index"
 
+
 # test_file_remove_filegroup()
-
-
 
 
 @skip_if_no_nornir
@@ -1041,15 +1114,22 @@ ntp server 7.7.7.9
     print(res["IOL1"]["ntp_config"]["result"])
     print(res["IOL2"]["ntp_config"]["result"])
 
-    assert """-ntp server 7.7.7.8
+    assert (
+        """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
  ntp server 7.7.7.7
-+ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
++ntp server 1.1.1.1"""
+        in res["IOL1"]["ntp_config"]["result"]
+    )
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert """-ntp server 7.7.7.7
-+ntp server 7.7.7.9""" in res["IOL2"]["ntp_config"]["result"]
+    assert (
+        """-ntp server 7.7.7.7
++ntp server 7.7.7.9"""
+        in res["IOL2"]["ntp_config"]["result"]
+    )
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+
 
 # test_file_diff_whole_result()
 
@@ -1101,7 +1181,7 @@ ntp server 7.7.7.9
         task=file_diff,
         base_url="./tofile_outputs/",
         filegroup="ntp_config",
-        last=[2,1]
+        last=[2, 1],
     )
     res = ResultSerializer(output, add_details=True)
 
@@ -1109,15 +1189,22 @@ ntp server 7.7.7.9
     print(res["IOL1"]["ntp_config"]["result"])
     print(res["IOL2"]["ntp_config"]["result"])
 
-    assert """-ntp server 7.7.6.8
+    assert (
+        """-ntp server 7.7.6.8
 +ntp server 7.7.7.8
  ntp server 7.7.7.7
--ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
+-ntp server 1.1.1.1"""
+        in res["IOL1"]["ntp_config"]["result"]
+    )
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert """-ntp server 7.7.7.9
-+ntp server 7.7.7.7""" in res["IOL2"]["ntp_config"]["result"]
+    assert (
+        """-ntp server 7.7.7.9
++ntp server 7.7.7.7"""
+        in res["IOL2"]["ntp_config"]["result"]
+    )
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+
 
 # test_file_diff_whole_result_last_2_1()
 
@@ -1166,10 +1253,7 @@ ntp server 7.7.7.9
 
     # run task to diff
     output = nr.run(
-        task=file_diff,
-        base_url="./tofile_outputs/",
-        filegroup="ntp_config",
-        last=151
+        task=file_diff, base_url="./tofile_outputs/", filegroup="ntp_config", last=151
     )
     res = ResultSerializer(output, add_details=True)
 
@@ -1177,15 +1261,22 @@ ntp server 7.7.7.9
     print(res["IOL1"]["ntp_config"]["result"])
     print(res["IOL2"]["ntp_config"]["result"])
 
-    assert """-ntp server 7.7.7.8
+    assert (
+        """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
  ntp server 7.7.7.7
-+ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
++ntp server 1.1.1.1"""
+        in res["IOL1"]["ntp_config"]["result"]
+    )
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert """-ntp server 7.7.7.7
-+ntp server 7.7.7.9""" in res["IOL2"]["ntp_config"]["result"]
+    assert (
+        """-ntp server 7.7.7.7
++ntp server 7.7.7.9"""
+        in res["IOL2"]["ntp_config"]["result"]
+    )
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+
 
 # test_file_diff_whole_result_last_out_of_range()
 
@@ -1245,7 +1336,7 @@ ntp server 7.7.7.9
         task=file_diff,
         base_url="./tofile_outputs/",
         filegroup="ntp_config",
-        last=[100,151]
+        last=[100, 151],
     )
     res = ResultSerializer(output, add_details=True)
 
@@ -1255,6 +1346,7 @@ ntp server 7.7.7.9
     assert "new and old files are same" in res["IOL1"]["ntp_config"]["exception"]
     assert res["IOL2"]["ntp_config"]["failed"] == True
     assert "new and old files are same" in res["IOL2"]["ntp_config"]["exception"]
+
 
 # test_file_diff_whole_result_last_both_out_of_range()
 
@@ -1306,7 +1398,7 @@ ntp server 7.7.7.9
         task=file_diff,
         base_url="./tofile_outputs/",
         filegroup="ntp_config",
-        last="2, 1"
+        last="2, 1",
     )
     res = ResultSerializer(output, add_details=True)
 
@@ -1314,14 +1406,21 @@ ntp server 7.7.7.9
     # print(res["IOL1"]["ntp_config"]["result"])
     # print(res["IOL2"]["ntp_config"]["result"])
 
-    assert """-ntp server 7.7.6.8
+    assert (
+        """-ntp server 7.7.6.8
 +ntp server 7.7.7.8
  ntp server 7.7.7.7
--ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
+-ntp server 1.1.1.1"""
+        in res["IOL1"]["ntp_config"]["result"]
+    )
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert """-ntp server 7.7.7.9
-+ntp server 7.7.7.7""" in res["IOL2"]["ntp_config"]["result"]
+    assert (
+        """-ntp server 7.7.7.9
++ntp server 7.7.7.7"""
+        in res["IOL2"]["ntp_config"]["result"]
+    )
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
+
 
 # test_file_diff_whole_result_last_2_1_string()

@@ -411,7 +411,7 @@ from fnmatch import fnmatchcase
 from typing import List
 from nornir.core.task import AggregatedResult, Task, MultiResult, Result
 from nornir.core.inventory import Host
-from nornir_salt.plugins.tasks.connections import conn_open
+from nornir_salt.plugins.tasks.connections import conn_open, conn_check
 
 try:
     import paramiko
@@ -530,6 +530,7 @@ def connector(
     connect_retry: int,
     jumphosts_connections: dict,
     run_creds_retry: list,
+    run_connect_timeout: int,
 ):
     while not stop_event.is_set():
         try:
@@ -556,6 +557,12 @@ def connector(
                     extras["sock"] = connect_to_device_behind_jumphost(
                         host, jumphosts_connections
                     )
+                # check connection
+                host_connection_check = conn_check(
+                    task, host, connection_name, timeout=run_connect_timeout
+                )
+                if host_connection_check.failed is True:
+                    raise Exception(host_connection_check.exception)
                 # retry various connection parameters
                 if run_creds_retry:
                     log.info(
@@ -751,6 +758,7 @@ class RetryRunner:
         task_timeout: int = 600,
         creds_retry: list = None,
         task_stop_errors: list = None,
+        connect_timeout: int = None,
     ) -> None:
         self.num_workers = num_workers
         self.num_connectors = num_connectors
@@ -765,6 +773,7 @@ class RetryRunner:
         self.task_timeout = task_timeout
         self.creds_retry = creds_retry or []
         self.task_stop_errors = task_stop_errors or []
+        self.connect_timeout = connect_timeout or 5
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
         connectors_q = queue.Queue()
@@ -783,6 +792,9 @@ class RetryRunner:
         run_creds_retry = task.params.pop("run_creds_retry", self.creds_retry)
         run_num_workers = task.params.pop("run_num_workers", self.num_workers)
         run_num_connectors = task.params.pop("run_num_connectors", self.num_connectors)
+        run_connect_timeout = task.params.pop(
+            "run_connect_timeout", self.connect_timeout
+        )
         run_reconnect_on_fail = task.params.pop(
             "run_reconnect_on_fail", self.reconnect_on_fail
         )
@@ -792,9 +804,15 @@ class RetryRunner:
         )
         run_task_stop_errors.append("*validation error*")
         # attempt to extract a list of connections this task uses
-        run_connection_name = task.params.pop(
-            "connection_name", task.task.__globals__.get("CONNECTION_NAME", "")
-        )
+        if getattr(task.task, "__wrapped__"):  # task function has decorator
+            run_connection_name = task.params.pop(
+                "connection_name",
+                task.task.__wrapped__.__globals__.get("CONNECTION_NAME", ""),
+            )
+        else:
+            run_connection_name = task.params.pop(
+                "connection_name", task.task.__globals__.get("CONNECTION_NAME", "")
+            )
         run_connection_name = [
             i.strip() for i in run_connection_name.split(",") if i.strip()
         ]
@@ -824,6 +842,7 @@ class RetryRunner:
                     int(run_connect_retry),
                     self.jumphosts_connections,
                     run_creds_retry,
+                    run_connect_timeout,
                 ),
             )
             t.start()

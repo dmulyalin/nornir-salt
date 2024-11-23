@@ -55,6 +55,7 @@ import time
 import traceback
 import logging
 import copy
+import socket
 
 from typing import Optional, Any, Dict
 from nornir.core.task import Result
@@ -194,7 +195,7 @@ def conn_open(
     :param platform: platform name connection parameter
     :param extras: connection plugin extras parameters
     :param default_to_host_attributes: on True host's open connection  method
-      uses inventory data to suppliment not missing arguments like port or
+      uses inventory data to supplement missing arguments like port or
       platform
     :param close_open: if True, closes already open connection
       and connects again
@@ -246,7 +247,7 @@ def conn_open(
                 username: nornir
 
     Starting with nornir-salt version 0.19.0 support added to reconnect
-    credetntials to specify per-connection parameters using
+    credentials to specify per-connection parameters using
     ``connection_options`` argument::
 
         default:
@@ -291,7 +292,7 @@ def conn_open(
 
     Specifying ``via`` parameter allows to open connection to device
     using certain connection options. This is useful when device has
-    multiple management IP addresses, for example - inband, out of
+    multiple management IP addresses, for example - in-band, out of
     band or console.
 
     If ``via`` parameter provided, connection always closed before
@@ -416,7 +417,7 @@ def conn_open(
         param_name = "kwargs" if index == 0 else index
         redispatch = None
 
-        # source parameters from inventory crdentials section
+        # source parameters from inventory credentials section
         if isinstance(param, str):
             param_name = param
             param = host.get("credentials", {}).get(param)
@@ -481,6 +482,51 @@ def conn_open(
     return Result(host=host, **info, **ret)
 
 
+def conn_check(
+    task,
+    host: Optional[Host] = None,
+    connection_name: Optional[str] = None,
+    timeout: Optional[int] = 5,
+) -> Result:
+    """
+    Function to check TCP connection to host for given
+    connection name.
+
+    :param connection_name: name of configured connection plugin to check
+      to open connection e.g. ``netmiko``, ``napalm``, ``scrapli``
+    :param host: Nornir host object
+    :param timeout: connection socket timeout in seconds
+    """
+    host = host or task.host
+    result = Result(host=host, result=None)
+    # source hostname and port
+    if connection_name:
+        conn_opts = host._get_connection_options_recursively(connection_name)
+        hostname = conn_opts.hostname or host.hostname
+        port = conn_opts.port or host.port or 22
+    else:
+        hostname = host.hostname
+        port = host.port or 22
+        connection_name = "primary connection parameters"
+    # test connection
+    s = socket.socket()
+    try:
+        s.settimeout(timeout)
+        s.connect((hostname, port))
+        s.close()
+        result.result = True
+    except Exception as e:
+        result.failed = True
+        result.exception = (
+            f"{hostname}:{port} {connection_name} TCP connection error: '{e}'"
+        )
+        result.result = False
+    finally:
+        s.close()
+
+    return result
+
+
 @ValidateFuncArgs(model_connections)
 def connections(task, call, **kwargs):
     """
@@ -496,8 +542,14 @@ def connections(task, call, **kwargs):
     * ls - calls conn_list task
     * close - calls conn_close task
     * open - calls conn_open task
+    * check - calls conn_check task
     """
     task.name = "connections"
-    dispatcher = {"ls": conn_list, "close": conn_close, "open": conn_open}
+    dispatcher = {
+        "ls": conn_list,
+        "close": conn_close,
+        "open": conn_open,
+        "check": conn_check,
+    }
 
     return dispatcher[call](task, **kwargs)

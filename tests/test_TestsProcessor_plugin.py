@@ -236,7 +236,9 @@ def test_contains_check_list_of_lists():
         ["show run | inc ntp", "contains", "ntp server 7.7.7.7"],
     ]
     nr.data.reset_failed_hosts()
-    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)])
+    nr_with_tests = nr.with_processors(
+        [TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)]
+    )
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
@@ -1135,26 +1137,36 @@ def test_custom_function_text_use_all_tasks():
     output = nr_with_tests.run(task=grouped_task_for_use_all_tasks_test)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result, width=150)
-    assert check_result == {'IOL1': {'Test NTP and logging config': {'changed': False,
-                                          'criteria': '',
-                                          'diff': '',
-                                          'exception': None,
-                                          'failed': False,
-                                          'result': 'PASS',
-                                          'success': True,
-                                          'task': '',
-                                          'test': 'custom',
-                                          'use_all_tasks': True}},
- 'IOL2': {'Test NTP and logging config': {'changed': False,
-                                          'criteria': '',
-                                          'diff': '',
-                                          'exception': 'Logging or NTP cfg incorrect',
-                                          'failed': True,
-                                          'result': 'FAIL',
-                                          'success': False,
-                                          'task': '',
-                                          'test': 'custom',
-                                          'use_all_tasks': True}}}
+    assert check_result == {
+        "IOL1": {
+            "Test NTP and logging config": {
+                "changed": False,
+                "criteria": "",
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "result": "PASS",
+                "success": True,
+                "task": "",
+                "test": "custom",
+                "use_all_tasks": True,
+            }
+        },
+        "IOL2": {
+            "Test NTP and logging config": {
+                "changed": False,
+                "criteria": "",
+                "diff": "",
+                "exception": "Logging or NTP cfg incorrect",
+                "failed": True,
+                "result": "FAIL",
+                "success": False,
+                "task": "",
+                "test": "custom",
+                "use_all_tasks": True,
+            }
+        },
+    }
 
 
 # test_custom_function_text_use_all_tasks()
@@ -1162,7 +1174,7 @@ def test_custom_function_text_use_all_tasks():
 
 @skip_if_no_nornir
 def test_custom_function_text_dictionary_return():
-    """ test case when custom function returns dictionary """
+    """test case when custom function returns dictionary"""
     custom_function = """
 def run(result):
     if "7.7.7.8" not in result.result:
@@ -1988,7 +2000,9 @@ def test_eval_when_tests_are_list_of_lists():
         ["show run | inc ntp", "eval", "'7.7.7.7' in result"],
     ]
     nr.data.reset_failed_hosts()
-    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)])
+    nr_with_tests = nr.with_processors(
+        [TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)]
+    )
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
@@ -2571,28 +2585,38 @@ ntp server 7.7.7.7
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
-    assert check_result == {'IOL1': {'Test NTP config': {'changed': False,
-                                                         'count_ge': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': None,
-                                                         'failed': False,
-                                                         'result': 'PASS',
-                                                         'success': True,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}},
-                            'IOL2': {'Test NTP config': {'changed': False,
-                                                         'count_ge': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': 'Pattern not in output greater or '
-                                                                      'equal 2 times',
-                                                         'failed': True,
-                                                         'result': 'FAIL',
-                                                         'success': False,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}}}
-                                                         
+    assert check_result == {
+        "IOL1": {
+            "Test NTP config": {
+                "changed": False,
+                "count_ge": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "result": "PASS",
+                "success": True,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+        "IOL2": {
+            "Test NTP config": {
+                "changed": False,
+                "count_ge": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": "Pattern not in output greater or " "equal 2 times",
+                "failed": True,
+                "result": "FAIL",
+                "success": False,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+    }
+
+
 @skip_if_no_nornir
 def test_contains_count_ge_check_revert():
     tests = [
@@ -2602,7 +2626,7 @@ def test_contains_count_ge_check_revert():
             "pattern": "ntp server 7.7.7.",
             "test": "contains",
             "count_ge": 2,
-            "revert": True
+            "revert": True,
         }
     ]
     nr.data.reset_failed_hosts()
@@ -2623,28 +2647,38 @@ ntp server 7.7.7.7
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
-    assert check_result == {'IOL1': {'Test NTP config': {'changed': False,
-                                                         'count_ge': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': 'Pattern in output greater or equal '
-                                                                      '2 times',
-                                                         'failed': True,
-                                                         'result': 'FAIL',
-                                                         'success': False,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}},
-                            'IOL2': {'Test NTP config': {'changed': False,
-                                                         'count_ge': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': None,
-                                                         'failed': False,
-                                                         'result': 'PASS',
-                                                         'success': True,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}}}
-                                                         
+    assert check_result == {
+        "IOL1": {
+            "Test NTP config": {
+                "changed": False,
+                "count_ge": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": "Pattern in output greater or equal " "2 times",
+                "failed": True,
+                "result": "FAIL",
+                "success": False,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+        "IOL2": {
+            "Test NTP config": {
+                "changed": False,
+                "count_ge": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "result": "PASS",
+                "success": True,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+    }
+
+
 @skip_if_no_nornir
 def test_contains_count_le_check():
     tests = [
@@ -2674,28 +2708,38 @@ ntp server 7.7.7.7
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
-    assert check_result == {'IOL1': {'Test NTP config': {'changed': False,
-                                                         'count_le': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': 'Pattern not in output lower or '
-                                                                      'equal 2 times',
-                                                         'failed': True,
-                                                         'result': 'FAIL',
-                                                         'success': False,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}},
-                            'IOL2': {'Test NTP config': {'changed': False,
-                                                         'count_le': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': None,
-                                                         'failed': False,
-                                                         'result': 'PASS',
-                                                         'success': True,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}}}
-                                                         
+    assert check_result == {
+        "IOL1": {
+            "Test NTP config": {
+                "changed": False,
+                "count_le": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": "Pattern not in output lower or " "equal 2 times",
+                "failed": True,
+                "result": "FAIL",
+                "success": False,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+        "IOL2": {
+            "Test NTP config": {
+                "changed": False,
+                "count_le": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "result": "PASS",
+                "success": True,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+    }
+
+
 @skip_if_no_nornir
 def test_contains_count_le_check_revert():
     tests = [
@@ -2726,28 +2770,38 @@ ntp server 7.7.7.7
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
-    assert check_result == {'IOL1': {'Test NTP config': {'changed': False,
-                                                         'count_le': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': None,
-                                                         'failed': False,
-                                                         'result': 'PASS',
-                                                         'success': True,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}},
-                            'IOL2': {'Test NTP config': {'changed': False,
-                                                         'count_le': 2,
-                                                         'criteria': 'ntp server 7.7.7.',
-                                                         'diff': '',
-                                                         'exception': 'Pattern in output lower or equal 2 '
-                                                                      'times',
-                                                         'failed': True,
-                                                         'result': 'FAIL',
-                                                         'success': False,
-                                                         'task': 'show run | inc ntp',
-                                                         'test': 'contains'}}}
-                                                         
+    assert check_result == {
+        "IOL1": {
+            "Test NTP config": {
+                "changed": False,
+                "count_le": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": None,
+                "failed": False,
+                "result": "PASS",
+                "success": True,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+        "IOL2": {
+            "Test NTP config": {
+                "changed": False,
+                "count_le": 2,
+                "criteria": "ntp server 7.7.7.",
+                "diff": "",
+                "exception": "Pattern in output lower or equal 2 " "times",
+                "failed": True,
+                "result": "FAIL",
+                "success": False,
+                "task": "show run | inc ntp",
+                "test": "contains",
+            }
+        },
+    }
+
+
 def grouped_task_for_test_jinja2_suite(task):
     # run first subtask
     task.run(
@@ -2785,7 +2839,8 @@ Interface admin state - admin up
         name="show version",
     )
     return Result(host=task.host)
-    
+
+
 @skip_if_no_nornir
 def test_jinja2_suite():
     """
@@ -2805,10 +2860,10 @@ def test_jinja2_suite():
       version: xe1.2.3.4
     IOL2 inventory has this data:
     data:
-      version: xe1.2.3.4    
+      version: xe1.2.3.4
     """
     tests = [
-    """
+        """
 - task: "show version"
   name: "Test {{ host.name }} version"
   pattern: "{{ host.version }}"
@@ -2824,7 +2879,7 @@ def test_jinja2_suite():
   pattern: {{ interface.description }}
 {% endfor %}
     """,
-    """
+        """
 {% for interface in host.interfaces %}
 - task: "show interface {{ interface.name }}"
   name: "Test {{ host.name }} interface {{ interface.name }} status"
@@ -2833,10 +2888,12 @@ def test_jinja2_suite():
   - {{ interface.line }}
   - {{ interface.admin }}
 {% endfor %}
-    """
-    ]            
+    """,
+    ]
     nr.data.reset_failed_hosts()
-    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)])
+    nr_with_tests = nr.with_processors(
+        [TestsProcessor(tests, remove_tasks=True, build_per_host_tests=True)]
+    )
     output = nr_with_tests.run(task=grouped_task_for_test_jinja2_suite)
     res = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(res, width=150)
@@ -2848,14 +2905,15 @@ def test_jinja2_suite():
     assert res["IOL1"]["Test IOL1 interface Eth2 status"]["result"] == "PASS"
     assert res["IOL1"]["Test IOL1 version"]["result"] == "PASS"
     assert res["IOL2"]["Test IOL2 version"]["result"] == "FAIL"
-    
+
+
 @skip_if_no_nornir
 def test_jinja2_suite_tests_data():
     """
     This tes add tests_data to testsprovessor, that data used to render tests suite
     """
     tests_data = {
-    "IOL1": {
+        "IOL1": {
             "interfaces": [
                 {
                     "name": "Eth1",
@@ -2872,12 +2930,12 @@ def test_jinja2_suite_tests_data():
                     "admin": "admin up",
                 },
             ],
-            "version": "xe1.2.3.4"
+            "version": "xe1.2.3.4",
         },
-    "IOL2": {"version": "xe1.2.3.4"},
+        "IOL2": {"version": "xe1.2.3.4"},
     }
     tests = [
-    """
+        """
 - task: "show version"
   name: "Test {{ host.name }} version"
   pattern: "{{ tests_data[host.name]['version'] }}"
@@ -2895,7 +2953,7 @@ def test_jinja2_suite_tests_data():
 {% endfor %}
 {% endif %}
     """,
-    """
+        """
 {% if host.name == 'IOL1' %}
 {% for interface in tests_data[host.name]['interfaces'] %}
 - task: "show interface {{ interface.name }}"
@@ -2906,16 +2964,16 @@ def test_jinja2_suite_tests_data():
   - {{ interface.admin }}
 {% endfor %}
 {% endif %}
-    """
-    ]            
+    """,
+    ]
     nr.data.reset_failed_hosts()
     nr_with_tests = nr.with_processors(
         [
             TestsProcessor(
-                tests, 
-                remove_tasks=True, 
-                build_per_host_tests=True, 
-                tests_data=tests_data
+                tests,
+                remove_tasks=True,
+                build_per_host_tests=True,
+                tests_data=tests_data,
             )
         ]
     )
@@ -2930,4 +2988,3 @@ def test_jinja2_suite_tests_data():
     assert res["IOL1"]["Test IOL1 interface Eth2 status"]["result"] == "PASS"
     assert res["IOL1"]["Test IOL1 version"]["result"] == "PASS"
     assert res["IOL2"]["Test IOL2 version"]["result"] == "FAIL"
-	

@@ -17,7 +17,6 @@ sys.path.insert(0, "..")
 try:
     from nornir import InitNornir
     from nornir.core.plugins.inventory import InventoryPluginRegister
-    from nornir.core.plugins.connections import ConnectionPluginRegister
     from nornir.core.task import Result
 
     HAS_NORNIR = True
@@ -26,16 +25,10 @@ except ImportError:
 
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import nr_test
-from nornir_salt.plugins.processors import DataProcessor
-from nornir_salt.plugins.tasks import netmiko_send_commands
-from nornir_salt.plugins.connections import PyGNMIPlugin
-from nornir_salt.plugins.tasks import pygnmi_call
-
+from nornir_salt.plugins.tasks import connections
 
 logging.basicConfig(level=logging.ERROR)
 InventoryPluginRegister.register("DictInventory", DictInventory)
-ConnectionPluginRegister.register("pygnmi", PyGNMIPlugin)
 
 skip_if_no_nornir = pytest.mark.skipif(
     HAS_NORNIR == False,
@@ -54,9 +47,8 @@ hosts:
     password: C1sco12345
     port: 57777
     connection_options:
-      pygnmi:
-        extras:
-          insecure: True
+      conn_test:
+        port: 1234
 """
 try:
     s = socket.socket()
@@ -94,12 +86,58 @@ def init(opts):
     return nr
 
 
-nr = init(cisco_iosxr_always_on_router_dict)
+@skip_if_no_nornir
+@skip_if_has_no_cisco_iosxr_always_on_router
+def test_connection_check():
+    nr = init(cisco_iosxr_always_on_router_dict)
+    output = nr.run(
+        task=connections,
+        call="check",
+        connection_name=None,
+        name="check base connection",
+    )
+    result = ResultSerializer(output, add_details=True)
+
+    pprint.pprint(result)
+
+    assert (
+        result["sandbox-iosxr-1.cisco.com"]["connections"]["result"] == True
+    ), "Unexpected connection check result"
 
 
 @skip_if_no_nornir
-def test_gnmi_capabilities_check():
-    pass
+@skip_if_has_no_cisco_iosxr_always_on_router
+def test_connection_check_with_conn_name():
+    nr = init(cisco_iosxr_always_on_router_dict)
+    output = nr.run(
+        task=connections,
+        call="check",
+        connection_name="conn_test",
+        name="check connection by name",
+    )
+    result = ResultSerializer(output, add_details=True)
+
+    pprint.pprint(result)
+
+    assert (
+        result["sandbox-iosxr-1.cisco.com"]["connections"]["result"] == False
+    ), "Connection check should have failed"
 
 
-# test_gnmi_capabilities_check()
+@skip_if_no_nornir
+@skip_if_has_no_cisco_iosxr_always_on_router
+def test_connection_check_non_existing_conn_name():
+    nr = init(cisco_iosxr_always_on_router_dict)
+    output = nr.run(
+        task=connections,
+        call="check",
+        connection_name="non_exist",
+        name="check non existing connection",
+    )
+    result = ResultSerializer(output, add_details=True)
+
+    pprint.pprint(result)
+
+    assert (
+        result["sandbox-iosxr-1.cisco.com"]["connections"]["result"] == True
+    ), "Connection check should not have failed"

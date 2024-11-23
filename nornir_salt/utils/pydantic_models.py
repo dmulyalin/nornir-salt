@@ -11,7 +11,7 @@ from pydantic import (
     StrictFloat,
     StrictStr,
     conlist,
-#    root_validator,
+    #    root_validator,
     model_validator,
     Field,
     ConfigDict,
@@ -77,10 +77,7 @@ class model_netmiko_send_commands(BaseModel):
     repeat_interval: Optional[StrictInt] = None
     return_last: Optional[StrictInt] = None
 
-    model_config = ConfigDict(
-        arbitrary_types_allowed = True,
-        extra = "allow"
-    )       
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_nr_test(BaseModel):
@@ -160,6 +157,7 @@ class ConnectionsCallsEnum(str, Enum):
     connections_list = "ls"
     connections_open = "open"
     connections_close = "close"
+    connection_check = "check"
 
 
 class model_connections(BaseModel):
@@ -574,7 +572,7 @@ class modelTestsProcessorTest(BaseModel):
     class Config:
         extra = "allow"
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def check_commands_given(cls, values):
         test = values["test"]
