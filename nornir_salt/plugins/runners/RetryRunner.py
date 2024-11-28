@@ -764,7 +764,7 @@ class RetryRunner:
         creds_retry: list = None,
         task_stop_errors: list = None,
         connect_check: bool = True,
-        connect_timeout: int = None,
+        connect_timeout: int = 5,
     ) -> None:
         self.num_workers = num_workers
         self.num_connectors = num_connectors
@@ -779,7 +779,7 @@ class RetryRunner:
         self.task_timeout = task_timeout
         self.creds_retry = creds_retry or []
         self.task_stop_errors = task_stop_errors or []
-        self.connect_timeout = connect_timeout or 5
+        self.connect_timeout = connect_timeout
         self.connect_check = connect_check
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
@@ -811,16 +811,15 @@ class RetryRunner:
             "run_task_stop_errors", self.task_stop_errors
         )
         run_task_stop_errors.append("*validation error*")
-        # attempt to extract a list of connections this task uses
-        if getattr(task.task, "__wrapped__"):  # task function has decorator
-            run_connection_name = task.params.pop(
-                "connection_name",
-                task.task.__wrapped__.__globals__.get("CONNECTION_NAME", ""),
+        # attempt to extract a list of connections names this task uses
+        if task.params.get("connection_name"):  # use task connection_name argument
+            run_connection_name = task.params.pop("connection_name")
+        elif getattr(task.task, "__wrapped__", None):  # task function has decorator
+            run_connection_name = task.task.__wrapped__.__globals__.get(
+                "CONNECTION_NAME", ""
             )
-        else:
-            run_connection_name = task.params.pop(
-                "connection_name", task.task.__globals__.get("CONNECTION_NAME", "")
-            )
+        else:  # use task global CONNECTION_NAME varibale
+            run_connection_name = task.task.__globals__.get("CONNECTION_NAME", "")
         run_connection_name = [
             i.strip() for i in run_connection_name.split(",") if i.strip()
         ]
