@@ -592,19 +592,20 @@ def connector(
             # close host connections to retry it
             close_host_connection(host, [connection_name])
             err_msg = "nornir_salt:RetryRunner {} - connection {}, retry attempt {}, error: '{}'".format(
-                host.name, connection_name, params["connection_retry"], e
+                host.name, connection_name, params["connection_retry"], ' '.join([i.strip() for i in str(e).splitlines()])
             )
-            log.error(err_msg)
-            log.exception(e)
             if params["connection_retry"] < connect_retry:
                 params["connection_retry"] += 1
                 params["timestamp"] = time.time()
                 connectors_q.put(connection)
                 connectors_q.task_done()
+                log.warning(err_msg)
                 continue
             else:
                 # record exception in params for worker thread to react on it
                 params["connect_exception"] = err_msg
+                log.error(err_msg)
+                log.exception(e)
         connectors_q.task_done()
         work_q.put((task, host, params, result))
 
