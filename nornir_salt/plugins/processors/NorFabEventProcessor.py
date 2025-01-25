@@ -12,9 +12,13 @@ NorFabEventProcessor reference
 """
 import logging
 
-from datetime import datetime
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
+
+try:
+    from norfab.core.models import NorFabEvent
+except Exception as e:
+    pass
 
 log = logging.getLogger(__name__)
 
@@ -25,98 +29,96 @@ class NorFabEventProcessor:
 
     :param worker: (obj) NorFab worker object
     :param tmstp_ftr: (str) timestamp formatter string, default is "%d-%b-%Y %H:%M:%S"
+    :param username: (str) username who started the job
     """
 
-    def __init__(
-        self, worker, tmstp_ftr="%d-%b-%Y %H:%M:%S.%f", norfab_task: str = None
-    ):
+    def __init__(self, worker, norfab_task_name):
         self.worker = worker
-        self.tmstp_ftr = tmstp_ftr
-
-    def _timestamp(self):
-        """
-        Helper function to produce event data timestamp.
-        """
-        return datetime.now().strftime(self.tmstp_ftr)[:-3]
+        self.norfab_task_name = norfab_task_name
 
     def task_started(self, task: Task) -> None:
-        data = {
-            "timestamp": self._timestamp(),
-            "task_name": task.name,
-            "parent_task": task.parent_task.name if task.parent_task else None,
-            "task_event": "started",
-            "task_type": "task",
-            "hosts": list(task.nornir.inventory.hosts.keys()),
-            "status": "RUNNING",
-            "message": f"{task.name} Nornir task started",
-        }
-        self.worker.event(data=data)
+        self.worker.event(
+            NorFabEvent(
+                task=f"{self.norfab_task_name}.{task.name}",
+                status="started",
+                resource=sorted(list(task.nornir.inventory.hosts.keys())),
+                message="Task started",
+                severity="INFO",
+                extras={},
+            )
+        )
 
     def task_completed(self, task: Task, result: AggregatedResult) -> None:
-        data = {
-            "timestamp": self._timestamp(),
-            "task_name": task.name,
-            "parent_task": task.parent_task.name if task.parent_task else None,
-            "task_event": "completed",
-            "task_type": "task",
-            "hosts": list(task.nornir.inventory.hosts.keys()),
-            "status": "FAILED" if task.results.failed else "COMPLETED",
-            "message": f"{task.name} Nornir task completed",
-        }
-        self.worker.event(data=data)
+        self.worker.event(
+            NorFabEvent(
+                task=f"{self.norfab_task_name}.{task.name}",
+                status="completed",
+                resource=sorted(list(task.nornir.inventory.hosts.keys())),
+                message="Task completed",
+                severity="INFO",
+                extras={},
+            )
+        )
 
     def task_instance_started(self, task: Task, host: Host) -> None:
-        data = {
-            "timestamp": self._timestamp(),
-            "task_name": task.name,
-            "parent_task": task.parent_task.name if task.parent_task else None,
-            "hosts": [host.name],
-            "task_event": "started",
-            "task_type": "task_instance",
-            "status": "RUNNING",
-            "message": f"{task.name} Nornir task instance started",
-        }
-        self.worker.event(data=data)
+        self.worker.event(
+            NorFabEvent(
+                task=f"{self.norfab_task_name}.{task.name}",
+                status="started",
+                resource=[host.name],
+                message="Host task started",
+                severity="INFO",
+                extras={},
+            )
+        )
 
     def task_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
-        data = {
-            "timestamp": self._timestamp(),
-            "task_name": task.name,
-            "parent_task": task.parent_task.name if task.parent_task else None,
-            "hosts": [host.name],
-            "task_event": "completed",
-            "task_type": "task_instance",
-            "status": "FAILED" if task.results.failed else "COMPLETED",
-            "message": f"{task.name} Nornir task instance completed",
-        }
-        self.worker.event(data=data)
+        self.worker.event(
+            NorFabEvent(
+                task=f"{self.norfab_task_name}.{task.name}",
+                status="failed" if task.results.failed else "completed",
+                resource=[host.name],
+                message="Host task completed",
+                severity="INFO",
+                extras={},
+            )
+        )
 
     def subtask_instance_started(self, task: Task, host: Host) -> None:
-        data = {
-            "timestamp": self._timestamp(),
-            "task_name": task.name,
-            "parent_task": task.parent_task.name if task.parent_task else None,
-            "hosts": [host.name],
-            "task_event": "started",
-            "task_type": "subtask",
-            "status": "RUNNING",
-            "message": f"{task.name} Nornir sub-task instance started",
-        }
-        self.worker.event(data=data)
+        task_name = f"{self.norfab_task_name}.{task.parent_task.name}"
+        message = f"Sub-task started '{task.name}'"
+        self.worker.event(
+            NorFabEvent(
+                task=task_name,
+                status="started",
+                resource=[host.name],
+                message=message,
+                severity="INFO",
+                extras={},
+            )
+        )
 
     def subtask_instance_completed(
         self, task: Task, host: Host, result: MultiResult
     ) -> None:
-        data = {
-            "timestamp": self._timestamp(),
-            "task_name": task.name,
-            "parent_task": task.parent_task.name if task.parent_task else None,
-            "hosts": [host.name],
-            "task_event": "completed",
-            "task_type": "subtask",
-            "status": "FAILED" if task.results.failed else "COMPLETED",
-            "message": f"{task.name} Nornir sub-task instance completed",
-        }
-        self.worker.event(data=data)
+        task_name = f"{self.norfab_task_name}.{task.parent_task.name}"
+        if task.results.failed:
+            message = f"Sub-task failed '{task.name}'"
+            status = "failed"
+            severity = "WARNING"
+        else:
+            message = f"Sub-task completed '{task.name}'"
+            status = "completed"
+            severity = "INFO"
+        self.worker.event(
+            NorFabEvent(
+                task=task_name,
+                status=status,
+                resource=[host.name],
+                message=message,
+                severity=severity,
+                extras={},
+            )
+        )

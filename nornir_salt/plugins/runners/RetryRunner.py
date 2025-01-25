@@ -592,7 +592,10 @@ def connector(
             # close host connections to retry it
             close_host_connection(host, [connection_name])
             err_msg = "nornir_salt:RetryRunner {} - connection {}, retry attempt {}, error: '{}'".format(
-                host.name, connection_name, params["connection_retry"], ' '.join([i.strip() for i in str(e).splitlines()])
+                host.name,
+                connection_name,
+                params["connection_retry"],
+                " ".join([i.strip() for i in str(e).splitlines()]),
             )
             if params["connection_retry"] < connect_retry:
                 params["connection_retry"] += 1
