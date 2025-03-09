@@ -492,11 +492,14 @@ def worker(
                 params["timestamp"] = time.time()
                 # recover task results for not to count task as failed
                 for r in task.results:
-                    r.failed = False
-                    r.exception = None
-                    r.skip_results = (
-                        True  # for ResultSerializer to skip failed attempts
-                    )
+                    try:
+                        r.failed = False
+                        r.exception = None
+                        r.skip_results = (
+                            True  # for ResultSerializer to skip failed attempts
+                        )
+                    except Exception as e:
+                        log.exception(f"Failed to process {task.name} task result {r}.")
                 if reconnect_on_fail:
                     # close host connections to retry them
                     close_host_connection(host, params["connection_name"])
@@ -506,7 +509,7 @@ def worker(
                     work_q.put(work)
                 work_q.task_done()
                 continue
-        # en reach result objects with runner statistics
+        # en-reach result objects with runner statistics
         for result_item in work_result:
             result_item.connection_retry = params["connection_retry"]
             result_item.task_retry = params["task_retry"]
