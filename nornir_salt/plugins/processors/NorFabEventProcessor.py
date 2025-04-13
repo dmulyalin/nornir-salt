@@ -16,7 +16,7 @@ from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
 
 try:
-    from norfab.core.models import NorFabEvent
+    from norfab.models import NorFabEvent
 except Exception as e:
     pass
 
