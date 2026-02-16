@@ -44,6 +44,7 @@ API Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_send_commands.scrapli_send_commands
 """
+
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cli_send_commands, cli_form_commands
 from nornir_salt.utils.pydantic_models import model_scrapli_send_commands

@@ -19,7 +19,7 @@ Test functions returns Nornir ``Result`` object and make use of these attributes
 
 * ``name`` - name of the test
 * ``task`` - name of the task
-* ``result`` -  test result ``PASS``, ``FAIL`` or ``ERROR``
+* ``result`` - test result ``PASS``, ``FAIL`` or ``ERROR``
 * ``success`` - test success status True (PASS) or False (FAIL or ERROR)
 * ``exception`` - description of failure reason
 * ``test`` - test type to perform e.g. ``contains``, ``custom``, ``cerberus`` etc.
@@ -45,14 +45,18 @@ These are arguments/keys each test dictionary may contain:
 * ``report_all`` - optional, boolean, default is False, if ``path`` evaluates to a list of items
   and ``report_all`` set to True, reports all tests, even successful ones
 * ``use_all_tasks`` - optional, boolean to indicate if need to supply all task results to the test function
+* ``groups`` - optional, list of groups names a test belongs to, used together with processor ``groups`` argument
+* ``cli`` - optional, dictionary with ``FFun`` filter arguments to run test for matching hosts only
 
 To simplify test functions calls, ``TestsProcessor`` implements these set of aliases
 for ``test`` argument:
 
 * ``contains`` calls ``ContainsTest``
-* ``!contains`` or ``ncontains`` calls ``ContainsTest`` with  kwargs: ``{"revert": True}``
+* ``!contains`` or ``ncontains`` calls ``ContainsTest`` with kwargs: ``{"revert": True}``
 * ``contains_lines`` calls ``ContainsLinesTest``
 * ``!contains_lines`` or ``ncontains_lines`` calls ``ContainsLinesTest`` with kwargs: ``{"revert": True}``
+* ``contains_lines_re`` calls ``ContainsLinesTest`` with kwargs: ``{"use_re": True}``
+* ``!contains_lines_re`` or ``ncontains_lines_re`` calls ``ContainsLinesTest`` with kwargs: ``{"revert": True, "use_re": True}``
 * ``contains_re`` calls ``ContainsTest`` with kwargs: ``{"use_re": True}``
 * ``!contains_re`` or ``ncontains_re`` calls ``ContainsTest`` with kwargs: ``{"revert": True, "use_re": True}``
 * ``equal`` calls ``EqualTest``
@@ -153,7 +157,7 @@ or list of dictionaries. For example::
             "task": "show run interface",
             "name": "Test MTU config",
             "path": "interfaces.*",
-            "expr": "assert result['mtu'] > 9000, '{} MTU less then 9000'.format(result['interface'])"
+            "expr": "assert result['mtu'] > 9000, '{} MTU less than 9000'.format(result['interface'])"
         }
     ]
 
@@ -185,7 +189,7 @@ or list of dictionaries. For example::
     # [{'changed': False,
     #   'criteria': '',
     #   'diff': '',
-    #   'exception': 'Gi1 MTU less then 9000',
+    #   'exception': 'Gi1 MTU less than 9000',
     #   'failed': True,
     #   'host': 'IOL1',
     #   'name': 'Test MTU config',
@@ -327,10 +331,12 @@ Tests Reference
 .. autofunction:: nornir_salt.plugins.processors.TestsProcessor.EvalTest
 .. autofunction:: nornir_salt.plugins.processors.TestsProcessor.CustomFunctionTest
 """
+
 import logging
 import re
 import traceback
 import fnmatch
+from typing import Any, Dict, Generator, List, Optional, Union, Callable
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
@@ -338,7 +344,7 @@ from nornir_salt.utils.pydantic_models import (
     modelTestsProcessorSuite,
     modelTestsProcessorTests,
 )
-from nornir_salt.plugins.functions import FFun, FFun_functions
+from nornir_salt.plugins.functions import FFun
 
 log = logging.getLogger(__name__)
 
@@ -374,12 +380,14 @@ test_result_template = {
     "success": True,  # success status
     "failed": False,  # failure status
     "exception": None,  # description of failure reason
-    "test": None,  # test type to perform .g. contains
+    "test": None,  # test type to perform e.g. contains
     "criteria": "",  # criteria that failed the test e.g. pattern or string
 }
 
 
-def _get_result_by_path(data, path, host):
+def _get_result_by_path(
+    data: Any, path: List[str], host: Host
+) -> Generator[Result, None, None]:
     """
     Helper generator function to iterate over data and yield
     ``nornir.core.task.Result`` object with result attribute set to data
@@ -387,8 +395,8 @@ def _get_result_by_path(data, path, host):
 
     :param data: (dict or list) structured data to retrieve data subset from
     :param path: (list) list of path items to get from data
-    :param host: (obj)  Nornir host object
-        :return result: ``nornir.core.task.Result`` object with data at given path
+    :param host: (obj) Nornir host object
+    :return: ``nornir.core.task.Result`` object with data at given path
     """
     if path == []:
         yield Result(host=host, result=data)
@@ -404,7 +412,15 @@ def _get_result_by_path(data, path, host):
                 yield result
 
 
-def EvalTest(host, result, expr, revert=False, err_msg=None, globs=None, **kwargs):
+def EvalTest(
+    host: Host,
+    result: Result,
+    expr: str,
+    revert: bool = False,
+    err_msg: Optional[str] = None,
+    globs: Optional[Dict[str, Any]] = None,
+    **kwargs: Any,
+) -> Result:
     """
     Function to check result running python built-in ``Eval`` or ``Exec``
     function against provided python expression.
@@ -492,7 +508,9 @@ def EvalTest(host, result, expr, revert=False, err_msg=None, globs=None, **kwarg
     return Result(host=host, **ret)
 
 
-def _cerberus_validate_item(validator_engine, data, schema, ret_data):
+def _cerberus_validate_item(
+    validator_engine: Any, data: Any, schema: Dict[str, Any], ret_data: Dict[str, Any]
+) -> Dict[str, Any]:
     """Helper function to avoid code repetition for Cerberus validation"""
     res = validator_engine.validate(document=data, schema=schema)
     if not res:
@@ -506,15 +524,21 @@ def _cerberus_validate_item(validator_engine, data, schema, ret_data):
     return ret_data
 
 
-def CerberusTest(host, result, schema, allow_unknown=True, **kwargs):
+def CerberusTest(
+    host: Host,
+    result: Result,
+    schema: Dict[str, Any],
+    allow_unknown: bool = True,
+    **kwargs: Any,
+) -> Union[Result, List[Result]]:
     """
     Function to check results using ``Cerberus`` module schema. Results must be a structured
     data - dictionary, list - strings and other types of data not supported.
 
     :param host: (obj) Nornir host object
     :param result: ``nornir.core.task.Result`` object
-    :param schema: (dictionary) Cerberus schema definition to us for validation
-    :param allow_uncknown: (bool) Cerberus allow unknown parameter, default is True
+    :param schema: (dictionary) Cerberus schema definition to use for validation
+    :param allow_unknown: (bool) Cerberus allow unknown parameter, default is True
     :param kwargs: (dict) any additional ``**kwargs`` keyword arguments to include in return Result object
 
     .. warning:: Cerberus library only supports validation of dictionary structures,
@@ -531,9 +555,9 @@ def CerberusTest(host, result, schema, allow_unknown=True, **kwargs):
     # run check
     if not HAS_CERBERUS:
         ret.update({"result": "ERROR", "success": False})
-        ret[
-            "exception"
-        ] = "Failed to import Cerberus library, install: pip install cerberus"
+        ret["exception"] = (
+            "Failed to import Cerberus library, install: pip install cerberus"
+        )
         return Result(host=host, **ret)
     validator_engine = Validator()
     validator_engine.allow_unknown = allow_unknown
@@ -554,22 +578,24 @@ def CerberusTest(host, result, schema, allow_unknown=True, **kwargs):
         return validation_results
     else:
         raise TypeError(
-            "nornir-salt:CerberusTest unsupported results type '{}', supported - dictionary, list".format(
-                type(result.result)
-            )
+            f"nornir-salt:CerberusTest unsupported results type "
+            f"'{type(result.result)}', supported - dictionary, list"
         )
 
 
-def _load_custom_fun_from_text(function_text, function_name, globals_dictionary=None):
+def _load_custom_fun_from_text(
+    function_text: str,
+    function_name: str,
+    globals_dictionary: Optional[Dict[str, Any]] = None,
+) -> Callable:
     """
     Helper function to load custom function code from text using
     Python ``exec`` built-in function
     """
     if function_name not in function_text:
         raise RuntimeError(
-            "nornir-salt:CustomFunctionTest no '{}' function in function text".format(
-                function_name
-            )
+            f"nornir-salt:CustomFunctionTest no '{function_name}' "
+            f"function in function text"
         )
 
     globals_dictionary = globals_dictionary or {}
@@ -592,17 +618,18 @@ def _load_custom_fun_from_text(function_text, function_name, globals_dictionary=
 
 
 def CustomFunctionTest(
-    host,
-    result,
-    function_file=None,
-    function_text=None,
-    function_call=None,
-    function_name="run",
-    function_kwargs=None,
-    globals_dictionary=None,
-    add_host=False,
-    **kwargs,
-):
+    host: Host,
+    result: Union[Result, List[Result], MultiResult],
+    function_file: Optional[str] = None,
+    function_text: Optional[str] = None,
+    function_call: Optional[Callable] = None,
+    function_name: str = "run",
+    function_import: Optional[str] = None,
+    function_kwargs: Optional[Dict[str, Any]] = None,
+    globals_dictionary: Optional[Dict[str, Any]] = None,
+    add_host: bool = False,
+    **kwargs: Any,
+) -> Union[Result, List[Result]]:
     """
     Wrapper around calling custom function to perform results checks.
 
@@ -612,6 +639,7 @@ def CustomFunctionTest(
     :param function_file: (str) OS path to file with ``function_name`` function
     :param function_text: (str) Python code text for ``function_name`` function
     :param function_call: (callable) reference to callable python function
+    :param function_import: (str) dotted import path in ``module.function`` format
     :param globals_dictionary: (dict) dictionary to merge with global space of the custom function,
       used only if ``function_file`` or ``function_text`` arguments provided.
     :param function_kwargs: (dict) ``**function_kwargs`` to pass on to custom function
@@ -653,7 +681,7 @@ def CustomFunctionTest(
     added to overall results with ``result`` key set to ``FAIL``.
 
     Sample custom test function to accept ``Result`` object when ``use_all_tasks`` set to False and
-    ``task`` is a sting representing name of the task::
+    ``task`` is a string representing name of the task::
 
         def custom_test_function(result):
             # result is nornir.core.task.Result object
@@ -709,6 +737,14 @@ def CustomFunctionTest(
                 test_function = _load_custom_fun_from_text(
                     f.read(), function_name, globals_dictionary
                 )
+        elif function_import:
+            if "." not in function_import:
+                raise RuntimeError(
+                    "nornir-salt:CustomFunctionTest function_import must be in 'module.function' format"
+                )
+            module_name, func_name = function_import.rsplit(".", 1)
+            module = __import__(module_name, fromlist=[func_name])  # nosec
+            test_function = getattr(module, func_name)
         elif function_call:
             test_function = function_call
         else:
@@ -716,8 +752,9 @@ def CustomFunctionTest(
                 "nornir-salt:CustomFunctionTest no custom function found."
             )
     except:
-        msg = "nornir-salt:CustomFunctionTest function loading error:\n{}".format(
-            traceback.format_exc()
+        msg = (
+            f"nornir-salt:CustomFunctionTest function loading error:\n"
+            f"{traceback.format_exc()}"
         )
         log.error(msg)
         ret.update({"result": "ERROR", "success": False, "exception": msg})
@@ -726,8 +763,9 @@ def CustomFunctionTest(
     try:
         test_function_result = test_function(result, **function_kwargs)
     except:
-        msg = "nornir-salt:CustomFunctionTest function run error:\n{}".format(
-            traceback.format_exc()
+        msg = (
+            f"nornir-salt:CustomFunctionTest function run error:\n"
+            f"{traceback.format_exc()}"
         )
         log.error(msg)
         ret.update({"result": "ERROR", "success": False, "exception": msg})
@@ -755,13 +793,19 @@ def CustomFunctionTest(
         return Result(host=host, **ret)
     else:
         raise TypeError(
-            "nornir-salt:CustomFunctionTest test function returned unsupported results type: {}".format(
-                type(test_function_result)
-            )
+            f"nornir-salt:CustomFunctionTest test function returned "
+            f"unsupported results type: {type(test_function_result)}"
         )
 
 
-def EqualTest(host, result, pattern, revert=False, err_msg=None, **kwargs):
+def EqualTest(
+    host: Host,
+    result: Result,
+    pattern: Any,
+    revert: bool = False,
+    err_msg: Optional[str] = None,
+    **kwargs: Any,
+) -> Result:
     """
     Function to check result is equal to the pattern.
 
@@ -799,15 +843,15 @@ def EqualTest(host, result, pattern, revert=False, err_msg=None, **kwargs):
 
 
 def ContainsLinesTest(
-    host,
-    result,
-    pattern,
-    use_re=False,
-    count=None,
-    revert=False,
-    err_msg=None,
-    **kwargs,
-):
+    host: Host,
+    result: Result,
+    pattern: Union[str, List[str]],
+    use_re: bool = False,
+    count: Optional[int] = None,
+    revert: bool = False,
+    err_msg: Optional[str] = None,
+    **kwargs: Any,
+) -> Result:
     """
     Function to check that all lines contained in result output.
 
@@ -850,17 +894,17 @@ def ContainsLinesTest(
 
 
 def ContainsTest(
-    host,
-    result,
-    pattern,
-    use_re=False,
-    count=None,
-    count_ge=None,
-    count_le=None,
-    revert=False,
-    err_msg=None,
-    **kwargs,
-):
+    host: Host,
+    result: Result,
+    pattern: Union[str, Any],
+    use_re: bool = False,
+    count: Optional[int] = None,
+    count_ge: Optional[int] = None,
+    count_le: Optional[int] = None,
+    revert: bool = False,
+    err_msg: Optional[str] = None,
+    **kwargs: Any,
+) -> Result:
     """
     Function to check if pattern contained in output of given result.
 
@@ -887,11 +931,11 @@ def ContainsTest(
     )
 
     # add count to return results
-    if count:
+    if count is not None:
         ret["count"] = count
-    if count_ge:
+    if count_ge is not None:
         ret["count_ge"] = count_ge
-    if count_le:
+    if count_le is not None:
         ret["count_le"] = count_le
 
     # run the check
@@ -899,25 +943,36 @@ def ContainsTest(
         if not re.search(pattern, result.result):
             ret.update({"result": "FAIL", "success": False})
             ret["exception"] = err_msg if err_msg else "Regex pattern not in output"
-    elif count and result.result.count(pattern) != count:
-        ret.update({"result": "FAIL", "success": False})
-        ret["exception"] = (
-            err_msg if err_msg else "Pattern not in output {} times".format(count)
-        )
-    elif count_ge and result.result.count(pattern) < count_ge:
-        ret.update({"result": "FAIL", "success": False})
-        ret["exception"] = (
-            err_msg
-            if err_msg
-            else "Pattern not in output greater or equal {} times".format(count_ge)
-        )
-    elif count_le and result.result.count(pattern) > count_le:
-        ret.update({"result": "FAIL", "success": False})
-        ret["exception"] = (
-            err_msg
-            if err_msg
-            else "Pattern not in output lower or equal {} times".format(count_le)
-        )
+    elif count is not None:
+        if result.result.count(pattern) != count:
+            ret.update({"result": "FAIL", "success": False})
+            ret["exception"] = (
+                err_msg if err_msg else f"Pattern not in output {count} times"
+            )
+    elif count_le is not None and count_ge is not None:
+        if not (count_le >= result.result.count(pattern) >= count_ge):
+            ret.update({"result": "FAIL", "success": False})
+            ret["exception"] = (
+                err_msg
+                if err_msg
+                else f"Pattern not in output between {count_ge} and {count_le} times"
+            )
+    elif count_ge is not None:
+        if result.result.count(pattern) < count_ge:
+            ret.update({"result": "FAIL", "success": False})
+            ret["exception"] = (
+                err_msg
+                if err_msg
+                else f"Pattern not in output greater or equal {count_ge} times"
+            )
+    elif count_le is not None:
+        if result.result.count(pattern) > count_le:
+            ret.update({"result": "FAIL", "success": False})
+            ret["exception"] = (
+                err_msg
+                if err_msg
+                else f"Pattern not in output lower or equal {count_le} times"
+            )
     elif pattern not in result.result:
         ret.update({"result": "FAIL", "success": False})
         ret["exception"] = err_msg if err_msg else "Pattern not in output"
@@ -930,21 +985,27 @@ def ContainsTest(
             ret.update({"result": "FAIL", "success": False})
             if use_re:
                 ret["exception"] = err_msg if err_msg else "Regex pattern in output"
-            elif count:
+            elif count is not None:
                 ret["exception"] = (
-                    err_msg if err_msg else "Pattern in output {} times".format(count)
+                    err_msg if err_msg else f"Pattern in output {count} times"
                 )
-            elif count_ge:
+            elif count_le is not None and count_ge is not None:
                 ret["exception"] = (
                     err_msg
                     if err_msg
-                    else "Pattern in output greater or equal {} times".format(count_ge)
+                    else f"Pattern in output between {count_ge} and {count_le} times"
                 )
-            elif count_le:
+            elif count_ge is not None:
                 ret["exception"] = (
                     err_msg
                     if err_msg
-                    else "Pattern in output lower or equal {} times".format(count_le)
+                    else f"Pattern in output greater or equal {count_ge} times"
+                )
+            elif count_le is not None:
+                ret["exception"] = (
+                    err_msg
+                    if err_msg
+                    else f"Pattern in output lower or equal {count_le} times"
                 )
             else:
                 ret["exception"] = err_msg if err_msg else "Pattern in output"
@@ -984,6 +1045,11 @@ class TestsProcessor:
     TestsProcessor designed to run a series of tests for Nornir
     tasks results.
 
+    Supports static tests suite and per-host tests suite rendering from
+    Jinja2/YAML templates, optional tests filtering by subset patterns,
+    groups names and ``FFun`` ``cli`` filters, and can remove device
+    task output preserving only tests results.
+
     :param tests: (list of dictionaries) list of tests to run
     :param remove_tasks: (bool) if True (default) removes tasks output from results
     :param kwargs: (any) if provided, ``**kwargs`` will form a single test item
@@ -995,24 +1061,25 @@ class TestsProcessor:
     :param subset: (list or str) list or string with comma separated glob patterns to
         match tests' names to execute. Patterns are not case-sensitive. Uses ``fnmatch``
         Python built-in function to do glob patterns matching
+    :param groups: (list or str) list or comma separated string of test group names to execute
     :param tests_data: (dict) dictionary of parameters to supply for test suite templates rendering
     """
 
     def __init__(
         self,
-        tests=None,
-        remove_tasks=True,
-        failed_only=False,
-        jinja_kwargs=None,
-        tests_data=None,
-        build_per_host_tests=False,
-        render_tests=True,
-        subset=None,
-        **kwargs,
-    ):
+        tests: Optional[List[Dict[str, Any]]] = None,
+        remove_tasks: bool = True,
+        failed_only: bool = False,
+        jinja_kwargs: Optional[Dict[str, Any]] = None,
+        tests_data: Optional[Dict[str, Any]] = None,
+        build_per_host_tests: bool = False,
+        render_tests: bool = True,
+        subset: Optional[Union[List[str], str]] = None,
+        groups: Optional[Union[List[str], str]] = None,
+        **kwargs: Any,
+    ) -> None:
         self.tests = tests if tests else [kwargs]
         self.remove_tasks = remove_tasks
-        self.len_tasks = {}
         self.failed_only = failed_only
         self.jinja_kwargs = jinja_kwargs or {"trim_blocks": True, "lstrip_blocks": True}
         self.tests_data = tests_data or {}
@@ -1023,7 +1090,11 @@ class TestsProcessor:
             if isinstance(subset, str)
             else (subset or [])
         )
-
+        self.groups = (
+            [i.strip() for i in groups.split(",")]
+            if isinstance(groups, str)
+            else (groups or [])
+        )
         # do preliminary tests suite validation
         if build_per_host_tests:
             _ = modelTestsProcessorTests(tests=self.tests)
@@ -1031,7 +1102,12 @@ class TestsProcessor:
         else:
             _ = modelTestsProcessorSuite(tests=self.tests)
 
-    def _render(self, template, data: dict = None, load: bool = False):
+    def _render(
+        self,
+        template: Union[str, List[str]],
+        data: Optional[Dict[str, Any]] = None,
+        load: bool = False,
+    ) -> Union[str, List, Dict, None]:
         """
         Helper function to render test items and test tasks
 
@@ -1072,7 +1148,7 @@ class TestsProcessor:
     def task_started(self, task: Task) -> None:
         """
         This callback called on task start. This method forms per host
-        test suits, rendering any of test items if it is a string, extracts
+        test suites, rendering any of test items if it is a string, extracts
         per host show commands to collect from per-host tests suite items.
         """
         if not self.build_per_host_tests:
@@ -1131,6 +1207,11 @@ class TestsProcessor:
                     # filter tests by using subset list
                     if self.subset and not any(
                         map(lambda m: fnmatch.fnmatch(t["name"], m), self.subset)
+                    ):
+                        continue
+                    # filter tests by using groups list
+                    if self.groups and not any(
+                        map(lambda g: g in self.groups, t["groups"])
                     ):
                         continue
                     # filter tests by using Fx filters
@@ -1199,12 +1280,14 @@ class TestsProcessor:
 
                 # make sure we have test name defined
                 if not test.get("name"):
-                    test["name"] = "{} {} {}..".format(
+                    task_label = (
                         test.get("task", "Test all tasks")
                         if test.get("use_all_tasks")
-                        else test["task"],
-                        test["test"],
-                        str(test.get("pattern", ""))[:9],
+                        else test["task"]
+                    )
+                    test["name"] = (
+                        f"{task_label} {test['test']} "
+                        f"{str(test.get('pattern', ''))[:9]}.."
                     )
 
                 # get task results to use; use all results
@@ -1221,7 +1304,7 @@ class TestsProcessor:
                             test["result"].append(i)
                 # use results for single task only
                 else:
-                    # try to find task by matching it's name
+                    # try to find task by matching its name
                     for i in result:
                         # check if need to skip this task
                         if hasattr(i, "skip_results") and i.skip_results is True:
@@ -1237,9 +1320,9 @@ class TestsProcessor:
 
                 # check if found no task results for this test item
                 if test["result"] is None or test["result"] == []:
-                    test[
-                        "exception"
-                    ] = "Found no results to test - all tasks failed or test name does not match any of task names"
+                    test["exception"] = (
+                        "Found no results to test - all tasks failed or test name does not match any of task names"
+                    )
                     test["result"] = "ERROR"
                     test["success"] = False
                     ret = {**test_result_template.copy(), **test}
@@ -1255,15 +1338,12 @@ class TestsProcessor:
                     test_func = globals()[test["test"]]
                 else:
                     raise NameError(
-                        "nornir-salt:TestsProcessor unsupported test function '{}'".format(
-                            test["test"]
-                        )
+                        f"nornir-salt:TestsProcessor unsupported "
+                        f"test function '{test['test']}'"
                     )
 
                 # run the test
-                log.debug(
-                    "nornir-salt:TestsProcessor running test '{}'".format(test["name"])
-                )
+                log.debug(f"nornir-salt:TestsProcessor running test '{test['name']}'")
                 try:
                     # run test for data at given path
                     if test.get("path"):
@@ -1288,8 +1368,9 @@ class TestsProcessor:
                     else:
                         res = test_func(host=host, **test)
                 except:
-                    msg = "nornir-salt:TestsProcessor run error:\n{}".format(
-                        traceback.format_exc()
+                    msg = (
+                        f"nornir-salt:TestsProcessor run error:\n"
+                        f"{traceback.format_exc()}"
                     )
                     log.error(msg)
                     ret = test_result_template.copy()

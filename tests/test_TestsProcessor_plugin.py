@@ -20,7 +20,6 @@ from nornir_salt.plugins.inventory import DictInventory
 from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors import TestsProcessor
 
-
 logging.basicConfig(level=logging.ERROR)
 
 
@@ -128,7 +127,7 @@ ntp server 7.7.7.7
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # pprint.pprint(check_result)
+    pprint.pprint(check_result)
     assert check_result == {
         "IOL1": {
             "Test NTP config": {
@@ -2806,27 +2805,23 @@ def grouped_task_for_test_jinja2_suite(task):
     # run first subtask
     task.run(
         task=nr_test,
-        ret_data_per_host={
-            "IOL1": """
+        ret_data_per_host={"IOL1": """
 Interface description Circuit CX54DF323
 Interface mtu 1500
 Interface line protocol is up
 Interface admin state - admin up
-        """
-        },
+        """},
         name="show interface Eth1",
     )
     # run second subtask
     task.run(
         task=nr_test,
-        ret_data_per_host={
-            "IOL1": """
+        ret_data_per_host={"IOL1": """
 Interface description OOB Connection
 Interface mtu 9200
 Interface line protocol is up
 Interface admin state - admin up
-        """
-        },
+        """},
         name="show interface Eth2",
     )
     # run third subtask
@@ -2988,3 +2983,126 @@ def test_jinja2_suite_tests_data():
     assert res["IOL1"]["Test IOL1 interface Eth2 status"]["result"] == "PASS"
     assert res["IOL1"]["Test IOL1 version"]["result"] == "PASS"
     assert res["IOL2"]["Test IOL2 version"]["result"] == "FAIL"
+
+
+@skip_if_no_nornir
+def test_custom_function_import():
+    tests = [
+        {
+            "task": "show run | inc ntp",
+            "name": "Test NTP config",
+            "test": "custom",
+            "function_import": "custom_functions_tests.custom_function_import_test",
+        }
+    ]
+    nr.data.reset_failed_hosts()
+    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
+    output = nr_with_tests.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """,
+        },
+        name="show run | inc ntp",
+    )
+    check_result = ResultSerializer(output, add_details=True, to_dict=True)
+    pprint.pprint(check_result)
+    assert check_result == {
+        "IOL1": {
+            "Test NTP config": {
+                "changed": False,
+                "criteria": "",
+                "diff": "",
+                "exception": "",
+                "failed": False,
+                "result": "PASS",
+                "success": True,
+                "task": "show run | inc ntp",
+                "test": "custom",
+            }
+        },
+        "IOL2": {
+            "Test NTP config": {
+                "changed": False,
+                "criteria": "",
+                "description": "check ntp config",
+                "diff": "",
+                "exception": "Server 7.7.7.8 not in config",
+                "failed": True,
+                "result": "FAIL",
+                "success": False,
+                "task": "show run | inc ntp",
+                "test": "custom",
+            }
+        },
+    }
+
+
+@skip_if_no_nornir
+def test_extra_arguments_return():
+    tests = [
+        {
+            "task": "show run | inc ntp",
+            "name": "Test NTP config",
+            "test": "custom",
+            "function_import": "custom_functions_tests.custom_function_import_test",
+            "description": "check ntp config",
+            "comments": "This test check that ntp server is configured correctly",
+        }
+    ]
+    nr.data.reset_failed_hosts()
+    nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
+    output = nr_with_tests.run(
+        task=nr_test,
+        ret_data_per_host={
+            "IOL1": """
+ntp server 7.7.7.8
+ntp server 7.7.7.7
+        """,
+            "IOL2": """
+ntp server 7.7.7.7
+        """,
+        },
+        name="show run | inc ntp",
+    )
+    check_result = ResultSerializer(output, add_details=True, to_dict=True)
+    pprint.pprint(check_result)
+    assert check_result == {
+        "IOL1": {
+            "Test NTP config": {
+                "changed": False,
+                "comments": "This test check that ntp server is "
+                "configured correctly",
+                "criteria": "",
+                "description": "check ntp config",
+                "diff": "",
+                "exception": "",
+                "failed": False,
+                "result": "PASS",
+                "success": True,
+                "task": "show run | inc ntp",
+                "test": "custom",
+            }
+        },
+        "IOL2": {
+            "Test NTP config": {
+                "changed": False,
+                "comments": "This test check that ntp server is "
+                "configured correctly",
+                "criteria": "",
+                "description": "check ntp config",
+                "diff": "",
+                "exception": "Server 7.7.7.8 not in config",
+                "failed": True,
+                "result": "FAIL",
+                "success": False,
+                "task": "show run | inc ntp",
+                "test": "custom",
+            }
+        },
+    }

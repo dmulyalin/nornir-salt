@@ -1,0 +1,676 @@
+# ---------------------------------------------------------------------------
+# Version 0.2.0:
+# ---------------------------------------------------------------------------
+
+# BUG Fixes
+1. Fixed FFun has_filter breaking Nornir object initialization
+2. Fixed RetryRunner to close connections before retrying them
+
+# FEATURES
+1. Added tcp_ping task
+2. RetryRunner - added reconnect_on_fail boolean parameter to reconnect to host on task failure
+3. RetryRunner - added support for task_timeout timer to wait for task to complete for all hosts
+
+# CHANGES
+1. RetryRunner - replaced LOCK acquire/release handling using with statement
+2. Updated requirements to include Nornir, Netmiko, nornir_netmiko and nornir_napalm modules
+3. Improved Task Failure detection logic for RetryRunner
+4. Improved RetryRunner reconnection logic and task completion detection
+
+
+
+# ---------------------------------------------------------------------------
+# Version 0.3.0:
+# ---------------------------------------------------------------------------
+
+# CHANGES
+
+1. Removed reference to self for connectors and workers queues, added queues and threads objects explicit deletion at the end.
+2. Instead of dead pill, connectors and threads use event object to signal stop.
+3. Instead of counting execution time, implemented threading.Timer for task_timeout
+4. Moved worker and connector threads functions to global space, presumably making code cleaner and easier to follow.
+5. Modified HostsKeepalive function to use is_alive method for netmiko connection object
+
+# BUGS
+
+1. ResultSerialiser returning exception object on error, resulting in failure to pickle it and causing process to crash, changed to return host result instead
+as it generally contains error information
+
+# FEATURES
+
+1. Added HostsKeepalive function to run hosts' connections keep-alive checks
+2. Added docs - https://nornir-salt.readthedocs.io/en/latest/
+
+
+# ---------------------------------------------------------------------------
+# Version 0.3.1:
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. Added ToFile function
+2. Added test functions: ContainsTest, ContainsLinesTest, EqualTest, RunTestSuite, CustomFunctionTest, CerberusTest
+3. Added netmiko_send_commands task plugin
+4. Added nr_test task
+5. Added ParseTTP function
+
+
+# ---------------------------------------------------------------------------
+# Version 0.4.0:
+# ---------------------------------------------------------------------------
+
+
+# CHANGES
+
+1. Test functions use ResultSerialiser output instead of Nornir results object, that is to be able to pass Nornir results between processes using queues
+2. Renamed ``ContainsLinesTest`` ``lines`` argument to ``pattern`` to keep arguments uniform
+3. Changes if empty FL list supplied, none of the hosts matched, i.e. supplying FL=[] will not match any host effectively stopping task execution.
+4. ResultSerialized will return exception parameter set to None value instead of 'None' string if no exception was raised within task execution
+5. Removed netmiko_kwargs argument from netmiko_send_commands task plugin, instead whatever additional supplied arguments used - **kwargs
+
+# FEATURES
+
+1. Added support for new return structure to ResultSerialiser
+2. RunTestSuite has support for brief output
+3. Test functions' tabulate formatter has support for brief output
+4. Added support for ``serialize`` argument to ``CustomFunctionTest`` function to opt for results type passed to it
+5. ``ContainsTest`` has support for ``count`` argument to count the number of pattern ``occurrences``
+6. ``RunTestSuite`` has support for ``print_results`` argument to colour print the results to terminal
+7. Added new task netmiko_send_command_ps and extended netmiko_send_commands task to support use_ps
+8. Added ToFile processor plugin, ToFile function will be deprecated later on
+9. Added TestsProcessor plugin and support for ContainsTest, ContainsLinesTest, EqualTest, CustomFunctionTest, CerberusTest, EvalTest tests
+10. Updated promptless mode call - use_ps can be a boolean or dictionary, if dictionary used as **kwargs for ps call
+11. Added ncclient connection plugin
+12. Added scrapli_netconf_call task plugin
+13. Added ncclient_call task plugin
+14. Added TabulateFormatter function to represent results in a text-table formatter
+15. Made RetryRunner to add stats to result for connection and task execution run attempts
+16. FFun added check_if_has_filter argument to check if has Fx filter supplied in kwargs - used by salt nornir proxy minion
+17. Added ``scrapli_send_commands`` task plugin
+18. Added netmiko_send_config task plugin
+19. Modified netmiko_send_command task plugin to support split_lines keyword for use_ps mode to allow sending multi line strings to devices
+
+# BUGS
+
+1. ResultSerialized was not returning results if underscored grouped task failed, changed conditions logic to account for such a case
+2. ResultSerialized was returning failed task attempt instead of successful one, updated RetryRunner to set "skip_results" to True for previously failed attempts
+
+# ---------------------------------------------------------------------------
+# Version 0.5.0:
+# ---------------------------------------------------------------------------
+
+1. Added support for ``FB`` to accept list of patterns or comma separated string with patterns
+2. Added ``FC`` - filter contains - new filter to filter based on containment
+3. Added ``FR`` - filter regex - new filter to filter host names based on regex match
+4. Added ``FN`` - filter negate - to introduce match negate, e.g. if ``FB="ABC*"`` and ``FN=True`` - will match all hosts that do NOT have "ABC*" pattern in their names
+5. Added ``DataProcessor`` processor plugin with below functions to simplify Nornir results post-processing:
+
+formatters - structured data to text:
+- to_str
+- to_json
+- to_pprint
+- to_yaml
+
+loaders - text to structured data:
+- load_xml
+- load_json
+
+filters:
+- flake
+- key_filter - filter dictionary keys
+- xpath - XML xpath
+- match - similar to include
+- xml_flake - XML flatten key filter
+- lod_filter - list of dictionaries filter
+- find
+
+transformers:
+- xml_to_json
+- xml_flatten
+- xml_rm_ns
+- path
+- flatten
+- unflatten
+
+parsers:
+- parse_ttp
+- run_ttp
+	
+6. Added ``DumpResults`` function plugin to save full results of task execution to local file system
+7. Added new task plugins to work with files saved by ``ToFileProcessor``: ``file_read, file_list, file_rm, file_diff, files``
+8. Added ``HTTPPlugin`` connection plugin to query API over HTTP using requests
+9. Added ``http_call`` task plugin to run any ``requests`` methods against HTTP API endpoints
+10. Ncclient ``ncclient_call`` task plugin can now interact with devices behind SSH jumphosts if using ``RetryRunner``
+11. Added ``sortby`` and ``reverse`` keywords to ``TabulateFormatter`` to sort table results
+12. ``TabulateFormatter`` added new ``extend`` directive to form table out of list of dictionaries results
+13. Added new connections tasks to handle connections: ``conn_list, conn_close, connections``
+
+# BUGS
+
+1. Improved ``TestsProcesor`` to better handle errors in ``task_instance_completed`` method, without it, if exception happens during that method call worker thread halts and never responds
+2. Fixed ``send_command_ps`` to raise ``TimeoutError`` instead of ``NetmikoTimeoutError``
+3. Fixed ``DiffProcessor`` logic not to run if any of tasks failed
+
+# CHANGES
+
+1. Removed formatting ``fmt`` option from ``ncclient_call`` and ``scrapli_netconf_call`` tasks - instead need to use ``DataProcessor`` to format/transform results
+2. Removed ``FindString, ParseTTP, ToFile, TestFuncs`` functions from codebase as their functionality replaced with processors plugins
+
+# ---------------------------------------------------------------------------
+# Version 0.6.0:
+# ---------------------------------------------------------------------------
+
+# BUGS
+
+1. Fixed netmiko_send_commands and scrapli_send_commands task to ignore empty commands
+2. Fixed `DataProcessor` lod_filter/key_filter glob check integers handling
+
+# FEATURES
+
+1. Added `jmespath` function to `DataProcessor`
+2. `DataProcessor` `find` function extended to support `xpath` and `jmespath` functions
+3. Added connection plugin `PyGNMIPlugin` and `pygnmi_call` task plugin
+4. `DataProcessor` added new filtering checks `eq, ge, gt, le, lt, contains` for `find`, `lod_filter` and `key_filter` functions
+5. Added `iplkp` function to `DataProcessor` to replace IP addresses with CSV or DNS lookup values
+
+# CHANGES
+
+1. `http_call` updated to use more advanced logic to form target url and changed to assigns call method name to task name
+
+# ---------------------------------------------------------------------------
+# Version 0.6.1:
+# ---------------------------------------------------------------------------
+
+# BUG
+
+1. Fixed checks for lod_filter for DataProcessor for integer compare operations - le, ge, lt etc, as it was returning full results if value was string
+
+# ---------------------------------------------------------------------------
+# Version 0.7.0:
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. Added `commit_final_delay` argument for `netmiko_send_config` task plugin to use with commit confirm feature.
+2. Added `napalm_send_commands` task plugin to send commands to devices using NAPALM `cli` method
+3. Added `ntfsm` parser function to `DataProcessor` to parse CLI output using TextFSM ntc-templates repository
+4. Extended `parse_ttp` function to source templates from `ttp_templates` based on host platform and task command
+5. Added new task `sleep` to command Nornir to sleep/pause for certain time
+6. Added `terse` tabulate argument to `TabulateFormatter` to emit the same columns as `brief` but in a denser format to occupy fewer lines
+7. Added `batch` keyword to `netmiko_send_config` task to send config commands in batches, useful if need to push big configurations
+8. Added `SaltEventProcessor` to emit SaltStack events on task execution progress.
+
+# BUGS
+
+1. When was using err_msg with eval test function and assert in expression, if assert fails, err_msg not used as exception, updated EvalTest logic to prefer using err_msg
+2. `FFun` when supplying integer as a pattern was failing, made sure to convert pattern to string for all FFun functions
+
+# CHANGES
+
+1. TestsProcessor EvalTest - improved err_msg handling by making it always preferred even when assert used.
+2. `netmiko_send_config` no longer uses nornir-netmiko netmiko_send_config task, instead interacts with Netmiko connection directly.
+3. Change logging level to be debug for `DataProcessor` if it fails to import third party libraries
+
+# ---------------------------------------------------------------------------
+# Version 0.8.0:
+# ---------------------------------------------------------------------------
+
+# BUGS
+
+1. ResultSerialiser improved handling of non-supported types for results by converting them to string as a last-ditch effort
+2. Fixed `ncclient_call` `transaction` (previously named `locked`) function commit-confirmed handling
+
+# FEATURES
+
+1. Added `PyATSUnicon` connection plugin to interact with devices using Genie library
+2. Added `pyats_send_commands` task plugin to send commands over CLI to devices using Genie->PyATS->Unicon libraries, supporting connections pools and output parsing
+3. Added `pyats_send_config` task plugin to send config over CLI to devices using Genie->PyATS->Unicon libraries
+4. Updated `HostsKeepalive` function to support pyats connection
+5. Significantly improved `transaction` handling for `ncclient_call` and `scrapli_netconf_call` task plugins by checking device capabilities and using them to decide on additional steps such as validate or commit-confirmed
+6. Added task plugin `pyats_genie_api` to call any Genie device api
+7. Added `InventoryFun` function to interact with nornir inventory, these are the `InventoryFun` functions available:
+
+- create_host/create
+- update_host/update
+- delete_host/delete
+- read_host/read
+- read_inventory
+- load
+- list_hosts
+
+# CHANGES
+
+1. `ncclient_call` task renamed `locked` function to `transaction`
+2. `scrapli_netconf_call` task renamed `locked` function to `transaction`
+
+# ---------------------------------------------------------------------------
+# Version 0.9.0:
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. `ToFileProcessor` added `skip_failed` argument to control whether to save failed tasks
+2. Added `add_host` argument to `TestsProcessor` custom test function to address github ticket #1 and allow passing host object to custom function for processing
+3. FFun added `FM` - Filter platform - filter hosts by platform names using glob patterns str or list of patterns
+4. FFun added a list `FFun_functions` with names of all Fx function i.e. `FFun_functions = ["FB", "FP" ...etc]` - this is to facilitate kwargs filtering
+5. Task `sleep`, added `sleep_random` timer support, e.g. `sleep_random=(1,5)` or `sleep_random=5` to sleep random time within given interval on a per-host basis
+6. Added `TestsProcessor` `ContainsTest` support for `count_le` and `count_ge` arguments.
+
+# CHANGES
+
+1. Updated `TestsProcessor` to not process/test results if has failed tasks
+2. Updated `TestsProcessor` contains function to convert pattern to string
+3. Updated `napalm_configure, scrapli_send_config, netmiko_send_config and pyats_send_config` to try and source config from `host.data.__task__["config"]`
+4. PyATSUnicon - when making up connection options if "telnet" in platform name use protocol "telnet" instead of "ssh"
+
+# BUGS
+
+1. Fixed `RetryRunner` jumphost re-connection handling after closing connection to it
+2. Fixed `RetryRunner` to not try connecting to device directly if connection via jumphost failed
+3. Fixed `RetryRunner` jumphost intermittent connectivity handling bt no longer using host["exception"] to record errors
+4. Improved `TestsProcessor` failed tasks handling making sure skip them and log an error if all tasks are failed for that particular test
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.10.0:
+# ---------------------------------------------------------------------------
+
+# CHANGES
+
+1. SaltEventProcessor updated to use `datetime` module to add milliseconds to timestamps
+2. Code refactoring, added `utils` folder to contain various functions for re-use across the code base
+3. Updated `netmiko_send_commands`, `scrapli_send_commands`, `pyats_send_commands` and `napalm_send_commands` to use `cli_form_commands` utils function
+4. Updated `netmiko_send_commands`, `scrapli_send_commands` to use `cli_send_command`s utils function
+5. Code refactoring for `netmikko_send_config`, `scrapli_send_config`, `pyats_send_config`, `napalm_configure` using `cfg_form_commands` utils function
+6. `http_call` task add `raise_fo_status` to requests response object to raise if experienced any errors
+7. TabulateFormatter changed to honor `headers` argument for `terse and brief` `tabulate` argument values
+8. For connections task changed the way how task name formed to make it more human readable and informative
+9. `connections` task `conn_list` changed `connection_type` to `connection_plugin`, also plugin name extracted instead of <class xyz>
+10. SaltEventProcessor no merges identity dictionary as is with events data, meaning can add any information into idenity dictionary and that will be emited on saltevent bus
+11. Updated RetryRunner to handle multiple connections establishment for custom tasks `CONNECTION_NAME` variable or `connection_name` task parameter - can specify comma separated string to list connections to establish
+
+# BUGS
+
+1. Fixed issue #2 bug by making sure to pop `connection_name` from task arguments within QueueRunner
+2. Fixed docs spelling using pylint spelling check plugin (pyenchant) and sphinxcontrib-spelling RST plugin
+3. Discovered issue in `scrapli-netconf` with determining if request failed, adjusted logic in `scrapli_netconf_call` task to account for it, raised [scrapli-netconf github issue]( https://github.com/scrapli/nornir_scrapli/issues/108)
+
+# FEATURES
+
+1. Added utils `MakePlugin` function to emit boilerplate code for task and custom test function plugins.
+2. Added `repeat, stop_patern, return_last` and `repeat_interval` support to `netmiko_send_commands` and `scrapli_send_commands plugins` to run commands certain amount of times
+3. Added `conn_open` function to `connections` task plugin
+4. Added to `ncclient_call` and `scrapli_netconf_call` tasks support for glob pattern `capab_filter` for `server_apabilities` function
+5. Added RetryRunner task parameters - `run_connect_retry`, `run_task_retry`, `run_creds_retry`, `run_num_workers`, `run_num_connectors` to influence task execution logic on a per-task basis
+6. Added support for `creds_retry` option to RetryRunner to specify a list of credentials to try connecting to devices.
+7. Added FFun `FH` filter to filter by hostname values using glob patterns, similar to `FB` but for host's hostname parameter
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.11.0:
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. RetryRunner added new option `task_stop_errors` and run option `run_task_stop_errors` to list glob patterns to stop task re-trying if seen any of them in task exception
+2. `connections.conn_list` task added `conn_name` argument to list connections of certain type only
+3. Added support to add pydantic models for arguments validation for plugins functions. Motivation behind this feature is to preform use input validations, to make sure
+tasks fail fast with validation error, making overall system more resilient to malformed input parameters
+4. `files` task plugin added `list` in addition to `ls`, and `remove`, `delete` in addition to `rm` calls dispatcher, all referring to same functions as `ls` and `rm` respectively
+5. `file_remove` task added support for `tf_index_lock` argument to make files removal thread and multiprocessing safe
+6. `ToFileProcessor` added support for `tf_index_lock` argument to make tf index update thread and multiprocessing safe
+7. `FFun` added `FX` - Filer eXclude - function to exclude hosts using glob patterns, it is revers of FB
+
+# CHANGES
+
+1. Added pydantic models validation for these plugins functions arguments:
+
+- nornir_salt.plugins.tasks.connections.conn_list
+- nornir_salt.plugins.tasks.connections.conn_open
+- nornir_salt.plugins.tasks.connections.conn_close
+- nornir_salt.plugins.tasks.connections.connections
+- nornir_salt.plugins.tasks.nr_test
+- nornir_salt.plugins.tasks.netmiko_send_commands
+- nornir_salt.plugins.tasks.napalm_send_commands
+- nornir_salt.plugins.tasks.scrapli_send_commands
+- nornir_salt.plugins.tasks.pyats_send_commands
+- nornir_salt.plugins.tasks.pyats_genie_api
+- nornir_salt.plugins.tasks.salt_cfg_gen
+- nornir_salt.plugins.tasks.files
+- nornir_salt.plugins.tasks.file_read
+- nornir_salt.plugins.tasks.file_list
+- nornir_salt.plugins.tasks.file_remove
+- nornir_salt.plugins.tasks.file_diff
+- nornir_salt.plugins.tasks.sleep
+- nornir_salt.plugins.tasks.scrapli_send_config
+- nornir_salt.plugins.tasks.scrapli_netconf_call
+- nornir_salt.plugins.tasks.salt_clear_hcache
+- nornir_salt.plugins.tasks.pygnmi_call_update
+- nornir_salt.plugins.tasks.pygnmi_call_replace
+- nornir_salt.plugins.tasks.pygnmi_call_delete
+- nornir_salt.plugins.tasks.pygnmi_call
+- nornir_salt.plugins.tasks.pyats_send_config
+- nornir_salt.plugins.tasks.netmiko_send_config
+- nornir_salt.plugins.tasks.ncclient_call
+- nornir_salt.plugins.tasks.napalm_configure
+- nornir_salt.plugins.tasks.http_call
+- modelTestsProcessorSuite
+- modelTestsProcessorTest
+
+2. Removed imports from nornir_salt folder __init__ file, that is to make salt runners to load faster as well as to resolve dependency on all the modules that tasks uses to be installed on the system, which is not really required/used by Salt-Nornir runner modules. That changes the way how you import modules from nornir-salt unfortunately.
+3. Made salt_cfg_gen to use cfg_form_commands utility function to get config commands
+4. Switched to poetry for dependency management, packaging and virtual environments handling
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.12.0:
+# ---------------------------------------------------------------------------
+
+# CHANGES
+
+0. Deprecated Python 3.6 support, pinned requirement for Python >=3.7,<4.0
+1. Updated dependency - Nornir from 3.2.0 to 3.3.0
+2. Updated dependency - jmespath from 0.10.0 to 1.0.0
+3. Updated dependency - NAPALM from 3.3.1 to 3.4.1
+4. Updated dependency - nornir-napalm from 0.1.2 to 0.2.0
+5. Updated dependency - paramiko from 2.9.2 to 2.11.0
+6. Updated dependency - pygnmi from 0.6.8 to 0.6.9
+7. Updated dependency - xmltodict from 0.12.0 to 0.13.0
+8. Pinned lxml dependency to version 4.8.0
+9. Added dependency extras - netmiko, napalm, scrapli, pyats, netconf, gnmi, restconf, dataprocessor - to simplify installation using `pip install nornir-salt[xyz]`
+10. Updated dependency - scrapli from 2021.7.30 to 2022.1.30
+
+# BUG
+
+1. Changed FC, FB, FX, FR filters pydantic models to non strict str type, so that can give any value such as number or boolean, as they are converted to strings anyway by FFun
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.13.0:
+# ---------------------------------------------------------------------------
+
+# BUGS
+
+1. Fixed files task index loading to check if index file exists, and return empty dictionary if it does not exists.
+
+# CHANGES
+
+1. Added textfsm == 1.1.2 dependency, 1.1.3 version was failing to install due to lack of six package
+2. Dependencies update:
+
+- Ncclient from 0.6.9 to 0.6.13
+- Netmiko from 3.4.1 to 4.1.1
+- NAPALAM from 3.4.0 to 4.0.0
+- nornir-netmiko from 0.1.0 to 0.2.0
+- nornir-napalm from 0.2.0 to 0.3.0
+- TTP from 0.8.4 to 0.9.*
+- TTP-Templates from 0.1.* to 0.3.*
+- NTC-Templates from 1.7.0 to 3.0.0
+- PyATS and Genie updated to install using 'full' extras
+
+3. Improvement "any()" calls uses generators instead of lists
+4. netmiko_send_command_ps updated to support Netmiko 4
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.13.1
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. ncclient_call transaction added support for edit_rpc, edit_arg and commit_arg arguments to have better control over transaction execution, for example can use edit_rpc="load_configuration" to call Juniper proprietary load_configuration_rpc, or use commit_arg to specify validate=True argument to validate config before commit if supported by device. Enhanced handling of Juniper proprietary commit RPC to support commit_confirmed for Juniper devices.
+
+# CHANGES
+
+1. Improved ncclient_call task yangdantic model
+2. Enhanced ncclient_call transaction function to better handle return results
+3. Dependency update - PyGNMI from 0.6.9 to 0.8.4
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.13.2
+# ---------------------------------------------------------------------------
+
+# BUGS
+
+1. Improved cfg_form_commands utility function \\n handling for send config tasks
+
+# CHANGES
+
+1. Improved netmik_send_config method to find prompt before entering enable mode, Arista was failing to enter enable mode due to is_alive method calls
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.14.0
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. Added PuseSNMPPlugin connection plugin to communicate with devices over SNMP using puresnmp library
+2. Added puresnmp_call task plugin to run SNMP tasks
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.15.0
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. Added NetboxConnectionPlugin to interact with netbox from task plugins using pynetbox
+2. Added netbox_tasks plugin with these functions:
+
+- netbox_tasks - function to call one of task plugins
+- sync_device_from_netbox - to sync data from Netbox device to Nornir host data inventory
+- sync_device_to_netbox - to sync Nornir Inventory devices data to Netbox
+
+# CHANGES
+
+1. Improved RetryRunner logging of connection exceptions
+2. Improved HostsKeepalive function handling for puresnmp, http and netbox connection plugins
+3. Improved netmiko_send_config result collection handling to capture not only config changes but also commit and exit config results
+4. Improved "\\n" handling for send_config tasks to make sure escaped new line is not altered
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.16.0
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. TestsProcessor added support to build per-host tests suites and per-host commands using Jinja2 and YAML
+2. scrapli_netconf_call task added support for commit confirmed to transaction function
+
+# CHANGES
+
+1. Tested and updated depemdencies:
+  - pydantic 1.9.1 -> 1.10.2
+  - jmespath 1.0.0 -> 1.0.1
+  - nornir-scrapli 2022.1.30 -> 2022.07.30
+  - pygnmi 0.8.4 -> 0.8.9
+  - requests 2.27.1 -> 2.28.1
+  - scrapli 2022.1.30 -> 2022.07.30
+  - scrapli-community 2022.1.30 -> 2022.07.30
+  - scrapli-netconf 2022.1.30 -> 2022.07.30
+  - tabulate 0.8.9 -> 0.8.10
+  - lxml 4.8.0 -> 4.9.1
+  - jinja2 3.0.3 -> 3.1.2
+  
+# ---------------------------------------------------------------------------
+# nornir-salt 0.17.0
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. InventoryFun added new function - list_hosts_platforms - to produce a dictionary keyed by hosts' names with values of their platforms
+
+
+# BUGS
+
+1. DictInvenotry fixed to properly handle empty inventory data or inventory that does not have hosts.
+
+# CHANGES
+
+1. Removed Netbox connection plugin and Netbox tasks, functionality moved to salt-nornir netbox pillar and nr.netbox execution modules. The reason is, integration with Salt provided better scaling compared to calling out Netbox API from hosts tasks, where one API request sent per each host task runs on. FOr substantial number of hosts that might not be the best way of doing it. SaltStack execution modules and pillar modules however, can serve as an aggregation points, gathering or pushing data for several hosts using less number of API calls.
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.19.0
+# ---------------------------------------------------------------------------
+
+# CHANGES
+
+1. DictInventory - created Pydantic model for Nornir inventory to perform data validation prior to processing it - this is to handle malformed inventory data in a uniform way
+
+# FEATURES
+
+1. Connections task plugin conn_open reconnect now support `connections_options` attribute to specify per-connection type parameters. #27
+2. InventoryFun added new function - read_host_data - to read portions of hosts' inventory data using path keys.
+3. Added new task plugins - `network` to implement network related usitlites, so far added `resolve_dns` utility
+4. Added new FFun filter functin - `FT` Filter Tags to filter hosts by tags in their data
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.19.1
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. Added InventoryFun `update_defaults` function
+
+# BUGS
+
+1. Fixed deepcopy handling for conn_open function when connecting via junphosts.
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.20.0
+# ---------------------------------------------------------------------------
+
+# CHANGES
+
+1. InventoryFun update, delete and load functions now return a dictionary keyed by host name and boolean as a value instead of just a boolean.
+2. Enhanced Robot nr.test keyword logging and reporting - now reports have success/failure highlighting, full test suite results returned with collected device output for each test suite.
+3. Updated dependencies to comply with Salt 3006 static requirements:
+
+- PyYaml 5.4.1 -> 6.0.1
+- napalm 4.0.0 -> 4.1.0
+- pydantic 1.10.2 -> 2.0.3
+- nornir-netmiko 0.2.0 -> 1.0.0
+- nornir-napalm 0.3.0 -> 0.4.0
+- nornir-scrapli 2022.07.30 -> 2023.7.30
+- scrapli 2022.07.30 -> 2023.7.30
+- scrapli-community 2022.07.30 -> 2023.7.30
+- scrapli-netconf 2022.07.30 -> 2023.7.30
+- pyats 22.1 -> 23.7
+- genie 22.1 -> 23.7
+- pygnmi 0.8.9 -> 0.8.12
+- pynetbox 7.0.0 -> 7.0.1
+- lxml 4.9.2 -> 4.9.3
+- rich 12.6.0 -> 13.5.2
+- robotframework 6.0.2 -> 6.1.1
+- dnspython 2.3.0 -> 2.4.2
+- saltstack 3006.0 -> 3006.2
+
+3. Added Pydantic 2.0 support, pydantic 1.x will be deprecated in 0.21 release
+5. Changes to install extras:
+
+- `prodmax` replaced with `prodmaxminion` and `prodmaxmaster` to optimize set of installed packages
+- `prodmin` replaced with `prodminminion` and `prodminmaster` to optimize set of installed packages
+
+6. Changed data returned by connections task plugin adding `connection_name`, `connection_action` and `connections_options` keys, changed task name to always be `connections` 
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.20.2
+# ---------------------------------------------------------------------------
+
+# BUGS
+
+1. Pydantic model fix for cerberus schema tests validation
+
+# CHANGES
+
+1. Tested and updated pydantic dependency to 2.3.0
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.20.3
+# ---------------------------------------------------------------------------
+
+# BUG
+
+1. Fixed resulserialiser handling of faulty results when `to_dict` is False and `add_details` is True
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.21.1
+# ---------------------------------------------------------------------------
+
+# FEATURES
+
+1. Added support for nr_test task plugin to source return results from ``__task__`` host's data.
+
+# CHANGES
+
+2. Updated TestsProcessor pydantic model to use ``model_validator`` instead of deprecated ``root_validator``
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.23.0
+# ---------------------------------------------------------------------------
+
+1. Bumped dependencies
+2. Python 3.9 suppport Removed
+3. TestsProcessor added `function_import` support to import custom functions from python module
+4. Updated pydantic models to use `model_config` attributes
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.23.1
+# ---------------------------------------------------------------------------
+
+## CHANGES
+
+1. Dependencies updates:
+
+  - cerberus: 1.3.5 → 1.3.8
+  - dnspython: 2.4.2 → 2.8.0
+  - jmespath: 1.0.1 → 1.1.0
+  - lxml: 4.9.4 → 6.0.2
+  - ncclient: 0.6.15 → 0.7.0
+  - ntc-templates: 8.0.0 → 8.1.0
+  - pynetbox: 7.5.0 → 7.6.1
+  - pyyaml: 6.0.2 → 6.0.3
+  - rich: 14.1.0 → 14.3.2
+  - robotframework: 7.3.2 → 7.4.1
+  - scrapli-netconf: 2025.01.30 → 2026.01.12
+  - textfsm: 1.1.3 → 2.1.0
+  - xmltodict: 0.13.0 → 1.0.3
+
+## BUGS
+
+1. TestsProessor - fixing count_le and count_ge handling
+
+## FEATURES
+
+1. TestsProcessor adding support for groups and filtering of tests using groups names
+
+
+
+
+# BACKLOG
+
+2. FEATURE - add PyATS Dq - dict query in addition to jmespath
+3. FEATURE - Add jsondiff to diff support and deepdiff as well to diff structured data
+6. TESTS - add HTTP tests using https://swapi.dev/ api, add jmespath tests as well
+7. FEATURE - Add support for has_diff and no_diff tests to tests processor, in essence, collect baseline and compare new data with baseline, if has diff - test can 
+fail or pass, add support to retrieve baseline using file read functions
+12. FEATURE - add PoliceProcessor to check commands, parameters etc. to allow or block tasks based on say command contains pattern "reload|reboot|reset|clear" - block it
+13. FEATURE - add DataValidate functions to validate data using for templates utilizing jsonschema, cerberus, yangson etc.
+16. FEATURE - Add batch keyword to scrapli_send_config method to limit number of commands send to devices to say 10 or 100 at a time
+23. FEATURE - TestsProcessor - Add support for contained_in or in to check that match in a list of values; add endswith and startswith checks
+26. FEATURE - TestProcessor add support for xpath test to verify that certain elements exist or not exist in returned data, xpath queries can have xpath constraints, meaning can do
+ data validation using xpath query language, make sure xpath test has foreach statements to iterate over elements if query returns several of them, also might want to have separate
+ validate expression argument, e.g., query, validate_expr and optional foreach
+29. FEATURE - Add TimingProcessor to add timing info to the tasks, useful for debugging and accountability e.g. start_timestamp, end_timestamp and elapsed for each task, subtask
+30. CHANGE - re-factor RetryRunner connect to host behind jumphost to be part of connections task plugin, add functionality to initiate connections via jumphosts using conn_open task
+32. FEATURE - DataProcessor add support for jxmlease in addition to xmltodict something like load_xml_jxmlease? or load_xml use_jxmlease=True?
+33. FEATURE add support or test if already supported scrapli and netmiko4 interactive modes
+35. BUG - test scrapli-netconf timeout handling
+36. CHANGE - for ncclient connection plugin add support to automatically add device_params platform by mapping host platform, eg if host platform is cisco_xr map it to ncclient platform accordingly
+37. FEATURE - add support to enable connection option for all possible connection plugins salt-nornir supports in automatic fashion, e.g. in connection_options: enable_all=True or something like that
+38. BUG - cli_form_command function needs to be updated to handle a list of multiline strings, as when salt nrp1 nr.cli commands = salt://... command given, command loaded from file are not split into multiple lines

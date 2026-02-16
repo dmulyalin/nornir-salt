@@ -20,6 +20,7 @@ API Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.sleep.sleep
 """
+
 import time
 import random
 from nornir.core.task import Result

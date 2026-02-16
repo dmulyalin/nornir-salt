@@ -51,6 +51,7 @@ DictInventory reference
 
 .. autoclass:: nornir_salt.plugins.inventory.DictInventory.DictInventory
 """
+
 import logging
 import traceback
 from typing import Any, Dict, Type

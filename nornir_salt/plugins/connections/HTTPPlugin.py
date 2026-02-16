@@ -9,6 +9,7 @@ HTTPPlugin reference
 
 .. autofunction:: nornir_salt.plugins.connections.HTTPPlugin.HTTPPlugin
 """
+
 from typing import Any, Dict, Optional
 from nornir.core.configuration import Config
 

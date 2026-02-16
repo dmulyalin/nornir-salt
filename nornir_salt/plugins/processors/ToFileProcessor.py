@@ -29,6 +29,7 @@ ToFileProcessor reference
 
 .. autofunction:: nornir_salt.plugins.processors.ToFileProcessor.ToFileProcessor
 """
+
 import logging
 import time
 import os

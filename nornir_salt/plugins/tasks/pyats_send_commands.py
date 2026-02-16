@@ -99,6 +99,7 @@ Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.pyats_send_commands.pyats_send_commands
 """
+
 import time
 import logging
 import traceback

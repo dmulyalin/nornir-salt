@@ -51,6 +51,7 @@ API reference
 .. autofunction:: nornir_salt.plugins.tasks.connections.conn_close
 .. autofunction:: nornir_salt.plugins.tasks.connections.conn_open
 """
+
 import time
 import traceback
 import logging

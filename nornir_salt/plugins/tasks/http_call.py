@@ -31,6 +31,7 @@ http_call reference
 
 .. autofunction:: nornir_salt.plugins.tasks.http_call.http_call
 """
+
 import logging
 import json
 import requests
@@ -132,14 +133,14 @@ def http_call(task: Task, method: str, url: str = None, **kwargs) -> Result:
                 and not base_url.startswith("http")
                 and not url.startswith(base_url)
             ):
-                parameters[
-                    "url"
-                ] = "{transport}://{hostname}:{port}/{base_url}/{url}".format(
-                    transport=transport,
-                    hostname=conn["hostname"],
-                    port=int(conn.get("port", 80 if transport == "http" else 443)),
-                    base_url=base_url.strip("/"),
-                    url=url.strip("/"),
+                parameters["url"] = (
+                    "{transport}://{hostname}:{port}/{base_url}/{url}".format(
+                        transport=transport,
+                        hostname=conn["hostname"],
+                        port=int(conn.get("port", 80 if transport == "http" else 443)),
+                        base_url=base_url.strip("/"),
+                        url=url.strip("/"),
+                    )
                 )
             # form URL using transport, hostname and port parameters
             elif transport:

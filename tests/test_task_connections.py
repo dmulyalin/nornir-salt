@@ -5,6 +5,7 @@ connecton and task plugins.
 Was not able to find always-on endpoints that can test using gNMI, Cisco sandboxes has gRPC
 API available but that is different.
 """
+
 import sys
 import pprint
 import logging

@@ -10,6 +10,7 @@ NorFabEventProcessor reference
 
 .. autofunction:: nornir_salt.plugins.processors.NorFabEventProcessor.NorFabEventProcessor
 """
+
 import logging
 
 from nornir.core.inventory import Host

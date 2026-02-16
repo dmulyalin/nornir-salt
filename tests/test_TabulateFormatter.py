@@ -189,15 +189,12 @@ ntp server 7.7.7.7""",
     )
     table = TabulateFormatter(output, headers=["host", "failed", "name", "result"])
     # print(table)
-    assert (
-        table
-        == """host    failed    name              result
+    assert table == """host    failed    name              result
 ------  --------  ----------------  ------------------
 IOL1    False     check ntp config  ntp server 7.7.7.8
                                     ntp server 7.7.7.7
 IOL2    False     check ntp config  ntp server 7.7.7.8
                                     ntp server 7.7.7.7"""
-    )
 
 
 # test_tabulate_from_aggregatedresult_with_headers()
@@ -240,15 +237,12 @@ def test_tabulate_sort_by_key_value():
         result, headers=["host", "failed", "name", "result"], sortby="host"
     )
     print(table)
-    assert (
-        table
-        == """host    failed    name                    result
+    assert table == """host    failed    name                    result
 ------  --------  ----------------------  --------------------
 IOL1    False     show run | inc ntp      [{'ntp': '1.1.1.1'}]
 IOL1    False     show run | inc logging  [{'log': '3.3.3.3'}]
 IOL2    False     show run | inc ntp      [{'ntp': '2.2.2.2'}]
 IOL2    False     show run | inc logging  [{'log': '4.4.4.4'}]"""
-    )
 
 
 # test_tabulate_sort_by_key_value()
@@ -294,15 +288,12 @@ def test_tabulate_sort_by_key_value_reverse():
         reverse=True,
     )
     # print(table)
-    assert (
-        table
-        == """host    failed    name                    result
+    assert table == """host    failed    name                    result
 ------  --------  ----------------------  --------------------
 IOL2    False     show run | inc ntp      [{'ntp': '2.2.2.2'}]
 IOL2    False     show run | inc logging  [{'log': '4.4.4.4'}]
 IOL1    False     show run | inc ntp      [{'ntp': '1.1.1.1'}]
 IOL1    False     show run | inc logging  [{'log': '3.3.3.3'}]"""
-    )
 
 
 # test_tabulate_sort_by_key_value_reverse()

@@ -27,6 +27,7 @@ API reference
 .. autofunction:: nornir_salt.plugins.tasks.network.network
 .. autofunction:: nornir_salt.plugins.tasks.network.resolve_dns
 """
+
 import time
 import traceback
 import logging

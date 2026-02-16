@@ -42,6 +42,7 @@ Reference
 
 .. autofunction:: nornir_salt.plugins.functions.TabulateFormatter.TabulateFormatter
 """
+
 import logging
 from nornir.core.task import AggregatedResult
 from .ResultSerializer import ResultSerializer
@@ -118,9 +119,11 @@ def TabulateFormatter(
         tabulate = {
             "tablefmt": "grid" if tabulate == "brief" else "simple",
             "showindex": True,
-            "headers": ["host", "name", "result", "exception"]
-            if headers == "keys"
-            else headers,
+            "headers": (
+                ["host", "name", "result", "exception"]
+                if headers == "keys"
+                else headers
+            ),
         }
     elif tabulate is True:
         tabulate = {"headers": headers}

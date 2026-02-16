@@ -23,7 +23,6 @@ from nornir_salt.plugins.inventory import DictInventory
 from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors import ToFileProcessor
 
-
 logging.basicConfig(level=logging.ERROR)
 
 

@@ -35,6 +35,7 @@ API Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.pyats_genie_api.pyats_genie_api
 """
+
 import logging
 from nornir.core.task import Result, Task
 from nornir_salt.utils.pydantic_models import model_pyats_genie_api

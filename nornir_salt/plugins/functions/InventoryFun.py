@@ -119,6 +119,7 @@ Call Functions Reference
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._list_hosts_platforms
 .. autofunction:: nornir_salt.plugins.functions.InventoryFun._update_defaults
 """
+
 import logging
 
 from .FFun import FFun

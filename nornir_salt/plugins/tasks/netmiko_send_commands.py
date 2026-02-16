@@ -32,6 +32,7 @@ netmiko_send_commands reference
 
 .. autofunction:: nornir_salt.plugins.tasks.netmiko_send_commands.netmiko_send_commands
 """
+
 import logging
 
 from nornir.core.task import Result, Task

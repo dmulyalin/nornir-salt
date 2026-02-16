@@ -5,7 +5,7 @@ PyATSUnicon
 `PyATS <https://pubhub.devnetcloud.com/media/pyats/docs/index.html>`_
 connection plugin to interact with network devices.
 
-Check `supported platofrms <https://pubhub.devnetcloud.com/media/unicon/docs/user_guide/supported_platforms.html>`_
+Check `supported platforms <https://pubhub.devnetcloud.com/media/unicon/docs/user_guide/supported_platforms.html>`_
 page for platform codes.
 
 This plugin uses Genie to load testbed inventory with single device and optional jumphosts definition,
@@ -17,6 +17,7 @@ PyATSUnicon reference
 
 .. autofunction:: nornir_salt.plugins.connections.PyATSUnicon.PyATSUnicon
 """
+
 import logging
 from typing import Any, Dict, Optional
 from nornir.core.configuration import Config
@@ -35,7 +36,7 @@ log = logging.getLogger(__name__)
 
 class PyATSUnicon:
     """
-    This plugin makes use of PyATS tesbed definition to initiate device connections, testbed can
+    This plugin makes use of PyATS testbed definition to initiate device connections, testbed can
     be partially reconstructed out of Nornir inventory or complete testbed data can be provided under
     extras section.
 
@@ -98,7 +99,7 @@ class PyATSUnicon:
                         port: 22
 
     In that case, because all mandatory parameters ``os``, ``connections`` and ``credentials`` provided,
-    extras data used as is to load PyATS tesbed.
+    extras data used as is to load PyATS testbed.
 
     It is mandatory to specify exact device cli prompt under ``connection_options:pyats:extras:devices``
     as a dictionary key as well as for top level device key. In other words this will not work::

@@ -41,6 +41,7 @@ API Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.napalm_send_commands.napalm_send_commands
 """
+
 import time
 import logging
 from nornir.core.task import Result, Task

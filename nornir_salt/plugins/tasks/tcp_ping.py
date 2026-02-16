@@ -42,6 +42,7 @@ tcp_ping reference
 
 .. autofunction:: nornir_salt.plugins.tasks.tcp_ping.tcp_ping
 """
+
 import logging
 import socket
 from typing import Optional, List

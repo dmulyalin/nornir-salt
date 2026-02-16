@@ -43,12 +43,12 @@ QueueRunner Reference
 
 .. autoclass:: nornir_salt.plugins.runners.QueueRunner.QueueRunner
 """
+
 import threading
 import queue
 from typing import List
 from nornir.core.task import AggregatedResult, Task
 from nornir.core.inventory import Host
-
 
 LOCK = threading.Lock()
 

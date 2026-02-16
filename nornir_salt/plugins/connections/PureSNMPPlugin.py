@@ -23,6 +23,7 @@ PureSNMPPlugin reference
 
 .. autofunction:: nornir_salt.plugins.connections.PureSNMPPlugin.PureSNMPPlugin
 """
+
 import logging
 
 from typing import Any, Dict, Optional

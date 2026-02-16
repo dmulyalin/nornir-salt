@@ -13,6 +13,7 @@ salt_cfg_gen reference
 
 .. autofunction:: nornir_salt.plugins.tasks.salt_cfg_gen.salt_cfg_gen
 """
+
 import logging
 
 from nornir.core.task import Result

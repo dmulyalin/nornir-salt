@@ -42,6 +42,7 @@ puresnmp_call - help
 --------------------
 .. autofunction:: nornir_salt.plugins.tasks.puresnmp_call._call_help
 """
+
 import logging
 import asyncio
 

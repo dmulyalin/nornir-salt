@@ -12,6 +12,7 @@ SaltEventProcessor reference
 
 .. autofunction:: nornir_salt.plugins.processors.SaltEventProcessor.SaltEventProcessor
 """
+
 import logging
 
 from datetime import datetime

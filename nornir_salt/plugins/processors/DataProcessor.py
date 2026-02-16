@@ -96,7 +96,7 @@ DataProcessor Functions help to process results after task completed.
    * - `match`_
      - Search for regex pattern in devices output
    * - `ntfsm`_
-     - Pase show commands output using TextFSM NTC-templates
+     - Parse show commands output using TextFSM NTC-templates
    * - `parse_ttp`_
      - Parses text output from device into structured data
    * - `path`_
@@ -254,6 +254,7 @@ iplkp
 ++++++++++++++++++++++++++++++
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.iplkp
 """
+
 import logging
 import json
 import pprint
@@ -1046,9 +1047,11 @@ def lod_filter(data, pass_all=True, strict=True, checks_required=True, **kwargs)
             for i in data
             if all(
                 [
-                    c["fun"](i[c["key"]], c["criteria"])
-                    if c["key"] in i
-                    else not strict
+                    (
+                        c["fun"](i[c["key"]], c["criteria"])
+                        if c["key"] in i
+                        else not strict
+                    )
                     for c in checks
                 ]
             )
@@ -1059,9 +1062,11 @@ def lod_filter(data, pass_all=True, strict=True, checks_required=True, **kwargs)
             for i in data
             if any(
                 [
-                    c["fun"](i[c["key"]], c["criteria"])
-                    if c["key"] in i
-                    else not strict
+                    (
+                        c["fun"](i[c["key"]], c["criteria"])
+                        if c["key"] in i
+                        else not strict
+                    )
                     for c in checks
                 ]
             )

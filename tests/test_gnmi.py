@@ -5,6 +5,7 @@ connecton and task plugins.
 Was not able to find always-on endpoints that can test using gNMI, Cisco sandboxes has gRPC
 API available but that is different.
 """
+
 import sys
 import pprint
 import logging
@@ -31,7 +32,6 @@ from nornir_salt.plugins.processors import DataProcessor
 from nornir_salt.plugins.tasks import netmiko_send_commands
 from nornir_salt.plugins.connections import PyGNMIPlugin
 from nornir_salt.plugins.tasks import pygnmi_call
-
 
 logging.basicConfig(level=logging.ERROR)
 InventoryPluginRegister.register("DictInventory", DictInventory)

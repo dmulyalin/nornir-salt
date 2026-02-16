@@ -296,7 +296,7 @@ Sample code to use RetryRunner task parameters::
         run_num_connectors=1,
     )
 
-    # retry credentials if login fails but without retrying conection establishment
+    # retry credentials if login fails but without retrying connection establishment
     result3 = NornirObj.run(
         task=netmiko_send_command,
         command_string="show clock",
@@ -402,6 +402,7 @@ API Reference
 
 .. autoclass:: nornir_salt.plugins.runners.RetryRunner.RetryRunner
 """
+
 import threading
 import queue
 import logging
@@ -672,9 +673,9 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
                 }
             # add jumphost to host connections to close it
             # on nornir.close_connections() call
-            host.connections[
-                "jumphost_{}".format(jumphost["hostname"])
-            ] = jumphost_ssh_client
+            host.connections["jumphost_{}".format(jumphost["hostname"])] = (
+                jumphost_ssh_client
+            )
             log.info(
                 "nornir_salt:RetryRunner Started connection to jumphost '{}' - '{}'".format(
                     jumphost["hostname"], jumphost_ssh_client

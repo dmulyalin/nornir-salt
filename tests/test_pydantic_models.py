@@ -1,6 +1,7 @@
 """
 Test docs code examples
 """
+
 import sys
 import pprint
 import logging

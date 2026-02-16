@@ -9,7 +9,7 @@ From GitHub master branch::
 
   python3 -m pip install git+https://github.com/dmulyalin/nornir-salt
 
-.. warning:: Python 3.6 support deprecated starting with Nornir-Salt version 0.12.0
+.. warning:: Support for Python 3.6 was deprecated starting with Nornir-Salt version 0.12.0
 
 Installation extras
 ===================
@@ -66,8 +66,8 @@ To install maximum production set::
     pip install Nornir-Salt[prodmaxminion]
 
 **Why different extras?** - to simplify dependency installation for different requirements. It might
-make sense to start testing Nornir-Salt using ``prodmaxminion`` set, but later on narrow down to using Netmiko
-and Ncclient only, in that case prodmin set would make sense as it helps to save some hard drive space
+make sense to start testing Nornir-Salt using the ``prodmaxminion`` set, but later narrow it down to using only Netmiko
+and Ncclient. In that case, the prodmin set would make sense as it helps to save some hard drive space
 and improve installation speed.
 
 Alternatively to using extras, individual libraries of desired version can be installed, provided

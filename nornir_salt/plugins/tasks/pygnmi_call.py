@@ -108,6 +108,7 @@ update
 ------
 .. autofunction:: nornir_salt.plugins.tasks.pygnmi_call._call_update
 """
+
 import logging
 
 from nornir.core.task import Result, Task

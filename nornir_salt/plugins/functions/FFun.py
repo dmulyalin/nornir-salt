@@ -59,7 +59,7 @@ Filter hosts by hostname using Glob Patterns matching `fnmatchcase <https://docs
     # Match devices with hostnames of 1.2.3.4, 192.168.1.0-255:
     filtered_hosts = FFun(NornirObj, FH="1.2.3.4, 192.168.1.*")
 
-    # Match deices with hostname of core-sw-2.lab.local, core-sw-3.lab.local:
+    # Match devices with hostname of core-sw-2.lab.local, core-sw-3.lab.local:
     filtered_hosts = FFun(NornirObj, FH="core-sw-[23].lab.local")
 
 If list of patterns provided, host matching at least one pattern will pass this check.
@@ -249,15 +249,30 @@ FFun reference
 import logging
 from fnmatch import fnmatchcase
 from nornir.core.filter import F
-
+from nornir.core import Nornir
+from typing import Any, Dict, List, Tuple, Union
 
 log = logging.getLogger(__name__)
 
 # list that enumerates all available FFun functions, useful for arguments filtering
-FFun_functions = ["FO", "FB", "FH", "FC", "FR", "FG", "FP", "FL", "FM", "FN", "FX"]
+FFun_functions: List[str] = [
+    "FO",
+    "FB",
+    "FH",
+    "FC",
+    "FR",
+    "FG",
+    "FP",
+    "FL",
+    "FM",
+    "FN",
+    "FX",
+]
 
 
-def FFun(nr, check_if_has_filter=False, **kwargs):
+def FFun(
+    nr: Nornir, check_if_has_filter: bool = False, **kwargs: Any
+) -> Union[Nornir, Tuple[Nornir, bool]]:
     """
     Inventory filters dispatcher function.
 
@@ -523,7 +538,7 @@ def _filter_FT(ret, tags_list):
     )
     tags_set = set(tags_list)
     return ret.filter(
-        filter_func=lambda h: True
-        if set(h.get("tags") or []).intersection(tags_set)
-        else False
+        filter_func=lambda h: (
+            True if set(h.get("tags") or []).intersection(tags_set) else False
+        )
     )

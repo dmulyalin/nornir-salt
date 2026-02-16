@@ -37,6 +37,7 @@ salt_clear_cache reference
 
 .. autofunction:: nornir_salt.plugins.tasks.salt_clear_hcache.salt_clear_hcache
 """
+
 import logging
 from typing import List
 

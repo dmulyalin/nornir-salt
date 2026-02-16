@@ -15,6 +15,7 @@ PyGNMIPlugin reference
 
 .. autofunction:: nornir_salt.plugins.connections.PyGNMIPlugin.PyGNMIPlugin
 """
+
 from typing import Any, Dict, Optional
 from nornir.core.configuration import Config
 

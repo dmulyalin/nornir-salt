@@ -2,7 +2,7 @@
 netmiko_send_config
 ###################
 
-This task plugin relies on ``Netmiko`` conection ``send_config_set`` method
+This task plugin relies on ``Netmiko`` connection ``send_config_set`` method
 to send configuration commands to devices over SSH or Telnet.
 
 This task plugin applies device configuration following this sequence:
@@ -46,6 +46,7 @@ netmiko_send_config reference
 
 .. autofunction:: nornir_salt.plugins.tasks.netmiko_send_config.netmiko_send_config
 """
+
 import logging
 import traceback
 import time

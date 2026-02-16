@@ -9,6 +9,7 @@ NcclientPlugin reference
 
 .. autofunction:: nornir_salt.plugins.connections.NcclientPlugin.NcclientPlugin
 """
+
 import logging
 
 from typing import Any, Dict, Optional

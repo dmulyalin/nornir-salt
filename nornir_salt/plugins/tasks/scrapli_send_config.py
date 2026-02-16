@@ -38,6 +38,7 @@ scrapli_send_config reference
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_send_config.scrapli_send_config
 """
+
 import logging
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cfg_form_commands

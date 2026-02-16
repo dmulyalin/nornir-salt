@@ -1114,20 +1114,14 @@ ntp server 7.7.7.9
     print(res["IOL1"]["ntp_config"]["result"])
     print(res["IOL2"]["ntp_config"]["result"])
 
-    assert (
-        """-ntp server 7.7.7.8
+    assert """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
  ntp server 7.7.7.7
-+ntp server 1.1.1.1"""
-        in res["IOL1"]["ntp_config"]["result"]
-    )
++ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert (
-        """-ntp server 7.7.7.7
-+ntp server 7.7.7.9"""
-        in res["IOL2"]["ntp_config"]["result"]
-    )
+    assert """-ntp server 7.7.7.7
++ntp server 7.7.7.9""" in res["IOL2"]["ntp_config"]["result"]
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
 
 
@@ -1189,20 +1183,14 @@ ntp server 7.7.7.9
     print(res["IOL1"]["ntp_config"]["result"])
     print(res["IOL2"]["ntp_config"]["result"])
 
-    assert (
-        """-ntp server 7.7.6.8
+    assert """-ntp server 7.7.6.8
 +ntp server 7.7.7.8
  ntp server 7.7.7.7
--ntp server 1.1.1.1"""
-        in res["IOL1"]["ntp_config"]["result"]
-    )
+-ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert (
-        """-ntp server 7.7.7.9
-+ntp server 7.7.7.7"""
-        in res["IOL2"]["ntp_config"]["result"]
-    )
+    assert """-ntp server 7.7.7.9
++ntp server 7.7.7.7""" in res["IOL2"]["ntp_config"]["result"]
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
 
 
@@ -1261,20 +1249,14 @@ ntp server 7.7.7.9
     print(res["IOL1"]["ntp_config"]["result"])
     print(res["IOL2"]["ntp_config"]["result"])
 
-    assert (
-        """-ntp server 7.7.7.8
+    assert """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
  ntp server 7.7.7.7
-+ntp server 1.1.1.1"""
-        in res["IOL1"]["ntp_config"]["result"]
-    )
++ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert (
-        """-ntp server 7.7.7.7
-+ntp server 7.7.7.9"""
-        in res["IOL2"]["ntp_config"]["result"]
-    )
+    assert """-ntp server 7.7.7.7
++ntp server 7.7.7.9""" in res["IOL2"]["ntp_config"]["result"]
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
 
 
@@ -1406,20 +1388,14 @@ ntp server 7.7.7.9
     # print(res["IOL1"]["ntp_config"]["result"])
     # print(res["IOL2"]["ntp_config"]["result"])
 
-    assert (
-        """-ntp server 7.7.6.8
+    assert """-ntp server 7.7.6.8
 +ntp server 7.7.7.8
  ntp server 7.7.7.7
--ntp server 1.1.1.1"""
-        in res["IOL1"]["ntp_config"]["result"]
-    )
+-ntp server 1.1.1.1""" in res["IOL1"]["ntp_config"]["result"]
     assert res["IOL1"]["ntp_config"]["result"].count("ntp_config") == 2
 
-    assert (
-        """-ntp server 7.7.7.9
-+ntp server 7.7.7.7"""
-        in res["IOL2"]["ntp_config"]["result"]
-    )
+    assert """-ntp server 7.7.7.9
++ntp server 7.7.7.7""" in res["IOL2"]["ntp_config"]["result"]
     assert res["IOL2"]["ntp_config"]["result"].count("ntp_config") == 2
 
 

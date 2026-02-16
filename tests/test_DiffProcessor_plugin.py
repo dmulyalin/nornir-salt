@@ -168,19 +168,13 @@ ntp server 9.9.9.9
     #                                            ' ntp server 7.7.7.7\n'
     #                                            '+ntp server 9.9.9.9\n'}}}
 
-    assert (
-        """-Timestamp 12:12:12
+    assert """-Timestamp 12:12:12
 +Timestamp 14:14:14
  ntp server 7.7.7.8
--ntp server 7.7.7.7"""
-        in res["IOL1"]["show run | inc ntp"]["result"]
-    )
-    assert (
-        """
+-ntp server 7.7.7.7""" in res["IOL1"]["show run | inc ntp"]["result"]
+    assert """
  ntp server 7.7.7.7
-+ntp server 9.9.9.9"""
-        in res["IOL2"]["show run | inc ntp"]["result"]
-    )
++ntp server 9.9.9.9""" in res["IOL2"]["show run | inc ntp"]["result"]
 
 
 test_diff_processor()
@@ -266,19 +260,13 @@ ntp server 9.9.9.9
     #                                            'ntp server 7.7.7.7\n'
     #                                            'ntp server 9.9.9.9\n'
     #                                            '        '}}}
-    assert (
-        """-Timestamp 12:12:12
+    assert """-Timestamp 12:12:12
 +Timestamp 14:14:14
  ntp server 7.7.7.8
--ntp server 7.7.7.7"""
-        in res["IOL1"]["show run | inc ntp"]["diff"]
-    )
-    assert (
-        """
+-ntp server 7.7.7.7""" in res["IOL1"]["show run | inc ntp"]["diff"]
+    assert """
  ntp server 7.7.7.7
-+ntp server 9.9.9.9"""
-        in res["IOL2"]["show run | inc ntp"]["diff"]
-    )
++ntp server 9.9.9.9""" in res["IOL2"]["show run | inc ntp"]["diff"]
 
 
 # test_diff_processor_in_diff_is_true()

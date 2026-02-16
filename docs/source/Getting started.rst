@@ -1,11 +1,11 @@
 Getting started
 ###############
 
-After importing, plugins can be incorporated in your work flow as required.
+After importing, plugins can be incorporated in your workflow as required.
 
-Inventory and runner plugins automatically registered with Nornir using
-entry points and does not need to be imported in your program. But Nornir
-need to be instructed which plugins to use on Nornir object instantiation.
+Inventory and runner plugins are automatically registered with Nornir using
+entry points and do not need to be imported into your program. However, Nornir
+needs to be instructed on which plugins to use during Nornir object instantiation.
 
 Sample code to use RetryRunner, DictInventory and ResultSerializer plugins::
 

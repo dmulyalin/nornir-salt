@@ -20,7 +20,6 @@ from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.runners import QueueRunner, RetryRunner
 from nornir_salt.plugins.tasks import netmiko_send_commands
 
-
 logging.basicConfig(level=logging.ERROR)
 
 

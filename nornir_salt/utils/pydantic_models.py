@@ -1,6 +1,7 @@
 """
 File to contain pydantic models for plugins input/output data validation
 """
+
 from nornir.core.task import Task
 from nornir.core.inventory import Host
 from enum import Enum
@@ -89,9 +90,7 @@ class model_nr_test(BaseModel):
     excpt: Optional[Union[StrictBool, Callable]] = None
     excpt_msg: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_napalm_send_commands(BaseModel):
@@ -103,9 +102,7 @@ class model_napalm_send_commands(BaseModel):
     new_line_char: Optional[StrictStr] = None
     split_lines: Optional[StrictBool] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class model_conn_list(BaseModel):
@@ -114,9 +111,7 @@ class model_conn_list(BaseModel):
     task: Task
     conn_name: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class model_conn_close(BaseModel):
@@ -125,9 +120,7 @@ class model_conn_close(BaseModel):
     task: Task
     conn_name: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class model_conn_open(BaseModel):
@@ -148,9 +141,7 @@ class model_conn_open(BaseModel):
     raise_on_error: Optional[StrictBool] = None
     via: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class ConnectionsCallsEnum(str, Enum):
@@ -166,9 +157,7 @@ class model_connections(BaseModel):
     task: Task
     call: ConnectionsCallsEnum
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_scrapli_send_commands(BaseModel):
@@ -184,9 +173,7 @@ class model_scrapli_send_commands(BaseModel):
     repeat_interval: Optional[StrictInt] = None
     return_last: Optional[StrictInt] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_pyats_send_commands(BaseModel):
@@ -200,9 +187,7 @@ class model_pyats_send_commands(BaseModel):
     via: Optional[StrictStr] = None
     parse: Optional[StrictBool] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_pyats_genie_api(BaseModel):
@@ -211,9 +196,7 @@ class model_pyats_genie_api(BaseModel):
     task: Task
     api: StrictStr
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_salt_cfg_gen(BaseModel):
@@ -223,9 +206,7 @@ class model_salt_cfg_gen(BaseModel):
     config: Optional[StrictStr] = None
     multiline: Optional[StrictBool] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_file_read(BaseModel):
@@ -238,9 +219,7 @@ class model_file_read(BaseModel):
     last: Optional[StrictInt] = 1
     index: Optional[StrictStr] = "common"
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class model_file_list(BaseModel):
@@ -251,9 +230,7 @@ class model_file_list(BaseModel):
     base_url: Optional[StrictStr] = "/var/nornir-salt/"
     index: Optional[StrictStr] = "common"
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class model_file_remove(BaseModel):
@@ -265,9 +242,7 @@ class model_file_remove(BaseModel):
     index: Optional[StrictStr] = "common"
     tf_index_lock: Optional[Any] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class model_file_diff(BaseModel):
@@ -280,9 +255,7 @@ class model_file_diff(BaseModel):
     last: Optional[Union[StrictInt, List[StrictInt], StrictStr]] = None
     index: Optional[StrictStr] = "common"
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class FilesCallsEnum(str, Enum):
@@ -301,9 +274,7 @@ class model_files(BaseModel):
     task: Task
     call: FilesCallsEnum
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_http_call(BaseModel):
@@ -313,9 +284,7 @@ class model_http_call(BaseModel):
     method: StrictStr
     url: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_napalm_configure(BaseModel):
@@ -324,9 +293,7 @@ class model_napalm_configure(BaseModel):
     task: Task
     config: Optional[Union[StrictStr, List[StrictStr]]] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class NclientEditRPCnames(str, Enum):
@@ -356,9 +323,7 @@ class model_ncclient_call(BaseModel):
     rpc: Optional[StrictStr] = None
     filter_: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_puresnmp_call(BaseModel):
@@ -375,9 +340,7 @@ class model_puresnmp_call(BaseModel):
     repeating_oids: Optional[List[StrictStr]] = None
     method_name: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_netmiko_send_config(BaseModel):
@@ -390,9 +353,7 @@ class model_netmiko_send_config(BaseModel):
     batch: Optional[StrictInt] = None
     enable: Optional[StrictBool] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_pyats_send_config(BaseModel):
@@ -401,9 +362,7 @@ class model_pyats_send_config(BaseModel):
     task: Task
     config: Optional[Union[StrictStr, List[StrictStr]]] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_pygnmi_call(BaseModel):
@@ -413,9 +372,7 @@ class model_pygnmi_call(BaseModel):
     call: StrictStr
     name_arg: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_pygnmi_call_delete(BaseModel):
@@ -423,8 +380,7 @@ class model_pygnmi_call_delete(BaseModel):
 
     path: List[StrictStr]
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class model_pygnmi_call_replace(BaseModel):
@@ -432,8 +388,7 @@ class model_pygnmi_call_replace(BaseModel):
 
     path: List[StrictStr]
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class model_pygnmi_call_update(BaseModel):
@@ -441,8 +396,7 @@ class model_pygnmi_call_update(BaseModel):
 
     path: List[StrictStr]
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class model_salt_clear_hcache(BaseModel):
@@ -451,9 +405,7 @@ class model_salt_clear_hcache(BaseModel):
     task: Task
     cache_keys: Optional[List[StrictStr]] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_scrapli_netconf_call(BaseModel):
@@ -462,9 +414,7 @@ class model_scrapli_netconf_call(BaseModel):
     task: Task
     call: StrictStr
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_scrapli_send_config(BaseModel):
@@ -473,9 +423,7 @@ class model_scrapli_send_config(BaseModel):
     task: Task
     config: Optional[Union[StrictStr, List[StrictStr]]] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_sleep(BaseModel):
@@ -485,8 +433,7 @@ class model_sleep(BaseModel):
     sleep_for: Optional[StrictInt] = None
     sleep_random: Optional[Union[StrictInt, List[StrictInt], Tuple[StrictInt]]] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class TestsProcessorTestFunctions(str, Enum):
@@ -520,7 +467,7 @@ class EnumSaltTestAllowedExecFunctions(str, Enum):
     nr_cli = "nr.cli"
     nr_tping = "nr.tping"
     nr_task = "nr.task"
-    nr_hrrp = "nr.http"
+    nr_http = "nr.http"
     nr_nc = "nr.nc"
     nr_gnmi = "nr.gnmi"
     nr_network = "nr.network"
@@ -531,8 +478,7 @@ class EnumSaltTestAllowedExecFunctions(str, Enum):
 class modelSaltTestsArgs(BaseModel):
     function: Optional[EnumSaltTestAllowedExecFunctions] = None
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class modelTestsProcessorTest(BaseModel):
@@ -545,6 +491,9 @@ class modelTestsProcessorTest(BaseModel):
     path: Optional[StrictStr] = None
     report_all: Optional[StrictBool] = None
     use_all_tasks: Optional[StrictBool] = None
+    groups: Optional[List[StrictStr]] = None
+    description: Optional[StrictStr] = None
+    comments: Optional[StrictStr] = None
     # Contains and Equal tests parameters
     pattern: Optional[Union[StrictStr, Any]] = None
     use_re: Optional[StrictBool] = None
@@ -557,6 +506,7 @@ class modelTestsProcessorTest(BaseModel):
     function_text: Optional[StrictStr] = None
     function_call: Optional[Callable] = None
     function_name: Optional[StrictStr] = None
+    function_import: Optional[StrictStr] = None
     function_kwargs: Optional[Dict] = None
     globals_dictionary: Optional[Dict] = None
     add_host: Optional[StrictBool] = None
@@ -566,11 +516,10 @@ class modelTestsProcessorTest(BaseModel):
     # EvalTest parameters
     expr: Optional[StrictStr] = None
     globs: Optional[Dict] = None
-    # SALT related argumetns
+    # SALT related arguments
     salt: Optional[modelSaltTestsArgs] = None
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     @model_validator(mode="before")
     @classmethod
@@ -584,7 +533,13 @@ class modelTestsProcessorTest(BaseModel):
             assert "pattern" in values, f"No pattern provided for test '{test}'"
         elif any(i in test.lower() for i in ["custom"]):
             assert any(  # nosec
-                i in values for i in ["function_file", "function_text", "function_call"]
+                i in values
+                for i in [
+                    "function_file",
+                    "function_text",
+                    "function_call",
+                    "function_import",
+                ]
             ), f"No function provided for test '{test}'"
         elif any(i in test.lower() for i in ["cerberus"]):
             assert values.get("schema"), f"No schema provided for test '{test}'"
@@ -629,9 +584,9 @@ class NornirInventoryConnection(BaseModel):
     """Nornir Inventory Connection Options Model"""
 
     hostname: Optional[StrictStr] = None
-    port: Optional[
-        Union[None, int]
-    ] = None  # using Union[None, StrictInt] throws error if port is None
+    port: Optional[Union[None, int]] = (
+        None  # using Union[None, StrictInt] throws error if port is None
+    )
     username: Optional[StrictStr] = None
     password: Optional[StrictStr] = None
     platform: Optional[StrictStr] = None
@@ -665,9 +620,7 @@ class model_network(BaseModel):
     task: Task
     call: Optional[StrictStr] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
 
 class model_network_resolve_dns(BaseModel):
@@ -680,5 +633,4 @@ class model_network_resolve_dns(BaseModel):
     ipv4: Optional[StrictBool] = None
     ipv6: Optional[StrictBool] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)

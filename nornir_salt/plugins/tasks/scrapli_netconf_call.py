@@ -56,6 +56,7 @@ transaction
 
 .. autofunction:: nornir_salt.plugins.tasks.scrapli_netconf_call._call_transaction
 """
+
 import logging
 import traceback
 import time

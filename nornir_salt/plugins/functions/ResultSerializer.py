@@ -91,7 +91,7 @@ with additional task execution details::
         "hostname_2": {
             "task_name_1": {
                 "changed": False,
-                "diff}: "",
+                "diff": "",
                 "exception": None,
                 "failed": False,
                 "result": "result string"
@@ -190,6 +190,7 @@ ResultSerializer reference
 
 .. autofunction:: nornir_salt.plugins.functions.ResultSerializer.ResultSerializer
 """
+
 import logging
 from nornir.core.task import AggregatedResult
 
@@ -283,9 +284,11 @@ def ResultSerializer(nr_results, add_details=False, to_dict=True, skip=None):
                         {
                             "host": hostname,
                             "name": i.name,
-                            "result": i.result
-                            if type(i.result) in supported_types
-                            else str(i.result),
+                            "result": (
+                                i.result
+                                if type(i.result) in supported_types
+                                else str(i.result)
+                            ),
                         }
                     )
 

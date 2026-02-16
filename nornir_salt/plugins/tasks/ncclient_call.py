@@ -64,6 +64,7 @@ ncclient_call - transaction
 
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_transaction
 """
+
 import traceback
 import logging
 import time

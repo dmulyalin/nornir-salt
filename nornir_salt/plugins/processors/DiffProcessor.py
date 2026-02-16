@@ -30,6 +30,7 @@ DiffProcessor reference
 
 .. autofunction:: nornir_salt.plugins.processors.DiffProcessor.DiffProcessor
 """
+
 import logging
 import os
 import json
@@ -39,7 +40,6 @@ import re
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
-
 
 log = logging.getLogger(__name__)
 

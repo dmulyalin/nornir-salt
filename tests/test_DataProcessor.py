@@ -20,7 +20,6 @@ from nornir_salt.plugins.inventory import DictInventory
 from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors.DataProcessor import DataProcessor
 
-
 logging.basicConfig(level=logging.ERROR)
 
 
@@ -1825,9 +1824,7 @@ def test_find_in_text_match_filter_with_path():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
-                "interfaces": {
-                    "cfg": """
+            "IOL1": {"interfaces": {"cfg": """
 interface Lo0
  description data_1 file
  ip address 1.0.0.0 32
@@ -1836,18 +1833,12 @@ interface Lo1
  description this interface has description
  ip address 1.1.1.1 32
 !
-            """
-                }
-            },
-            "IOL2": {
-                "interfaces": {
-                    "cfg": """
+            """}},
+            "IOL2": {"interfaces": {"cfg": """
 interface Lo0
  description data_1 file
  ip address 1.0.0.0 32
-            """
-                }
-            },
+            """}},
         },
         name="show run | inc ntp",
     )

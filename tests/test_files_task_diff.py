@@ -247,20 +247,14 @@ ntp server 7.7.7.9
 
     pprint.pprint(res_task_diff, width=150)
 
-    assert (
-        """-ntp server 7.7.7.8
+    assert """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
  ntp server 7.7.7.7
-+ntp server 1.1.1.1"""
-        in res_task_diff["IOL1"]["device_config"]["result"]
-    )
++ntp server 1.1.1.1""" in res_task_diff["IOL1"]["device_config"]["result"]
     assert res_task_diff["IOL1"]["device_config"]["result"].count("device_config") == 2
 
-    assert (
-        """-ntp server 7.7.7.7
-+ntp server 7.7.7.9"""
-        in res_task_diff["IOL2"]["device_config"]["result"]
-    )
+    assert """-ntp server 7.7.7.7
++ntp server 7.7.7.9""" in res_task_diff["IOL2"]["device_config"]["result"]
     assert res_task_diff["IOL2"]["device_config"]["result"].count("device_config") == 2
 
 

@@ -56,6 +56,7 @@ files dispatcher function
 +++++++++++++++++++++++++
 .. autofunction:: nornir_salt.plugins.tasks.files.files
 """
+
 import os
 import json
 import difflib

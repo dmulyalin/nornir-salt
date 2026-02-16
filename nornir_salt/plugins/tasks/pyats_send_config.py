@@ -2,7 +2,7 @@
 pyats_send_config
 #################
 
-This task plugin relies on Genie device conection ``config`` method
+This task plugin relies on Genie device connection ``config`` method
 to send configuration commands to devices over SSH or Telnet.
 
 This task plugin applies device configuration following this sequence:
@@ -45,6 +45,7 @@ API Reference
 
 .. autofunction:: nornir_salt.plugins.tasks.pyats_send_config.pyats_send_config
 """
+
 import logging
 import traceback
 from nornir.core.task import Result, Task

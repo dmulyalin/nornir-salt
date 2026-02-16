@@ -23,7 +23,6 @@ from nornir_salt.plugins.tasks import tcp_ping
 from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.functions import DumpResults
 
-
 logging.basicConfig(level=logging.ERROR)
 
 

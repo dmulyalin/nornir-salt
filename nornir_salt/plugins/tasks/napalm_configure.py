@@ -38,6 +38,7 @@ napalm_configure reference
 
 .. autofunction:: nornir_salt.plugins.tasks.napalm_configure.napalm_configure
 """
+
 import logging
 from nornir.core.task import Result, Task
 from nornir_salt.utils import cfg_form_commands
