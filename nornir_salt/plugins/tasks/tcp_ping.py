@@ -2,7 +2,7 @@
 tcp_ping
 ########
 
-Tests connection to a TCP port trying to establish a three way
+Tests connection to a TCP port by attempting to establish a three-way
 handshake. Useful for network discovery or testing.
 
 tcp_ping sample usage
@@ -17,7 +17,7 @@ Sample code to run ``tcp_ping`` task::
 
     nr = InitNornir(config_file="config.yaml")
 
-    result = NornirObj.run(
+    result = nr.run(
         task=tcp_ping,
         ports=[22]
     )
@@ -26,16 +26,16 @@ Sample code to run ``tcp_ping`` task::
 
     pprint.pprint(result_dictionary)
 
-    # prints:
-    #
-    # {'IOL1': {'tcp_ping': {22: True}},
-    #  'IOL2': {'tcp_ping': {22: True}}}
-
+    # Example output:
+    # {
+    #   'IOL1': {'tcp_ping': {22: True}},
+    #   'IOL2': {'tcp_ping': {22: True}}
+    # }
 
 tcp_ping returns
 ================
 
-Returns dictionary of port numbers as keys with True/False as values
+Returns a dictionary of port numbers as keys with True/False as values.
 
 tcp_ping reference
 ==================
@@ -45,7 +45,7 @@ tcp_ping reference
 
 import logging
 import socket
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from nornir.core.task import Result, Task
 
@@ -53,13 +53,16 @@ log = logging.getLogger(__name__)
 
 
 def tcp_ping(
-    task: Task, ports: List[int] = None, timeout: int = 1, host: Optional[str] = None
+    task: Task, ports: Optional[List[int]] = None, timeout: int = 1, host: Optional[str] = None
 ) -> Result:
     """
-    :param ports: list of int, optional, tcp ports to ping, defaults to host's port or 22
-    :param timeout: int, optional, connection timeout, defaults to 1
-    :param host: string, optional, address to TCP ping, defaults to hosts' ``hostname`` value
-    :returns: dictionary of port numbers as keys with True/False as values
+    Test connection to a TCP port by attempting to establish a three-way handshake.
+
+    :param task: Nornir task object.
+    :param ports: List of TCP ports to ping. Defaults to the host's port or 22.
+    :param timeout: Connection timeout in seconds. Defaults to 1.
+    :param host: Address to TCP ping. Defaults to the host's ``hostname`` value.
+    :return: Dictionary of port numbers as keys with True/False as values.
     """
     ports = ports or []
 
@@ -70,22 +73,19 @@ def tcp_ping(
 
     if isinstance(ports, list):
         if not all(isinstance(port, int) for port in ports):
-            raise ValueError("Invalid value for 'ports'")
+            raise ValueError("Invalid value for 'ports'. All ports must be integers.")
     else:
-        raise ValueError("Invalid value for 'ports'")
+        raise ValueError("Invalid value for 'ports'. Expected a list of integers.")
 
     host = host or task.host.hostname
 
-    result = {}
+    result: Dict[int, bool] = {}
     for port in ports:
         s = socket.socket()
         s.settimeout(timeout)
         try:
             status = s.connect_ex((host, port))
-            if status == 0:
-                connection = True
-            else:
-                connection = False
+            connection = status == 0
         except (socket.gaierror, socket.timeout, socket.error):
             connection = False
         finally:

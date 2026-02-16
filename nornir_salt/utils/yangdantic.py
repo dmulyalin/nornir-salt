@@ -10,17 +10,17 @@ log = logging.getLogger(__name__)
 
 class ValidateFuncArgs:
     """
-    Class based decorator to validate functions input arguments.
+    Class-based decorator to validate function input arguments.
 
-    :param model: pydantic model to use to check function arguments
-    :param mixins: list of additional functions to augment model fields with
-    :param mixins_skip_args: list of argument names to not add as fields to the ``model``,
-        by default skips arguments named ``self``
-    :param config: model configuration dictionary to use while dynamically forming model
-        for decorated function, ignored if ``model`` argument provided
+    :param model: Pydantic model to use for validating function arguments.
+    :param mixins: List of additional functions to augment model fields.
+    :param mixins_skip_args: List of argument names to exclude from the ``model``.
+        Defaults to skipping arguments named ``self``.
+    :param config: Model configuration dictionary for dynamically forming the model
+        for the decorated function. Ignored if ``model`` is provided.
 
-    .. warning:: all model fields derived from ``mixins`` functions forced to be optional,
-        all required arguments must be defined in ``model``.
+    .. warning:: All model fields derived from ``mixins`` functions are forced to be optional.
+        Required arguments must be defined in the ``model``.
     """
 
     __slots__ = ["model", "mixins", "mixins_skip_args", "config", "function"]
@@ -38,41 +38,39 @@ class ValidateFuncArgs:
         self.config = config or {}
 
     def __call__(self, function: Callable) -> Callable:
-
         self.function = function
 
         @wraps(function)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             self._validate(args, kwargs)
             return self.function(*args, **kwargs)
 
         return wrapper
 
-    def _merge_args_to_kwargs(self, args: List, kwargs: Dict) -> Dict:
+    def _merge_args_to_kwargs(self, args: List[Any], kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Function to merge args with kwargs using function argspec, this is to
-        make sure that pydantic only get **kwargs to instantiate a model and
-        run validation.
+        Merge positional arguments with keyword arguments using the function's argspec.
 
-        :param args: argument values passed to decorated function
-        :param kwargs: key word arguments passed to decorated function
+        :param args: Positional argument values passed to the decorated function.
+        :param kwargs: Keyword arguments passed to the decorated function.
+        :return: Merged dictionary of arguments.
         """
         merged_kwargs = {}
 
         (
-            fun_args,  # list of the positional parameter names
-            fun_varargs,  # name of the * parameter or None
-            fun_varkw,  # name of the ** parameter or None
-            fun_defaults,  # tuple of default argument values of the last n positional parameters
-            fun_kwonlyargs,  # list of keyword-only parameter names
-            fun_kwonlydefaults,  # dictionary mapping kwonlyargs parameter names to default values
-            fun_annotations,  # dictionary mapping parameter names to annotations
+            fun_args,  # List of the positional parameter names
+            fun_varargs,  # Name of the * parameter or None
+            fun_varkw,  # Name of the ** parameter or None
+            fun_defaults,  # Tuple of default argument values of the last n positional parameters
+            fun_kwonlyargs,  # List of keyword-only parameter names
+            fun_kwonlydefaults,  # Dictionary mapping kwonlyargs parameter names to default values
+            fun_annotations,  # Dictionary mapping parameter names to annotations
         ) = inspect.getfullargspec(self.function)
 
-        # "def foo(a, b):" - combine "foo(1, 2)" args with "a, b" fun_args
+        # Combine positional arguments with their names
         args_to_kwargs = dict(zip(fun_args, args))
 
-        # "def foo(a, *b):" - combine "foo(1, 2, 3)" 2|3 args with "*b" fun_varargs
+        # Combine *args with their names
         if fun_varargs:
             args_to_kwargs[fun_varargs] = args[len(fun_args) :]
 
@@ -80,10 +78,10 @@ class ValidateFuncArgs:
 
         return merged_kwargs
 
-    def _get_model(self) -> None:
+    def _get_model(self) -> BaseModel:
         """
-        Function to return model if it was provided on instantiation or
-        dynamically create model using decorated function type hints.
+        Return the model provided during initialization or dynamically create one
+        using the decorated function's type hints.
         """
         if self.model is None:
             fields_spec = self._form_fields_spec(self.function, make_optional=False)
@@ -91,12 +89,12 @@ class ValidateFuncArgs:
             class Config:
                 pass
 
-            # add configuration parameters to Config object
+            # Add configuration parameters to the Config object
             for k, v in self.config.items():
                 setattr(Config, k, v)
 
             self.model = create_model(
-                "model_{}".format(self.function.__name__),
+                f"model_{self.function.__name__}",
                 **fields_spec,
                 __config__=Config
             )
@@ -106,17 +104,16 @@ class ValidateFuncArgs:
     def _form_fields_spec(
         self,
         function: Callable,
-        skip_fields: List[str] = None,
+        skip_fields: Optional[List[str]] = None,
         make_optional: bool = True,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """
-        Function to form a dictionary of arguments and their types in
-        {arg1: (type, default_value), arg2: default_value, arg3: {type, ...}}
-        formats
+        Form a dictionary of arguments and their types.
 
-        :param function: function to form fields spec for
-        :param skip_fields: list of arguments names to ignore
-        :param make_optional: boolean to indicate if all arguments to be made optional
+        :param function: Function to form fields spec for.
+        :param skip_fields: List of argument names to ignore.
+        :param make_optional: Whether to make all arguments optional.
+        :return: Dictionary of fields.
         """
         skip_fields = skip_fields or []
 
@@ -169,7 +166,7 @@ class ValidateFuncArgs:
         return fields_spec
 
     def _add_mixins(self, model: BaseModel) -> BaseModel:
-        """Function to augment model fields with mixins functions arguments using their type hints"""
+        """Augment model fields with mixin function arguments using their type hints."""
         for mixin_function in self.mixins:
             # check if mixin is not defined
             if mixin_function is None:
@@ -187,8 +184,8 @@ class ValidateFuncArgs:
 
         return model
 
-    def _validate(self, args: List, kwargs: Dict) -> None:
-        """Function to validate provided arguments against model"""
+    def _validate(self, args: List[Any], kwargs: Dict[str, Any]) -> None:
+        """Validate provided arguments against the model."""
         merged_kwargs = self._merge_args_to_kwargs(args, kwargs)
         model = self._get_model()
         model = self._add_mixins(model)
