@@ -122,8 +122,9 @@ Call Functions Reference
 
 import logging
 
+from nornir.core.inventory import ConnectionOptions, Host
+
 from .FFun import FFun
-from nornir.core.inventory import Host, ConnectionOptions
 
 log = logging.getLogger(__name__)
 

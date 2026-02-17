@@ -48,9 +48,11 @@ netmiko_send_config reference
 """
 
 import logging
-import traceback
 import time
+import traceback
+
 from nornir.core.task import Result, Task
+
 from nornir_salt.utils import cfg_form_commands
 from nornir_salt.utils.pydantic_models import model_netmiko_send_config
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
@@ -155,7 +157,7 @@ def netmiko_send_config(
                 result.append(conn.commit())
         except AttributeError:
             pass
-        except:
+        except Exception:
             tb = traceback.format_exc()
             log.error("nornir-salt:netmiko_send_config commit error\n{}".format(tb))
             task_result.failed = True

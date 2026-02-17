@@ -32,11 +32,13 @@ http_call reference
 .. autofunction:: nornir_salt.plugins.tasks.http_call.http_call
 """
 
-import logging
 import json
+import logging
+
 import requests
 from nornir.core.task import Result, Task
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
 from nornir_salt.utils.pydantic_models import model_http_call
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 

@@ -36,11 +36,12 @@ netmiko_send_commands reference
 import logging
 
 from nornir.core.task import Result, Task
-from nornir_salt.utils import cli_send_commands, cli_form_commands
-from .netmiko_send_command_ps import netmiko_send_command_ps, send_command_ps
 
+from nornir_salt.utils import cli_form_commands, cli_send_commands
 from nornir_salt.utils.pydantic_models import model_netmiko_send_commands
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
+
+from .netmiko_send_command_ps import netmiko_send_command_ps, send_command_ps
 
 try:
     from nornir_netmiko.tasks import netmiko_send_command

@@ -11,6 +11,7 @@ HTTPPlugin reference
 """
 
 from typing import Any, Dict, Optional
+
 from nornir.core.configuration import Config
 
 CONNECTION_NAME = "http"

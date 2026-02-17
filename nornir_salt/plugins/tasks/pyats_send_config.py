@@ -48,7 +48,9 @@ API Reference
 
 import logging
 import traceback
+
 from nornir.core.task import Result, Task
+
 from nornir_salt.utils import cfg_form_commands
 from nornir_salt.utils.pydantic_models import model_pyats_send_config
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
@@ -103,7 +105,7 @@ def pyats_send_config(task: Task, config: str = None, **kwargs):
     # send config
     try:
         task_result.result = device.configure(config, **kwargs)
-    except:
+    except Exception:
         log.exception("nornir-salt:pyats_send_config configure error")
         task_result.failed = True
         task_result.exception = traceback.format_exc()

@@ -332,19 +332,20 @@ Tests Reference
 .. autofunction:: nornir_salt.plugins.processors.TestsProcessor.CustomFunctionTest
 """
 
+import fnmatch
 import logging
 import re
 import traceback
-import fnmatch
-from typing import Any, Dict, Generator, List, Optional, Union, Callable
+from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
+
+from nornir_salt.plugins.functions import FFun
 from nornir_salt.utils.pydantic_models import (
     modelTestsProcessorSuite,
     modelTestsProcessorTests,
 )
-from nornir_salt.plugins.functions import FFun
 
 log = logging.getLogger(__name__)
 
@@ -493,7 +494,7 @@ def EvalTest(
     except AssertionError as e:
         ret.update({"result": "FAIL", "success": False})
         ret["exception"] = err_msg if err_msg else (str(e) or "AssertionError")
-    except:
+    except Exception:
         ret.update({"result": "ERROR", "success": False})
         ret["exception"] = err_msg if err_msg else traceback.format_exc()
 
@@ -751,7 +752,7 @@ def CustomFunctionTest(
             raise RuntimeError(
                 "nornir-salt:CustomFunctionTest no custom function found."
             )
-    except:
+    except Exception:
         msg = (
             f"nornir-salt:CustomFunctionTest function loading error:\n"
             f"{traceback.format_exc()}"
@@ -762,7 +763,7 @@ def CustomFunctionTest(
     # run custom function
     try:
         test_function_result = test_function(result, **function_kwargs)
-    except:
+    except Exception:
         msg = (
             f"nornir-salt:CustomFunctionTest function run error:\n"
             f"{traceback.format_exc()}"
@@ -1211,7 +1212,7 @@ class TestsProcessor:
                         continue
                     # filter tests by using groups list
                     if self.groups and not any(
-                        map(lambda g: g in self.groups, t["groups"])
+                        map(lambda g: g in self.groups, t.get("groups", []))
                     ):
                         continue
                     # filter tests by using Fx filters
@@ -1367,7 +1368,7 @@ class TestsProcessor:
                                 res = Result(host=host, **ret)
                     else:
                         res = test_func(host=host, **test)
-                except:
+                except Exception:
                     msg = (
                         f"nornir-salt:TestsProcessor run error:\n"
                         f"{traceback.format_exc()}"
@@ -1382,7 +1383,7 @@ class TestsProcessor:
                     test_results.extend(res)
                 else:
                     test_results.append(res)
-        except:
+        except Exception:
             test_results.append(
                 Result(
                     host=host,

@@ -192,6 +192,7 @@ ResultSerializer reference
 """
 
 import logging
+
 from nornir.core.task import AggregatedResult
 
 log = logging.getLogger(__name__)

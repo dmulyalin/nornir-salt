@@ -211,3 +211,27 @@ dataprocessor = [
 "ConnectionsPool" = "nornir_salt.plugins.connections:ConnectionsPool"
 "pyats" = "nornir_salt.plugins.connections:PyATSUnicon"
 "puresnmp" = "nornir_salt.plugins.connections:PureSNMPPlugin"
+
+[tool.ruff.lint]
+ignore = [
+    "E712", # true-false-comparison
+]
+
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff]
+line-length = 320

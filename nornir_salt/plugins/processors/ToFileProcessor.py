@@ -30,16 +30,16 @@ ToFileProcessor reference
 .. autofunction:: nornir_salt.plugins.processors.ToFileProcessor.ToFileProcessor
 """
 
-import logging
-import time
-import os
 import json
-import traceback
+import logging
+import os
 import random
+import time
+import traceback
+from multiprocessing import Lock
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
-from multiprocessing import Lock
 
 log = logging.getLogger(__name__)
 
@@ -240,7 +240,7 @@ class ToFileProcessor:
                 file_to_rm = self.aliases_data[self.tf][host.name].pop(-1)
                 try:
                     os.remove(file_to_rm["filename"])
-                except:
+                except Exception:
                     log.error(
                         "nornir-salt:ToFileProcessor failed to remove file '{}':\n{}".format(
                             file_to_rm, traceback.format_exc()

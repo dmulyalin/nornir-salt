@@ -1,27 +1,26 @@
-import sys
-import pprint
-import logging
-import yaml
-import pytest
-import os
 import json
+import logging
+import os
+import pprint
+import sys
+
+import pytest
+import yaml
 
 sys.path.insert(0, "..")
 
 try:
     from nornir import InitNornir
-    from nornir.core.task import Result, Task
     from nornir.core.plugins.inventory import InventoryPluginRegister
+    from nornir.core.task import Result, Task
 
     HAS_NORNIR = True
 except ImportError:
     HAS_NORNIR = False
 
-from nornir_salt.plugins.functions import ResultSerializer
+from nornir_salt.plugins.functions import DumpResults, ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import tcp_ping
-from nornir_salt.plugins.tasks import nr_test
-from nornir_salt.plugins.functions import DumpResults
+from nornir_salt.plugins.tasks import nr_test, tcp_ping
 
 logging.basicConfig(level=logging.ERROR)
 

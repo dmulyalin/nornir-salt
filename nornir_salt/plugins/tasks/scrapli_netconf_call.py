@@ -58,10 +58,12 @@ transaction
 """
 
 import logging
-import traceback
 import time
+import traceback
 from fnmatch import fnmatchcase
+
 from nornir.core.task import Result, Task
+
 from nornir_salt.utils.pydantic_models import model_scrapli_netconf_call
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
@@ -225,7 +227,7 @@ def _call_transaction(conn, *args, **kwargs):
         r = conn.unlock(target=kwargs["target"])
         if r.failed:
             raise RuntimeError(f"unlock failed: {r.result}")
-    except:
+    except Exception:
         tb = traceback.format_exc()
         log.error("nornir_salt:scrapli_netconf_call transaction error: {}".format(tb))
         result.append({"error": tb})

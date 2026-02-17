@@ -255,16 +255,16 @@ iplkp
 .. autofunction:: nornir_salt.plugins.processors.DataProcessor.iplkp
 """
 
-import logging
-import json
-import pprint
-import traceback
-import re
 import csv
+import json
+import logging
+import pprint
+import re
 import socket
-
-from fnmatch import fnmatchcase
+import traceback
 from collections import deque
+from fnmatch import fnmatchcase
+
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
@@ -1757,7 +1757,7 @@ class DataProcessor:
                 fun = dp_dict_copy.pop("fun")
                 if fun in task_started_dispatcher:
                     task_started_dispatcher[fun](task, **dp_dict_copy)
-            except:
+            except Exception:
                 log.error(
                     "nornir-salt:DataProcessor task pre-processing task {} dp '{}' error:\n{}".format(
                         task, dp_dict, traceback.format_exc()
@@ -1786,7 +1786,7 @@ class DataProcessor:
                         task_instance_completed_dispatcher_multiresult[fun](
                             result, task=task, **dp_dict_copy
                         )
-                    except:
+                    except Exception:
                         log.exception(
                             "nornir-salt:DataProcessor host '{}' function '{}' per-multiresult error".format(
                                 host.name, fun
@@ -1804,7 +1804,7 @@ class DataProcessor:
                                     i.result, **dp_dict_copy
                                 )
                             )
-                        except:
+                        except Exception:
                             i.exception = traceback.format_exc()
                             log.exception(
                                 "nornir-salt:DataProcessor host '{}' function '{}' per-task error".format(
@@ -1821,7 +1821,7 @@ class DataProcessor:
                             task_instance_completed_dispatcher_per_result[fun](
                                 result=i, task=task, host=host, **dp_dict_copy
                             )
-                        except:
+                        except Exception:
                             i.exception = traceback.format_exc()
                             log.exception(
                                 "nornir-salt:DataProcessor host '{}' function '{}' per-result error".format(
@@ -1830,7 +1830,7 @@ class DataProcessor:
                             )
                 else:
                     raise KeyError(fun)
-            except:
+            except Exception:
                 log.exception(
                     "nornir-salt:DataProcessor host '{}' dp '{}'".format(
                         host.name, dp_dict

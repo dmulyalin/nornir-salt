@@ -14,8 +14,8 @@ SaltEventProcessor reference
 """
 
 import logging
-
 from datetime import datetime
+
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
 

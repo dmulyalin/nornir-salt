@@ -1,9 +1,9 @@
-import logging
 import inspect
-
+import logging
 from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
+
 from pydantic import BaseModel, create_model
-from typing import Optional, List, Any, Dict, Callable
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +47,9 @@ class ValidateFuncArgs:
 
         return wrapper
 
-    def _merge_args_to_kwargs(self, args: List[Any], kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_args_to_kwargs(
+        self, args: List[Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Merge positional arguments with keyword arguments using the function's argspec.
 
@@ -94,9 +96,7 @@ class ValidateFuncArgs:
                 setattr(Config, k, v)
 
             self.model = create_model(
-                f"model_{self.function.__name__}",
-                **fields_spec,
-                __config__=Config
+                f"model_{self.function.__name__}", **fields_spec, __config__=Config
             )
 
         return self.model

@@ -1,10 +1,11 @@
-import sys
+import logging
 import os
 import pprint
-import logging
-import yaml
-import pytest
+import sys
 import time
+
+import pytest
+import yaml
 
 sys.path.insert(0, "..")
 
@@ -19,9 +20,8 @@ except ImportError:
 
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
+from nornir_salt.plugins.processors import DiffProcessor, ToFileProcessor
 from nornir_salt.plugins.tasks import nr_test
-from nornir_salt.plugins.processors import ToFileProcessor
-from nornir_salt.plugins.processors import DiffProcessor
 
 logging.basicConfig(level=logging.ERROR)
 

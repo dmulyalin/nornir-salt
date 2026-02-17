@@ -53,18 +53,19 @@ DictInventory reference
 """
 
 import logging
-import traceback
 from typing import Any, Dict, Type
-from nornir_salt.utils.pydantic_models import NornirInventory
+
 from nornir.core.inventory import (
-    Inventory,
+    ConnectionOptions,
+    Defaults,
     Group,
     Host,
-    Defaults,
-    ConnectionOptions,
     HostOrGroup,
+    Inventory,
     ParentGroups,
 )
+
+from nornir_salt.utils.pydantic_models import NornirInventory
 
 __version__ = "0.0.1"
 

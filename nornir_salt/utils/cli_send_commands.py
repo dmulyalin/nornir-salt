@@ -1,7 +1,7 @@
-import time
 import logging
-
+import time
 from fnmatch import fnmatchcase
+
 from nornir.core.task import Task
 
 log = logging.getLogger(__name__)

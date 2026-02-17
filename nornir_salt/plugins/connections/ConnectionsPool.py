@@ -16,10 +16,11 @@ ConnectionsPool reference
 
 import logging
 import time
+from multiprocessing import Lock
 from typing import Any, Dict, Optional
+
 from nornir.core.configuration import Config
 from nornir.core.inventory import Host
-from multiprocessing import Lock
 
 log = logging.getLogger(__name__)
 

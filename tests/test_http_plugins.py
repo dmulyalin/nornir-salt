@@ -1,28 +1,29 @@
-import sys
+import logging
 import os
 import pprint
-import logging
-import yaml
-import pytest
+import sys
 import time
+
+import pytest
 import requests
+import yaml
 
 sys.path.insert(0, "..")
 
 try:
     from nornir import InitNornir
-    from nornir.core.plugins.inventory import InventoryPluginRegister
     from nornir.core.plugins.connections import ConnectionPluginRegister
+    from nornir.core.plugins.inventory import InventoryPluginRegister
     from nornir.core.task import Result
 
     HAS_NORNIR = True
 except ImportError:
     HAS_NORNIR = False
 
+from nornir_salt.plugins.connections import HTTPPlugin
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
 from nornir_salt.plugins.tasks import http_call
-from nornir_salt.plugins.connections import HTTPPlugin
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -33,15 +34,22 @@ skip_if_no_internet = pytest.mark.skipif(
     reason="Have no Internet access",
 )
 
-always_on_query = requests.get(
-    "https://sandbox-iosxe-recomm-1.cisco.com/restconf/",
-    verify=False,
-    auth=("developer", "lastorangerestoreball8876"),
-)
-skip_if_no_always_on_access = pytest.mark.skipif(
-    always_on_query.ok == False,
-    reason="Have no access to Cisco IOS XE always on lab",
-)
+try:
+    always_on_query = requests.get(
+        "https://sandbox-iosxe-recomm-1.cisco.com/restconf/",
+        verify=False,
+        auth=("developer", "lastorangerestoreball8876"),
+        timeout=5,
+    )
+    skip_if_no_always_on_access = pytest.mark.skipif(
+        always_on_query.ok == False,
+        reason="Have no access to Cisco IOS XE always on lab",
+    )
+except Exception:
+    skip_if_no_always_on_access = pytest.mark.skipif(
+        True,
+        reason="Have no access to Cisco IOS XE always on lab",
+    )
 
 # ----------------------------------------------------------------------
 # Initialize Nornir

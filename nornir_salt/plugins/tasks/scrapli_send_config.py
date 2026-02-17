@@ -40,11 +40,13 @@ scrapli_send_config reference
 """
 
 import logging
+from typing import Optional
+
 from nornir.core.task import Result, Task
+
 from nornir_salt.utils import cfg_form_commands
 from nornir_salt.utils.pydantic_models import model_scrapli_send_config
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
-from typing import Optional
 
 try:
     from nornir_scrapli.tasks import send_config as nornir_scrapli_send_config

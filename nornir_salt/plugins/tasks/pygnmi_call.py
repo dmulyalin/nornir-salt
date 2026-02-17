@@ -112,12 +112,13 @@ update
 import logging
 
 from nornir.core.task import Result, Task
+
 from nornir_salt.plugins.connections.PyGNMIPlugin import CONNECTION_NAME
 from nornir_salt.utils.pydantic_models import (
     model_pygnmi_call,
-    model_pygnmi_call_update,
-    model_pygnmi_call_replace,
     model_pygnmi_call_delete,
+    model_pygnmi_call_replace,
+    model_pygnmi_call_update,
 )
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 

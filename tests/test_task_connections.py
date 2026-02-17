@@ -6,12 +6,13 @@ Was not able to find always-on endpoints that can test using gNMI, Cisco sandbox
 API available but that is different.
 """
 
-import sys
-import pprint
 import logging
-import yaml
-import pytest
+import pprint
 import socket
+import sys
+
+import pytest
+import yaml
 
 sys.path.insert(0, "..")
 

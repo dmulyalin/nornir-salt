@@ -52,18 +52,19 @@ API reference
 .. autofunction:: nornir_salt.plugins.tasks.connections.conn_open
 """
 
+import copy
+import logging
+import socket
 import time
 import traceback
-import logging
-import copy
-import socket
+from typing import Any, Dict, Optional
 
-from typing import Optional, Any, Dict
-from nornir.core.task import Result
 from nornir.core.inventory import Host
+from nornir.core.task import Result
+
 from nornir_salt.utils.pydantic_models import (
-    model_conn_list,
     model_conn_close,
+    model_conn_list,
     model_conn_open,
     model_connections,
 )
@@ -121,7 +122,7 @@ def conn_close(task, conn_name: str = "all") -> list:
         ret.append({"connection_name": conn, "connection_action": "close"})
         try:
             task.host.close_connection(conn)
-        except:
+        except Exception:
             ret[-1]["status"] = traceback.format_exc()
         _ = task.host.connections.pop(conn, None)
         ret[-1].setdefault("status", "closed")
@@ -467,7 +468,7 @@ def conn_open(
                 )
             ret = {"result": res_msg}
             break
-        except:
+        except Exception:
             tb = traceback.format_exc()
             ret = {
                 "result": f"{conn_name} connection failed\n\n{tb}",

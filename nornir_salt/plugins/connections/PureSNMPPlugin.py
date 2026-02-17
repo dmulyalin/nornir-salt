@@ -25,14 +25,14 @@ PureSNMPPlugin reference
 """
 
 import logging
-
 from typing import Any, Dict, Optional
+
 from nornir.core.configuration import Config
 
 log = logging.getLogger(__name__)
 
 try:
-    from puresnmp import Client, PyWrapper, V1, V2C, V3
+    from puresnmp import V1, V2C, V3, Client, PyWrapper
     from puresnmp.credentials import Auth, Priv
 
     HAS_PURESNMP = True

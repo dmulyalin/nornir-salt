@@ -2,22 +2,21 @@
 File to contain pydantic models for plugins input/output data validation
 """
 
-from nornir.core.task import Task
-from nornir.core.inventory import Host
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+from nornir.core.inventory import Host
+from nornir.core.task import Task
 from pydantic import (
     BaseModel,
-    StrictBool,
-    StrictInt,
-    StrictFloat,
-    StrictStr,
-    conlist,
-    #    root_validator,
-    model_validator,
-    Field,
     ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    StrictStr,
+    model_validator,
 )
-from typing import Union, Optional, List, Any, Dict, Callable, Tuple
 
 
 class model_ffun_fx_filters(BaseModel):

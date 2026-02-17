@@ -8,14 +8,15 @@ also works fine even if theu are part of test_files_task_plugins.py
 file.
 """
 
-import sys
+import json
+import logging
 import os
 import pprint
-import logging
-import yaml
-import pytest
+import sys
 import time
-import json
+
+import pytest
+import yaml
 
 sys.path.insert(0, "..")
 
@@ -30,15 +31,14 @@ except ImportError:
 
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import nr_test
-from nornir_salt.plugins.processors import ToFileProcessor
-from nornir_salt.plugins.processors import DataProcessor
+from nornir_salt.plugins.processors import DataProcessor, ToFileProcessor
 from nornir_salt.plugins.tasks import (
+    file_diff,
+    file_list,
     file_read,
     file_remove,
-    file_list,
-    file_diff,
     files,
+    nr_test,
 )
 
 logging.basicConfig(level=logging.ERROR)

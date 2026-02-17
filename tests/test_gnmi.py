@@ -6,32 +6,31 @@ Was not able to find always-on endpoints that can test using gNMI, Cisco sandbox
 API available but that is different.
 """
 
-import sys
-import pprint
 import logging
-import yaml
-import pytest
+import pprint
 import socket
+import sys
+
+import pytest
+import yaml
 
 sys.path.insert(0, "..")
 
 try:
     from nornir import InitNornir
-    from nornir.core.plugins.inventory import InventoryPluginRegister
     from nornir.core.plugins.connections import ConnectionPluginRegister
+    from nornir.core.plugins.inventory import InventoryPluginRegister
     from nornir.core.task import Result
 
     HAS_NORNIR = True
 except ImportError:
     HAS_NORNIR = False
 
+from nornir_salt.plugins.connections import PyGNMIPlugin
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors import DataProcessor
-from nornir_salt.plugins.tasks import netmiko_send_commands
-from nornir_salt.plugins.connections import PyGNMIPlugin
-from nornir_salt.plugins.tasks import pygnmi_call
+from nornir_salt.plugins.tasks import netmiko_send_commands, nr_test, pygnmi_call
 
 logging.basicConfig(level=logging.ERROR)
 InventoryPluginRegister.register("DictInventory", DictInventory)

@@ -20,6 +20,7 @@ PyATSUnicon reference
 
 import logging
 from typing import Any, Dict, Optional
+
 from nornir.core.configuration import Config
 
 try:

@@ -1,8 +1,9 @@
-import sys
-import pprint
 import logging
-import yaml
+import pprint
+import sys
+
 import pytest
+import yaml
 
 sys.path.insert(0, "..")
 
@@ -15,11 +16,10 @@ try:
 except ImportError:
     HAS_NORNIR = False
 
-from nornir_salt.plugins.functions import ResultSerializer
+from nornir_salt.plugins.functions import ResultSerializer, TabulateFormatter
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import nr_test
-from nornir_salt.plugins.functions import TabulateFormatter
 from nornir_salt.plugins.processors import TestsProcessor
+from nornir_salt.plugins.tasks import nr_test
 
 logging.basicConfig(level=logging.ERROR)
 

@@ -45,7 +45,7 @@ tcp_ping reference
 
 import logging
 import socket
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 from nornir.core.task import Result, Task
 
@@ -53,7 +53,10 @@ log = logging.getLogger(__name__)
 
 
 def tcp_ping(
-    task: Task, ports: Optional[List[int]] = None, timeout: int = 1, host: Optional[str] = None
+    task: Task,
+    ports: Optional[List[int]] = None,
+    timeout: int = 1,
+    host: Optional[str] = None,
 ) -> Result:
     """
     Test connection to a TCP port by attempting to establish a three-way handshake.

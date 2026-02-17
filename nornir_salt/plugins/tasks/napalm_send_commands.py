@@ -42,9 +42,11 @@ API Reference
 .. autofunction:: nornir_salt.plugins.tasks.napalm_send_commands.napalm_send_commands
 """
 
-import time
 import logging
+import time
+
 from nornir.core.task import Result, Task
+
 from nornir_salt.utils import cli_form_commands
 from nornir_salt.utils.pydantic_models import model_napalm_send_commands
 from nornir_salt.utils.yangdantic import ValidateFuncArgs

@@ -46,7 +46,8 @@ API Reference
 """
 
 from nornir.core.task import Result, Task
-from nornir_salt.utils import cli_send_commands, cli_form_commands
+
+from nornir_salt.utils import cli_form_commands, cli_send_commands
 from nornir_salt.utils.pydantic_models import model_scrapli_send_commands
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 

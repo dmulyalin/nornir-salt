@@ -1,9 +1,9 @@
-from .ResultSerializer import ResultSerializer
+from .DumpResults import DumpResults
 from .FFun import FFun, FFun_functions
 from .HostsKeepalive import HostsKeepalive
-from .TabulateFormatter import TabulateFormatter
-from .DumpResults import DumpResults
 from .InventoryFun import InventoryFun
+from .ResultSerializer import ResultSerializer
+from .TabulateFormatter import TabulateFormatter
 
 __all__ = (
     "ResultSerializer",

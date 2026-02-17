@@ -248,9 +248,10 @@ FFun reference
 
 import logging
 from fnmatch import fnmatchcase
-from nornir.core.filter import F
+from typing import Any, List, Tuple, Union
+
 from nornir.core import Nornir
-from typing import Any, Dict, List, Tuple, Union
+from nornir.core.filter import F
 
 log = logging.getLogger(__name__)
 

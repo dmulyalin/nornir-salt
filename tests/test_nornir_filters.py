@@ -5,9 +5,10 @@ Notes:
 de to this PR - https://github.com/nornir-automation/nornir/pull/623
 """
 
-import sys
-import yaml
 import pprint
+import sys
+
+import yaml
 
 sys.path.insert(0, "..")
 

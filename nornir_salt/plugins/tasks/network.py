@@ -28,10 +28,8 @@ API reference
 .. autofunction:: nornir_salt.plugins.tasks.network.resolve_dns
 """
 
-import time
-import traceback
 import logging
-import socket
+import traceback
 
 try:
     import dns.resolver
@@ -47,8 +45,10 @@ try:
 except ImportError:
     HAS_PYTHONPING = False
 
-from typing import Optional, Any, Dict, Union
+from typing import Union
+
 from nornir.core.task import Result
+
 from nornir_salt.utils.pydantic_models import model_network, model_network_resolve_dns
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
@@ -116,7 +116,7 @@ def resolve_dns(
             answers = resolver.resolve(hostname, rdtype=record)
             for answer in answers:
                 res.add(answer.address)
-        except:
+        except Exception:
             tb = traceback.format_exc()
             failed = True
             exception_messages.append(
@@ -159,7 +159,7 @@ def icmp_ping(task, use_host_name: bool = False, **kwargs) -> Result:
 
     try:
         ret["result"] = pythonping.ping(target, **kwargs)
-    except:
+    except Exception:
         ret["result"] = None
         ret["failed"] = True
         ret["exception"] = traceback.format_exc()

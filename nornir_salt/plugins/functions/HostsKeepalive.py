@@ -96,7 +96,7 @@ def HostsKeepalive(nr):
                             conn_name, str(type(conn_obj)).lower()
                         )
                     )
-            except:
+            except Exception:
                 is_alive = False
                 tb = traceback.format_exc()
                 log.info(

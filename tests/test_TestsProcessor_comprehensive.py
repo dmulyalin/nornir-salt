@@ -5,12 +5,13 @@ These tests cover edge cases, aliases, and code paths not covered by the
 existing test_TestsProcessor_plugin.py test suite.
 """
 
-import sys
-import pprint
 import logging
-import yaml
-import pytest
 import os
+import pprint
+import sys
+
+import pytest
+import yaml
 
 sys.path.insert(0, "..")
 
@@ -25,8 +26,8 @@ except ImportError:
 
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import nr_test
 from nornir_salt.plugins.processors import TestsProcessor
+from nornir_salt.plugins.tasks import nr_test
 
 logging.basicConfig(level=logging.ERROR)
 

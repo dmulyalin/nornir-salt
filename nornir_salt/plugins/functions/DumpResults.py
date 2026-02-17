@@ -38,11 +38,11 @@ DumpResults reference
 .. autofunction:: nornir_salt.plugins.functions.DumpResults.DumpResults
 """
 
-import logging
 import json
-import random
+import logging
 import os
 import pprint
+import random
 import time
 import traceback
 
@@ -163,7 +163,7 @@ def DumpResults(
         file_to_rm = index_data[filegroup][proxy_id].pop(-1)
         try:
             os.remove(file_to_rm["filename"])
-        except:
+        except Exception:
             log.error(
                 "nornir-salt:DumpResults failed to remove file '{}':\n{}".format(
                     file_to_rm, traceback.format_exc()

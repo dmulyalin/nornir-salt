@@ -17,6 +17,7 @@ salt_cfg_gen reference
 import logging
 
 from nornir.core.task import Result
+
 from nornir_salt.utils import cfg_form_commands
 from nornir_salt.utils.pydantic_models import model_salt_cfg_gen
 from nornir_salt.utils.yangdantic import ValidateFuncArgs

@@ -1,8 +1,9 @@
-import sys
-import pprint
 import logging
-import yaml
+import pprint
+import sys
+
 import pytest
+import yaml
 
 sys.path.insert(0, "..")
 

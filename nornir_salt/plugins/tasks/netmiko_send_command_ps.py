@@ -71,11 +71,12 @@ netmiko_send_command_ps reference
 .. autofunction:: nornir_salt.plugins.tasks.netmiko_send_command_ps.send_command_ps
 """
 
-import time
 import logging
-from typing import Any
-from nornir.core.task import Result, Task
+import time
 from difflib import get_close_matches
+from typing import Any
+
+from nornir.core.task import Result, Task
 
 try:
     from nornir_netmiko.connections import CONNECTION_NAME

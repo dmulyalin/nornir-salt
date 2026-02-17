@@ -403,16 +403,18 @@ API Reference
 .. autoclass:: nornir_salt.plugins.runners.RetryRunner.RetryRunner
 """
 
-import threading
-import queue
 import logging
-import time
+import queue
 import random
+import threading
+import time
 from fnmatch import fnmatchcase
-from typing import List, Dict, Any, Optional
-from nornir.core.task import AggregatedResult, Task, MultiResult, Result
+from typing import Any, Dict, List
+
 from nornir.core.inventory import Host
-from nornir_salt.plugins.tasks.connections import conn_open, conn_check
+from nornir.core.task import AggregatedResult, MultiResult, Result, Task
+
+from nornir_salt.plugins.tasks.connections import conn_check, conn_open
 
 try:
     import paramiko
@@ -504,7 +506,7 @@ def worker(
                         r.skip_results = (
                             True  # for ResultSerializer to skip failed attempts
                         )
-                    except Exception as e:
+                    except Exception:
                         log.exception(f"Failed to process {task.name} task result {r}.")
                 if reconnect_on_fail:
                     # close host connections to retry them
@@ -543,7 +545,7 @@ def connector(
     run_connect_check: bool,
 ) -> None:
     """
-    Connector thread function that establishes connections to hosts with retry logic, 
+    Connector thread function that establishes connections to hosts with retry logic,
     exponential backoff, splaying, and support for jumphosts and credential retry.
     """
     while not stop_event.is_set():
@@ -646,7 +648,9 @@ def close_host_connection(host: Host, connection_names: List[str]) -> None:
                 _ = host.connections.pop(channel_name, None)
 
 
-def connect_to_device_behind_jumphost(host: Host, jumphosts_connections: Dict[str, Any]) -> Any:
+def connect_to_device_behind_jumphost(
+    host: Host, jumphosts_connections: Dict[str, Any]
+) -> Any:
     """
     Establish connection to devices behind jumphost/bastion
     """

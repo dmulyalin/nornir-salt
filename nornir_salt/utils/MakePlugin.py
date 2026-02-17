@@ -9,6 +9,7 @@ Reference
 
 .. autofunction:: nornir_salt.utils.MakePlugin.MakePlugin
 """
+
 from typing import Optional
 
 template_nornir_task_plugin = '''import time

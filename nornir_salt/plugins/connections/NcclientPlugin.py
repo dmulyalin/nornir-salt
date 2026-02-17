@@ -11,9 +11,9 @@ NcclientPlugin reference
 """
 
 import logging
-
-from typing import Any, Dict, Optional
 from pathlib import Path
+from typing import Any, Dict, Optional
+
 from nornir.core.configuration import Config
 
 log = logging.getLogger(__name__)

@@ -44,7 +44,9 @@ Reference
 """
 
 import logging
+
 from nornir.core.task import AggregatedResult
+
 from .ResultSerializer import ResultSerializer
 
 log = logging.getLogger(__name__)

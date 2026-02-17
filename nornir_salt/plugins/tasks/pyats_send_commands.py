@@ -100,20 +100,21 @@ Reference
 .. autofunction:: nornir_salt.plugins.tasks.pyats_send_commands.pyats_send_commands
 """
 
-import time
 import logging
+import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from nornir.core.task import Result, Task
+
 from nornir_salt.utils import cli_form_commands
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from nornir_salt.utils.pydantic_models import model_pyats_send_commands
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
-    from pyats.connections.pool import ConnectionPool
-    from genie.libs.parser.utils.common import ParserNotFound
     from genie.libs.parser.utils import get_parser
+    from genie.libs.parser.utils.common import ParserNotFound
+    from pyats.connections.pool import ConnectionPool
 
     HAS_PYATS = True
 except ImportError:

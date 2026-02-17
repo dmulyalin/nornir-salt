@@ -65,12 +65,13 @@ ncclient_call - transaction
 .. autofunction:: nornir_salt.plugins.tasks.ncclient_call._call_transaction
 """
 
-import traceback
 import logging
 import time
-
+import traceback
 from fnmatch import fnmatchcase
+
 from nornir.core.task import Result, Task
+
 from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
 from nornir_salt.utils.pydantic_models import model_ncclient_call
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
@@ -231,7 +232,7 @@ def _call_transaction(manager, *args, **kwargs):
                 else:
                     r = manager.commit(**commit_arg)
                     result.append({"commit": _form_result(r)})
-        except:
+        except Exception:
             tb = traceback.format_exc()
             log.error(f"nornir_salt:ncclient_call transaction error: {tb}")
             result.append({"error": tb})

@@ -57,21 +57,22 @@ files dispatcher function
 .. autofunction:: nornir_salt.plugins.tasks.files.files
 """
 
-import os
-import json
 import difflib
+import json
 import logging
+import os
+from multiprocessing import Lock
 
 from nornir.core.task import Result
+
 from nornir_salt.utils.pydantic_models import (
-    model_file_read,
-    model_file_list,
-    model_file_remove,
     model_file_diff,
+    model_file_list,
+    model_file_read,
+    model_file_remove,
     model_files,
 )
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
-from multiprocessing import Lock
 
 log = logging.getLogger(__name__)
 

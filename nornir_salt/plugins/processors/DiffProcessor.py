@@ -31,12 +31,12 @@ DiffProcessor reference
 .. autofunction:: nornir_salt.plugins.processors.DiffProcessor.DiffProcessor
 """
 
+import difflib
+import json
 import logging
 import os
-import json
-import traceback
-import difflib
 import re
+import traceback
 
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
@@ -212,7 +212,7 @@ class DiffProcessor:
                     i.diff = diff_res
                 else:
                     i.result = diff_res
-        except:
+        except Exception:
             log.error(
                 "nornir-salt:DiffProcessor host {} error:\n{}".format(
                     host.name, traceback.format_exc()

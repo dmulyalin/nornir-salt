@@ -43,18 +43,20 @@ puresnmp_call - help
 .. autofunction:: nornir_salt.plugins.tasks.puresnmp_call._call_help
 """
 
-import logging
 import asyncio
+import logging
 
 from nornir.core.task import Result, Task
+
 from nornir_salt.plugins.connections.PureSNMPPlugin import CONNECTION_NAME
 from nornir_salt.utils.pydantic_models import model_puresnmp_call
 from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 try:
+    from typing import AsyncGenerator
+
     from puresnmp.util import BulkResult
     from puresnmp.varbind import PyVarBind
-    from typing import AsyncGenerator
     from x690.types import OctetString
 
     HAS_PURESNMP = True
