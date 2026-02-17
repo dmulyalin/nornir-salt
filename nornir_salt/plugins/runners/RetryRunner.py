@@ -300,7 +300,7 @@ Sample code to use RetryRunner task parameters::
     result3 = NornirObj.run(
         task=netmiko_send_command,
         command_string="show clock",
-        run_retry_creds=["local_creds", "dev_creds"]
+        run_creds_retry=["local_creds", "dev_creds"],
         run_connect_retry=0,
     )
 
@@ -409,7 +409,7 @@ import logging
 import time
 import random
 from fnmatch import fnmatchcase
-from typing import List
+from typing import List, Dict, Any, Optional
 from nornir.core.task import AggregatedResult, Task, MultiResult, Result
 from nornir.core.inventory import Host
 from nornir_salt.plugins.tasks.connections import conn_open, conn_check
@@ -426,16 +426,20 @@ LOCK = threading.Lock()
 
 
 def worker(
-    stop_event,
-    connectors_q,
-    work_q,
+    stop_event: threading.Event,
+    connectors_q: queue.Queue,
+    work_q: queue.Queue,
     task_backoff: int,
     task_splay: int,
     task_retry: int,
     connect_retry: int,
     reconnect_on_fail: bool,
-    stop_errors: List,
-):
+    stop_errors: List[str],
+) -> None:
+    """
+    Worker thread function that executes tasks with retry logic, exponential backoff, and splaying.
+    Handles task failures by retrying or reconnecting as configured.
+    """
     while not stop_event.is_set():
         try:
             work = work_q.get(block=True, timeout=0.1)
@@ -462,6 +466,7 @@ def worker(
                 if elapsed < should_wait:
                     work_q.put(work)
                     work_q.task_done()
+                    time.sleep(0.1)
                     continue
             log.info(
                 f"nornir_salt:RetryRunner {host.name} - running task '{task.name}'"
@@ -526,17 +531,21 @@ def worker(
 
 
 def connector(
-    stop_event,
-    connectors_q,
-    work_q,
+    stop_event: threading.Event,
+    connectors_q: queue.Queue,
+    work_q: queue.Queue,
     connect_backoff: int,
     connect_splay: int,
     connect_retry: int,
-    jumphosts_connections: dict,
-    run_creds_retry: list,
+    jumphosts_connections: Dict[str, Any],
+    run_creds_retry: List[str],
     run_connect_timeout: int,
     run_connect_check: bool,
-):
+) -> None:
+    """
+    Connector thread function that establishes connections to hosts with retry logic, 
+    exponential backoff, splaying, and support for jumphosts and credential retry.
+    """
     while not stop_event.is_set():
         try:
             connection = connectors_q.get(block=True, timeout=0.1)
@@ -617,7 +626,7 @@ def connector(
         work_q.put((task, host, params, result))
 
 
-def close_host_connection(host, connection_names):
+def close_host_connection(host: Host, connection_names: List[str]) -> None:
     """
     Helper function to close connections to host
 
@@ -627,17 +636,17 @@ def close_host_connection(host, connection_names):
     for connection_name in connection_names:
         try:
             host.close_connection(connection_name)
-        except:
+        except Exception:
             _ = host.connections.pop(connection_name, None)
         if host.get("jumphost"):
             channel_name = "jumphost_{}_channel".format(host["jumphost"]["hostname"])
             try:
                 host.close_connection(channel_name)
-            except:
+            except Exception:
                 _ = host.connections.pop(channel_name, None)
 
 
-def connect_to_device_behind_jumphost(host, jumphosts_connections):
+def connect_to_device_behind_jumphost(host: Host, jumphosts_connections: Dict[str, Any]) -> Any:
     """
     Establish connection to devices behind jumphost/bastion
     """
@@ -656,13 +665,18 @@ def connect_to_device_behind_jumphost(host, jumphosts_connections):
     # continue sleeping until either connection succeeded or
     # failed. On connection failure, first thread will set value
     # to '__failed__' to signal other threads to exit.
-    if (
-        jumphost["hostname"] not in jumphosts_connections
-        or jumphosts_connections.get(jumphost["hostname"]) == "__failed__"
-    ):
+    with LOCK:
+        if (
+            jumphost["hostname"] not in jumphosts_connections
+            or jumphosts_connections.get(jumphost["hostname"]) == "__failed__"
+        ):
+            jumphosts_connections[jumphost["hostname"]] = "__connecting__"
+            needs_connect = True
+        else:
+            needs_connect = False
+
+    if needs_connect:
         try:
-            with LOCK:
-                jumphosts_connections[jumphost["hostname"]] = "__connecting__"
             jumphost_ssh_client = paramiko.client.SSHClient()
             jumphost_ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             jumphost_ssh_client.connect(**jumphost)
@@ -816,7 +830,7 @@ class RetryRunner:
         )
         # form a list of exception patterns to stop task retries
         run_task_stop_errors = task.params.pop(
-            "run_task_stop_errors", self.task_stop_errors
+            "run_task_stop_errors", list(self.task_stop_errors)
         )
         run_task_stop_errors.append("*validation error*")
         # attempt to extract a list of connections names this task uses
@@ -840,7 +854,8 @@ class RetryRunner:
         params = {
             "connection_retry": 0,
             "task_retry": 0,
-            "connection_name": run_connection_name,
+            "connection_name": list(run_connection_name),
+            "timestamp": 0,
         }
         for host in hosts:
             connectors_q.put((task.copy(), host, params.copy(), result))
