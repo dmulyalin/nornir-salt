@@ -501,6 +501,10 @@ def conn_check(
     """
     host = host or task.host
     result = Result(host=host, result=None)
+    # no connection check for SNMP/UDP
+    if "snmp" in connection_name:
+        result.result = True
+        return result
     # source hostname and port
     if connection_name:
         conn_opts = host._get_connection_options_recursively(connection_name)

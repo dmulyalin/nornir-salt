@@ -71,7 +71,7 @@ def _make_value(value):
     if isinstance(value, (int, float)):
         return value
     elif isinstance(value, bytes):
-        return value.decode(encoding="utf-8")
+        return value.decode(encoding="utf-8", errors='replace')
     return str(value)
 
 
@@ -81,12 +81,12 @@ def _form_result(result, kwargs):
 
     # form results content
     if isinstance(result, bytes):
-        res.append(result.decode(encoding="utf-8"))
+        res.append(result.decode(encoding="utf-8", errors='replace'))
     # result is a list for walk, table or multiget operations
     elif isinstance(result, list):
         for i in result:
             if isinstance(i, bytes):
-                res.append(i.decode(encoding="utf-8"))
+                res.append(i.decode(encoding="utf-8", errors='replace'))
             # result is PyVarBind for walk operations
             elif isinstance(i, PyVarBind):
                 res.append(_make_value(i.value))

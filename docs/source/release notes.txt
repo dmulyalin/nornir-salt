@@ -657,7 +657,14 @@ tasks fail fast with validation error, making overall system more resilient to m
 
 1. Enhancing HostsKeppealive finction for Netmiko connections handling
 
+# ---------------------------------------------------------------------------
+# nornir-salt 0.23.3
+# ---------------------------------------------------------------------------
 
+## BUGS
+
+1. Fixing connection check handling for SNMP connections
+2. Fixing puresnmp call task decoding of snmp resul values
 
 
 # BACKLOG
