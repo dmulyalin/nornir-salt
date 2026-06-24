@@ -543,6 +543,7 @@ def connector(
     run_creds_retry: List[str],
     run_connect_timeout: int,
     run_connect_check: bool,
+    job: object,
 ) -> None:
     """
     Connector thread function that establishes connections to hosts with retry logic,
@@ -570,21 +571,52 @@ def connector(
                 time.sleep(random.randrange(0, connect_splay) / 1000)  # nosec
                 extras = host.get_connection_parameters(connection_name).extras
                 if host.get("jumphost") and connection_name in ["netmiko", "ncclient"]:
+                    if job is not None:
+                        job.event(
+                            task="nornir.retrun",
+                            resource=[host.name],
+                            message=(
+                                "Connecting via jumphost "
+                                f"'{host['jumphost']['hostname']}'"
+                            ),
+                            severity="INFO",
+                        )
                     extras["sock"] = connect_to_device_behind_jumphost(
                         host, jumphosts_connections
                     )
                 # check connection
                 if run_connect_check:
+                    if job is not None:
+                        job.event(
+                            task="nornir.retrun",
+                            resource=[host.name],
+                            message=(
+                                f"Checking connection '{connection_name}' "
+                                f"with timeout {run_connect_timeout}s"
+                            ),
+                            severity="INFO",
+                        )
                     host_connection_check = conn_check(
                         task, host, connection_name, timeout=run_connect_timeout
                     )
                     if host_connection_check.failed is True:
                         raise Exception(host_connection_check.exception)
+                    time.sleep(1)  # sleep a bit to not hit devices SSH rate limit
                 # retry various connection parameters
                 if run_creds_retry:
                     log.info(
                         f"nornir_salt:RetryRunner {host.name} - connecting with creds retry"
                     )
+                    if job is not None:
+                        job.event(
+                            task=f"{job.task}.retryrunner",
+                            resource=[host.name],
+                            message=(
+                                f"Connecting using '{connection_name}' "
+                                "with credentials retry"
+                            ),
+                            severity="INFO",
+                        )
                     conn_open(
                         task=task,
                         host=host,
@@ -595,6 +627,16 @@ def connector(
                     )
                 # open connection to host as is
                 else:
+                    if job is not None:
+                        job.event(
+                            task=f"{job.task}.retryrunner",
+                            resource=[host.name],
+                            message=(
+                                f"Connecting using '{connection_name}', attempt "
+                                f"{params['connection_retry'] + 1} of {connect_retry + 1}"
+                            ),
+                            severity="INFO",
+                        )
                     host.open_connection(
                         connection_name, configuration=task.nornir.config, extras=extras
                     )
@@ -603,6 +645,13 @@ def connector(
                         host.name, connection_name
                     )
                 )
+                if job is not None:
+                    job.event(
+                        task=f"{job.task}.retryrunner",
+                        resource=[host.name],
+                        message=f"Connection '{connection_name}' established",
+                        severity="INFO",
+                    )
         except Exception as e:
             # close host connections to retry it
             close_host_connection(host, [connection_name])
@@ -618,12 +667,30 @@ def connector(
                 connectors_q.put(connection)
                 connectors_q.task_done()
                 log.warning(err_msg)
+                if job is not None:
+                    job.event(
+                        task=f"{job.task}.retryrunner",
+                        resource=[host.name],
+                        message=(
+                            f"Connection '{connection_name}' failed, "
+                            f"retrying attempt {params['connection_retry']} "
+                            f"of {connect_retry}: '{e}'"
+                        ),
+                        severity="WARNING",
+                    )
                 continue
             else:
                 # record exception in params for worker thread to react on it
                 params["connect_exception"] = err_msg
                 log.error(err_msg)
                 log.exception(e)
+                if job is not None:
+                    job.event(
+                        task=f"{job.task}.retryrunner",
+                        resource=[host.name],
+                        message=err_msg,
+                        severity="ERROR",
+                    )
         connectors_q.task_done()
         work_q.put((task, host, params, result))
 
@@ -789,7 +856,7 @@ class RetryRunner:
         task_timeout: int = 600,
         creds_retry: list = None,
         task_stop_errors: list = None,
-        connect_check: bool = True,
+        connect_check: bool = False,
         connect_timeout: int = 5,
     ) -> None:
         self.num_workers = num_workers
@@ -807,6 +874,7 @@ class RetryRunner:
         self.task_stop_errors = task_stop_errors or []
         self.connect_timeout = connect_timeout
         self.connect_check = connect_check
+        self.job = None
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
         connectors_q = queue.Queue()
@@ -878,6 +946,7 @@ class RetryRunner:
                     run_creds_retry,
                     run_connect_timeout,
                     run_connect_check,
+                    self.job,
                 ),
             )
             t.start()
@@ -924,4 +993,5 @@ class RetryRunner:
             _ = connector_threads.pop().join()
         while worker_threads:
             _ = worker_threads.pop().join()
+        self.job = None  # delete job reference
         return result

@@ -69,7 +69,7 @@ def HostsKeepalive(nr):
             try:
                 if "netmiko" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.connection.is_alive()
-                    # arista_eos after sending null character as part of is_alive method 
+                    # arista_eos after sending null character as part of is_alive method
                     # breaks the session, sending space to the channel seems to recover it
                     conn_obj.connection.write_channel(" ")
                     conn_obj.connection.clear_buffer()

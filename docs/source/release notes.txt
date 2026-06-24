@@ -666,6 +666,19 @@ tasks fail fast with validation error, making overall system more resilient to m
 1. Fixing connection check handling for SNMP connections
 2. Fixing puresnmp call task decoding of snmp resul values
 
+# ---------------------------------------------------------------------------
+# nornir-salt 0.23.4
+# ---------------------------------------------------------------------------
+
+## BUGS
+
+1. Improved RetryRunner TCP connect check handling and reverted it to default as False
+
+## FEATURES
+
+1. Added events logging for RetryRunner for NorFab jobs
+
+
 
 # BACKLOG
 
