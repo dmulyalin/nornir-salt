@@ -937,7 +937,7 @@ def test_custom_function_file():
             "task": "show run | inc ntp",
             "name": "Test NTP config",
             "test": "custom",
-            "function_file": "./assets/custom_check_function_fun_1.txt",
+            "function_file": "./tests/assets/custom_check_function_fun_1.txt",
             "function_name": "fun_1",
         }
     ]
