@@ -8,6 +8,7 @@ de to this PR - https://github.com/nornir-automation/nornir/pull/623
 import pprint
 import sys
 
+import pytest
 import yaml
 
 sys.path.insert(0, "..")
@@ -738,6 +739,30 @@ def test_FM_with_patterns_list():
 # test_FM_with_patterns_list()
 
 
+@pytest.mark.parametrize("pattern", ["*", ["*"], "io*, nxos*"])
+def test_FM_skips_hosts_without_platform(pattern):
+    nr = InitNornir(
+        runner={"plugin": "serial"},
+        inventory={
+            "plugin": "DictInventory",
+            "options": {
+                "hosts": {
+                    "missing": {},
+                    "none": {"platform": None},
+                    "ios": {"platform": "ios"},
+                    "nxos": {"platform": "nxos_ssh"},
+                    "inherited": {"groups": ["platform_group"]},
+                },
+                "groups": {"platform_group": {"platform": "ios"}},
+            },
+        },
+    )
+
+    res = FFun(nr, FM=pattern)
+
+    assert set(res.inventory.hosts) == {"ios", "nxos", "inherited"}
+
+
 def test_FM_matches_nothing():
     res = FFun(NornirObj, FM=["foobar"])
     res_dict = res.dict()
@@ -755,6 +780,29 @@ def test_FFun_functions_imported():
 
 
 # test_FFun_functions_imported()
+
+
+@pytest.mark.parametrize("pattern", ["*", ["*"], "192.0.2.*, 198.51.100.*"])
+def test_FH_skips_hosts_without_hostname(pattern):
+    nr = InitNornir(
+        runner={"plugin": "serial"},
+        inventory={
+            "plugin": "DictInventory",
+            "options": {
+                "hosts": {
+                    "missing": {},
+                    "none": {"hostname": None},
+                    "direct": {"hostname": "192.0.2.1"},
+                    "inherited": {"groups": ["hostname_group"]},
+                },
+                "groups": {"hostname_group": {"hostname": "198.51.100.1"}},
+            },
+        },
+    )
+
+    res = FFun(nr, FH=pattern)
+
+    assert set(res.inventory.hosts) == {"direct", "inherited"}
 
 
 def test_FH():

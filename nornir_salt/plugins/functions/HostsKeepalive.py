@@ -44,7 +44,6 @@ HostsKeepalive reference
 """
 
 import logging
-import traceback
 
 log = logging.getLogger(__name__)
 
@@ -69,10 +68,11 @@ def HostsKeepalive(nr):
             try:
                 if "netmiko" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.connection.is_alive()
-                    # arista_eos after sending null character as part of is_alive method
-                    # breaks the session, sending space to the channel seems to recover it
-                    conn_obj.connection.write_channel(" ")
-                    conn_obj.connection.clear_buffer()
+                    if is_alive:
+                        # arista_eos after sending null character as part of is_alive method
+                        # breaks the session, sending space to the channel seems to recover it
+                        conn_obj.connection.write_channel(" ")
+                        conn_obj.connection.clear_buffer()
                 elif "paramiko.channel.channel" in str(type(conn_obj)).lower():
                     is_alive = conn_obj.active
                 elif "paramiko.client.sshclient" in str(type(conn_obj)).lower():
@@ -100,13 +100,13 @@ def HostsKeepalive(nr):
                             conn_name, str(type(conn_obj)).lower()
                         )
                     )
-            except Exception:
+            except Exception as exc:
                 is_alive = False
-                tb = traceback.format_exc()
                 log.info(
-                    "nornir_salt:HostsKeepalive - '{}' connection keepalive error: {}".format(
-                        conn_name, tb
-                    )
+                    "HostsKeepalive - '%s' '%s' keepalive failed: %s",
+                    host_name,
+                    conn_name,
+                    exc,
                 )
             # close connection if not alive
             if not is_alive:

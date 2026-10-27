@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from nornir.core.inventory import Host
 from nornir.core.task import Task
 from pydantic import (
+    AliasChoices,
     BaseModel,
     ConfigDict,
     Field,
@@ -17,6 +18,53 @@ from pydantic import (
     StrictStr,
     model_validator,
 )
+
+
+class model_RetryRunner(BaseModel):
+    """RetryRunner settings, including supported per-task run_* overrides."""
+
+    num_workers: StrictInt = Field(
+        100, gt=0, validation_alias=AliasChoices("num_workers", "run_num_workers")
+    )
+    num_connectors: StrictInt = Field(
+        20, gt=0, validation_alias=AliasChoices("num_connectors", "run_num_connectors")
+    )
+    connect_retry: StrictInt = Field(
+        3, ge=0, validation_alias=AliasChoices("connect_retry", "run_connect_retry")
+    )
+    connect_backoff: StrictInt = Field(5000, ge=0)
+    connect_splay: StrictInt = Field(
+        100, ge=0, description="Jitter in ms. Zero disables it"
+    )
+    task_retry: StrictInt = Field(
+        1, ge=0, validation_alias=AliasChoices("task_retry", "run_task_retry")
+    )
+    task_backoff: StrictInt = Field(5000, ge=0)
+    task_splay: StrictInt = Field(
+        100, ge=0, description="Jitter in ms. Zero disables it"
+    )
+    reconnect_on_fail: StrictBool = Field(
+        True,
+        validation_alias=AliasChoices("reconnect_on_fail", "run_reconnect_on_fail"),
+    )
+    task_timeout: Union[StrictInt, StrictFloat] = Field(600, gt=0, allow_inf_nan=False)
+    creds_retry: Optional[List[Union[StrictStr, Dict]]] = Field(
+        None, validation_alias=AliasChoices("creds_retry", "run_creds_retry")
+    )
+    task_stop_errors: Optional[List[StrictStr]] = Field(
+        None, validation_alias=AliasChoices("task_stop_errors", "run_task_stop_errors")
+    )
+    connect_check: StrictBool = Field(
+        False, validation_alias=AliasChoices("connect_check", "run_connect_check")
+    )
+    connect_timeout: Union[StrictInt, StrictFloat] = Field(
+        5,
+        gt=0,
+        allow_inf_nan=False,
+        validation_alias=AliasChoices("connect_timeout", "run_connect_timeout"),
+    )
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class model_ffun_fx_filters(BaseModel):
@@ -139,6 +187,7 @@ class model_conn_open(BaseModel):
     reconnect: Optional[List] = None
     raise_on_error: Optional[StrictBool] = None
     via: Optional[StrictStr] = None
+    reconnect_splay: Optional[StrictInt] = Field(None, ge=0)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 

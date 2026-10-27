@@ -54,6 +54,7 @@ API reference
 
 import copy
 import logging
+import random
 import socket
 import time
 import traceback
@@ -183,10 +184,15 @@ def conn_open(
     reconnect: list = None,
     raise_on_error: bool = False,
     via: str = None,
+    reconnect_splay: Optional[int] = None,
 ) -> Result:
     """
     Helper function to open connections to hosts. Supports reconnect
     logic retrying different connection parameters.
+
+    :param reconnect_splay: optional additional random delay below this value in
+        milliseconds before each fallback credential attempt. Zero disables jitter.
+        The existing 100 ms delay after failed attempts is retained.
 
     :param conn_name: name of configured connection plugin to use
       to open connection e.g. ``netmiko``, ``napalm``, ``scrapli``
@@ -434,6 +440,8 @@ def conn_open(
             param.update(param.pop("connection_options", {}).get(conn_name, {}))
 
         try:
+            if index > 0 and reconnect_splay:
+                time.sleep(random.randrange(0, reconnect_splay) / 1000)  # nosec
             if index == 0:
                 res_msg = f"'{conn_name}' connected with primary connection parameters"
                 log_msg = f"nornir_salt:conn_open {host.name} '{conn_name}' connecting with primary connection parameters"

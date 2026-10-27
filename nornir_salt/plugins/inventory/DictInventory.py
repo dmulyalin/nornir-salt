@@ -153,7 +153,19 @@ class DictInventory:
         }
 
         for h in nr_hosts.values():
-            h.groups = ParentGroups([nr_groups[g] for g in h.groups])
+            try:
+                h.groups = ParentGroups([nr_groups[g] for g in h.groups])
+            except KeyError as exc:
+                raise ValueError(
+                    f"DictInventory: failed to load host {h.name!r}: "
+                    f"group {exc.args[0]!r} is not defined"
+                ) from exc
         for g in nr_groups.values():
-            g.groups = ParentGroups([nr_groups[g] for g in g.groups])
+            try:
+                g.groups = ParentGroups([nr_groups[g] for g in g.groups])
+            except KeyError as exc:
+                raise ValueError(
+                    f"DictInventory: failed to load group {g.name!r}: "
+                    f"parent group {exc.args[0]!r} is not defined"
+                ) from exc
         return Inventory(hosts=nr_hosts, groups=nr_groups, defaults=nr_defaults)

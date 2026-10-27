@@ -680,6 +680,68 @@ tasks fail fast with validation error, making overall system more resilient to m
 
 
 
+# ---------------------------------------------------------------------------
+# nornir-salt 0.23.5 (draft)
+# ---------------------------------------------------------------------------
+
+## BUGS
+
+1. Fixed RetryRunner to support connect_splay=0 and task_splay=0 to disable jitter without raising an error.
+2. Fixed RetryRunner to update connection retry counters before enqueueing task reconnect attempts, preventing connectors from reading stale retry state.
+3. Fixed RetryRunner queue accounting to mark dequeued items complete in finally blocks, including retry and exception paths.
+4. Fixed RetryRunner to record unexpected worker and connector exceptions as failed host results instead of silently terminating threads and leaving hosts without results.
+5. Fixed RetryRunner to cancel its timer and stop and join started threads when runner execution or thread startup raises an exception.
+6. Fixed RetryRunner connection backoff busy polling by adding a 10 ms interruptible wait after requeueing a delayed connection.
+7. Fixed RetryRunner backoff timing to use a monotonic clock so system clock adjustments do not affect retry waits.
+8. Made RetryRunner task backoff waits interruptible on shutdown while preserving the 100 ms interval.
+9. Fixed concurrent jumphost session creation and replacement using per-session locks and replaced channels belonging to dead transports.
+10. Fixed jumphost session cache identity to account for connection credentials, ports, and SSH and trust settings instead of hostname alone.
+11. Fixed HostsKeepalive to skip Netmiko recovery writes for dead connections and log concise keepalive errors with host and connection names instead of full tracebacks.
+12. Fixed FFun FM filtering to skip hosts whose platform is None instead of raising a TypeError.
+13. Fixed FFun FH filtering to skip hosts whose hostname is None instead of raising a TypeError.
+
+## CHANGES
+
+1. Added model_RetryRunner Pydantic model to validate constructor settings and per-task run_* overrides before threads start, including numeric bounds, finite timeouts, strict booleans, and credential and error-pattern lists.
+2. Added offline RetryRunner regression tests for jitter, backoff, retry limits, connection reuse, task retry routing, settings validation, exception accounting, and thread cleanup.
+3. Corrected RetryRunner documentation to describe linear backoff and additional retries beyond the initial attempt.
+4. Updated optional dependency pins (reviewed 2026-10-27):
+  - napalm: 5.1.0 -> 5.2.0
+  - netmiko: 4.6.0 -> 4.8.0
+  - nornir-napalm: 0.5.0 -> 0.6.0
+  - nornir-scrapli: 2025.01.30 -> 2026.10.13
+  - ntc-templates: 8.1.0 -> 9.3.0
+  - requests: 2.32.5 -> 2.34.2
+  - scrapli: 2025.01.30 -> 2026.02.20
+  - tabulate: 0.9.0 -> 0.10.0
+  - ttp: 0.10.0 -> 0.10.1
+  - ttp-templates: 0.3.* -> 0.6.18
+  - xmltodict: 1.0.3 -> 1.0.4
+  - lxml: 6.0.2 -> 6.1.3
+  - rich: 14.3.2 -> 15.0.0
+5. Restricted Nornir to <4.0.0 to exclude an unverified future major release; current 3.x releases remain allowed.
+   Regenerated poetry.lock to match the dependency declarations, including previously updated pins.
+6. Dependency compatibility notes:
+  - ncclient remains on 0.7.0 because junos-eznc (required by NAPALM) pins that exact version.
+  - Scrapli remains on the 1.x implementation (2026.02.20), as nornir-scrapli 2026.10.13 excludes Scrapli 2.x.
+  - dnspython remains on 2.8.0 to preserve Python 3.10 support.
+  - Paramiko remains on 4.0.0; 5.x removes legacy SSH algorithms and GSSAPI support.
+  - pyATS/Genie remain on 23.11 pending Linux integration and supported-Python wheel validation.
+  - ttp-templates 0.6.18 includes newer getter result schemas; downstream consumers should check their parsed-result expectations.
+  - ntc-templates 9.x includes parser field/output changes; downstream consumers should check their parsed-result expectations.
+  - Rich 15 drops Python 3.8 support, below this project's Python 3.10 minimum.
+7. Removed unused optional dependencies robotframework, pynetbox, N2G, diskcache, and picle, including their production extras entries.
+   Applications using these packages must declare and install them directly; Nornir-Salt no longer supplies them through its extras.
+8. Simplified docs dependencies to Sphinx, sphinx_rtd_theme, and sphinxcontrib-spelling. Removed unused readthedocs-sphinx-search and sphinxcontrib-napoleon
+   (the docs use Sphinx's built-in sphinx.ext.napoleon), and redundant declarations for sphinxcontrib-applehelp, -devhelp, -htmlhelp, -jsmath, -qthelp, and -serializinghtml.
+   Sphinx continues to manage its own required builder dependencies.
+
+## FEATURES
+
+1. Added jumphost hostkey_policy options autoadd, reject, and warning, with system known-hosts loading and an optional known_hosts file. The default remains autoadd for compatibility.
+2. Added fresh connect_splay jitter before each RetryRunner credential fallback attempt. Direct conn_open callers can opt in using reconnect_splay. The existing 100 ms delay after failed attempts is retained.
+
+
 # BACKLOG
 
 2. FEATURE - add PyATS Dq - dict query in addition to jmespath

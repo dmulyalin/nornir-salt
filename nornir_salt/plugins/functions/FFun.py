@@ -378,12 +378,15 @@ def _filter_FH(ret, pattern):
     # run filtering
     if isinstance(pattern, list):
         return ret.filter(
-            filter_func=lambda h: any(
+            filter_func=lambda h: h.hostname is not None and any(
                 [fnmatchcase(h.hostname, str(p)) for p in pattern]
             )
         )
     else:
-        return ret.filter(filter_func=lambda h: fnmatchcase(h.hostname, str(pattern)))
+        return ret.filter(
+            filter_func=lambda h: h.hostname is not None
+            and fnmatchcase(h.hostname, str(pattern))
+        )
 
 
 def _filter_FC(ret, pattern):
@@ -490,12 +493,15 @@ def _filter_FM(ret, pattern):
     # run filtering
     if isinstance(pattern, list):
         return ret.filter(
-            filter_func=lambda h: any(
+            filter_func=lambda h: h.platform is not None and any(
                 [fnmatchcase(h.platform, str(p)) for p in pattern]
             )
         )
     else:
-        return ret.filter(filter_func=lambda h: fnmatchcase(h.platform, str(pattern)))
+        return ret.filter(
+            filter_func=lambda h: h.platform is not None
+            and fnmatchcase(h.platform, str(pattern))
+        )
 
 
 def _filter_FN(ret, nr, FN):

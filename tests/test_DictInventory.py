@@ -157,6 +157,29 @@ def test_DictInvetnory_empty_inventory():
 
 
 @skip_if_no_nornir
+@pytest.mark.parametrize(
+    "options, message",
+    [
+        (
+            {"hosts": {"leaf1": {"groups": ["lab", "arista"]}}, "groups": {"lab": {}}},
+            "DictInventory: failed to load host 'leaf1': group 'arista' is not defined",
+        ),
+        (
+            {"groups": {"lab": {"groups": ["arista"]}}},
+            "DictInventory: failed to load group 'lab': parent group 'arista' is not defined",
+        ),
+    ],
+)
+def test_DictInventory_missing_group(options, message):
+    with pytest.raises(ValueError) as exc_info:
+        DictInventory(**options).load()
+
+    assert str(exc_info.value) == message
+    assert isinstance(exc_info.value.__cause__, KeyError)
+    assert exc_info.value.__cause__.args == ("arista",)
+
+
+@skip_if_no_nornir
 def test_DictInvetnory_hosts_are_none():
     inventory_data = yaml.safe_load(lab_inventory_no_hosts)
     inventory_data["hosts"] = None

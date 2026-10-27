@@ -5,7 +5,7 @@ RetryRunner plugin
 RetryRunner plugin implements retry logic to improve task execution reliability.
 
 Primary usecase for RetryRunner is to make Nornir task execution as reliable as possible
-utilizing queuing, retries, connections splaying and exponential backoff mechanisms.
+utilizing queuing, retries, connections splaying and linear backoff mechanisms.
 
 RetryRunner Architecture
 ========================
@@ -220,8 +220,8 @@ RetryRunner options supplied on Nornir object instantiation.
 
 RetryRunner task parameters description:
 
-* ``run_connect_retry`` - number of connection attempts
-* ``run_task_retry`` - number of attempts to run task
+* ``run_connect_retry`` - maximum number of additional connection retries. Zero allows only the initial attempt
+* ``run_task_retry`` - maximum number of additional task retries. Zero allows only the initial attempt
 * ``run_creds_retry`` - list of connection credentials and parameters to retry while connecting to device
 * ``run_num_workers`` - number of threads for tasks execution
 * ``run_num_connectors`` - number of threads for device connections
@@ -324,6 +324,15 @@ To connect to devices behind jumphost, need to define jumphost parameters in hos
             password: jump_host_password
             username: jump_host_user
 
+Set ``hostkey_policy: reject`` in ``jumphost`` to reject unknown SSH host keys.
+System known-hosts keys are loaded automatically. Set ``known_hosts`` to a file
+path to load additional trusted keys. ``hostkey_policy`` also accepts ``warning``
+and ``autoadd``. The default is ``autoadd`` for compatibility. It trusts unknown
+keys. Known keys that do not match are rejected regardless of policy.
+
+Jumphost sessions are shared only when their connection and trust settings match.
+Session creation and replacement are synchronized independently for each session.
+
 .. note:: Only Netmiko ``connection_name="netmiko"`` and Ncclient ``connection_name="ncclient"``
     tasks, support connecting to hosts behind Jumphosts using above inventory data.
 
@@ -337,6 +346,8 @@ RetryRunner option.
 
 Credentials retry logic implemented using ``conn_open`` task plugin in a way that
 ``creds_retry`` list content passed as ``reconnect`` argument to ``conn_open`` task.
+Each fallback attempt receives fresh jitter controlled by ``connect_splay``.
+The existing 100 ms delay after a failed credential attempt is retained.
 
 Items of ``creds_retry`` list tried sequentially until connection successfully established,
 or list runs out of items. If no connection established after all ``creds_retry`` items tried,
@@ -404,6 +415,7 @@ API Reference
 """
 
 import logging
+import hashlib
 import queue
 import random
 import threading
@@ -415,6 +427,7 @@ from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
 from nornir_salt.plugins.tasks.connections import conn_check, conn_open
+from nornir_salt.utils.pydantic_models import model_RetryRunner
 
 try:
     import paramiko
@@ -439,7 +452,7 @@ def worker(
     stop_errors: List[str],
 ) -> None:
     """
-    Worker thread function that executes tasks with retry logic, exponential backoff, and splaying.
+    Worker thread function that executes tasks with retry logic, linear backoff, and splaying.
     Handles task failures by retrying or reconnecting as configured.
     """
     while not stop_event.is_set():
@@ -448,88 +461,101 @@ def worker(
         except queue.Empty:
             continue
         task, host, params, result = work
-        # check if has exception recorded in params by connector thread
-        if params.get("connect_exception"):
-            work_result = MultiResult(task.name)
-            work_result.append(
-                Result(
-                    host,
-                    result=params["connect_exception"],
-                    failed=True,
-                    exception=params["connect_exception"],
-                    name=task.name,
+        try:
+            # check if has exception recorded in params by connector thread
+            if params.get("connect_exception"):
+                work_result = MultiResult(task.name)
+                work_result.append(
+                    Result(
+                        host,
+                        result=params["connect_exception"],
+                        failed=True,
+                        exception=params["connect_exception"],
+                        name=task.name,
+                    )
+                )
+            else:
+                # check if need backoff task retry for this host
+                if params["task_retry"] > 0:
+                    elapsed = time.monotonic() - params["timestamp"]
+                    should_wait = (params["task_retry"] * task_backoff) / 1000
+                    if elapsed < should_wait:
+                        work_q.put(work)
+                        stop_event.wait(0.1)
+                        continue
+                log.info(
+                    f"nornir_salt:RetryRunner {host.name} - running task '{task.name}'"
+                )
+                if task_splay:
+                    time.sleep(random.randrange(0, task_splay) / 1000)  # nosec
+
+                work_result = task.start(host)
+            # check if need to run task retry logic
+            if task.results.failed:
+                log.error(
+                    f"nornir_salt:RetryRunner {host.name} - task execution retry "
+                    f"attempt {params['task_retry']} failed: '{work_result[0].exception}'"
+                )
+                # check if need to stop because of this error
+                stop_error_found = False
+                for i in stop_errors:
+                    if fnmatchcase(str(work_result[0].exception), i):
+                        log.warning(
+                            f"nornir_salt:RetryRunner {host.name} - task exception "
+                            f"matched stop pattern '{i}', stopping"
+                        )
+                        stop_error_found = True
+                if (
+                    not stop_error_found
+                    and params["task_retry"] < task_retry
+                    and params["connection_retry"] < connect_retry
+                ):
+                    params["task_retry"] += 1
+                    params["timestamp"] = time.monotonic()
+                    # recover task results for not to count task as failed
+                    for r in task.results:
+                        try:
+                            r.failed = False
+                            r.exception = None
+                            r.skip_results = (
+                                True  # for ResultSerializer to skip failed attempts
+                            )
+                        except Exception:
+                            log.exception(
+                                f"Failed to process {task.name} task result {r}."
+                            )
+                    if reconnect_on_fail:
+                        # close host connections to retry them
+                        close_host_connection(host, params["connection_name"])
+                        params["connection_retry"] += 1
+                        connectors_q.put(work)
+                    else:
+                        work_q.put(work)
+                    continue
+            # en-reach result objects with runner statistics
+            for result_item in work_result:
+                result_item.connection_retry = params["connection_retry"]
+                result_item.task_retry = params["task_retry"]
+            with LOCK:
+                result[host.name] = work_result
+                del work_result
+            log.info(
+                "nornir_salt:RetryRunner {} - task '{}' completed".format(
+                    host.name, task.name
                 )
             )
-        else:
-            # check if need backoff task retry for this host
-            if params["task_retry"] > 0:
-                elapsed = time.time() - params["timestamp"]
-                should_wait = (params["task_retry"] * task_backoff) / 1000
-                if elapsed < should_wait:
-                    work_q.put(work)
-                    work_q.task_done()
-                    time.sleep(0.1)
-                    continue
-            log.info(
-                f"nornir_salt:RetryRunner {host.name} - running task '{task.name}'"
+        except Exception as exc:
+            log.exception(
+                "nornir_salt:RetryRunner %s - unexpected %s error", host.name, "worker"
             )
-            time.sleep(random.randrange(0, task_splay) / 1000)  # nosec
-
-            work_result = task.start(host)
-        # check if need to run task retry logic
-        if task.results.failed:
-            log.error(
-                f"nornir_salt:RetryRunner {host.name} - task execution retry "
-                f"attempt {params['task_retry']} failed: '{work_result[0].exception}'"
+            failure = MultiResult(task.name)
+            failure.append(
+                Result(host=host, name=task.name, failed=True, exception=exc)
             )
-            # check if need to stop because of this error
-            stop_error_found = False
-            for i in stop_errors:
-                if fnmatchcase(str(work_result[0].exception), i):
-                    log.warning(
-                        f"nornir_salt:RetryRunner {host.name} - task exception "
-                        f"matched stop pattern '{i}', stopping"
-                    )
-                    stop_error_found = True
-            if (
-                not stop_error_found
-                and params["task_retry"] < task_retry
-                and params["connection_retry"] < connect_retry
-            ):
-                params["task_retry"] += 1
-                params["timestamp"] = time.time()
-                # recover task results for not to count task as failed
-                for r in task.results:
-                    try:
-                        r.failed = False
-                        r.exception = None
-                        r.skip_results = (
-                            True  # for ResultSerializer to skip failed attempts
-                        )
-                    except Exception:
-                        log.exception(f"Failed to process {task.name} task result {r}.")
-                if reconnect_on_fail:
-                    # close host connections to retry them
-                    close_host_connection(host, params["connection_name"])
-                    connectors_q.put(work)
-                    params["connection_retry"] += 1
-                else:
-                    work_q.put(work)
-                work_q.task_done()
-                continue
-        # en-reach result objects with runner statistics
-        for result_item in work_result:
-            result_item.connection_retry = params["connection_retry"]
-            result_item.task_retry = params["task_retry"]
-        with LOCK:
-            result[host.name] = work_result
-            del work_result
-        work_q.task_done()
-        log.info(
-            "nornir_salt:RetryRunner {} - task '{}' completed".format(
-                host.name, task.name
-            )
-        )
+            with LOCK:
+                result[host.name] = failure
+        finally:
+            work_q.task_done()
 
 
 def connector(
@@ -547,7 +573,7 @@ def connector(
 ) -> None:
     """
     Connector thread function that establishes connections to hosts with retry logic,
-    exponential backoff, splaying, and support for jumphosts and credential retry.
+    linear backoff, splaying, and support for jumphosts and credential retry.
     """
     while not stop_event.is_set():
         try:
@@ -555,144 +581,166 @@ def connector(
         except queue.Empty:
             continue
         task, host, params, result = connection
-        # check if need back off connection retry for this host
-        if params["connection_retry"] > 0:
-            elapsed = time.time() - params["timestamp"]
-            should_wait = (params["connection_retry"] * connect_backoff) / 1000
-            if elapsed < should_wait:
-                connectors_q.put(connection)
-                connectors_q.task_done()
-                continue
         try:
-            # initiate connections to host
-            for connection_name in params["connection_name"]:
-                if connection_name in host.connections:
+            # check if need back off connection retry for this host
+            if params["connection_retry"] > 0:
+                elapsed = time.monotonic() - params["timestamp"]
+                should_wait = (params["connection_retry"] * connect_backoff) / 1000
+                if elapsed < should_wait:
+                    connectors_q.put(connection)
+                    stop_event.wait(
+                        0.01
+                    )  # avoid busy polling during connection backoff
                     continue
-                time.sleep(random.randrange(0, connect_splay) / 1000)  # nosec
-                extras = host.get_connection_parameters(connection_name).extras
-                if host.get("jumphost") and connection_name in ["netmiko", "ncclient"]:
-                    if job is not None:
-                        job.event(
-                            task="nornir.retrun",
-                            resource=[host.name],
-                            message=(
-                                "Connecting via jumphost "
-                                f"'{host['jumphost']['hostname']}'"
-                            ),
-                            severity="INFO",
+            try:
+                # initiate connections to host
+                for connection_name in params["connection_name"]:
+                    if connection_name in host.connections:
+                        continue
+                    if connect_splay:
+                        time.sleep(random.randrange(0, connect_splay) / 1000)  # nosec
+                    extras = host.get_connection_parameters(connection_name).extras
+                    if host.get("jumphost") and connection_name in [
+                        "netmiko",
+                        "ncclient",
+                    ]:
+                        if job is not None:
+                            job.event(
+                                task="nornir.retrun",
+                                resource=[host.name],
+                                message=(
+                                    "Connecting via jumphost "
+                                    f"'{host['jumphost']['hostname']}'"
+                                ),
+                                severity="INFO",
+                            )
+                        extras["sock"] = connect_to_device_behind_jumphost(
+                            host, jumphosts_connections
                         )
-                    extras["sock"] = connect_to_device_behind_jumphost(
-                        host, jumphosts_connections
-                    )
-                # check connection
-                if run_connect_check:
-                    if job is not None:
-                        job.event(
-                            task="nornir.retrun",
-                            resource=[host.name],
-                            message=(
-                                f"Checking connection '{connection_name}' "
-                                f"with timeout {run_connect_timeout}s"
-                            ),
-                            severity="INFO",
+                    # check connection
+                    if run_connect_check:
+                        if job is not None:
+                            job.event(
+                                task="nornir.retrun",
+                                resource=[host.name],
+                                message=(
+                                    f"Checking connection '{connection_name}' "
+                                    f"with timeout {run_connect_timeout}s"
+                                ),
+                                severity="INFO",
+                            )
+                        host_connection_check = conn_check(
+                            task, host, connection_name, timeout=run_connect_timeout
                         )
-                    host_connection_check = conn_check(
-                        task, host, connection_name, timeout=run_connect_timeout
-                    )
-                    if host_connection_check.failed is True:
-                        raise Exception(host_connection_check.exception)
-                    time.sleep(1)  # sleep a bit to not hit devices SSH rate limit
-                # retry various connection parameters
-                if run_creds_retry:
+                        if host_connection_check.failed is True:
+                            raise Exception(host_connection_check.exception)
+                        time.sleep(1)  # sleep a bit to not hit devices SSH rate limit
+                    # retry various connection parameters
+                    if run_creds_retry:
+                        log.info(
+                            f"nornir_salt:RetryRunner {host.name} - connecting with creds retry"
+                        )
+                        if job is not None:
+                            job.event(
+                                task=f"{job.task}.retryrunner",
+                                resource=[host.name],
+                                message=(
+                                    f"Connecting using '{connection_name}' "
+                                    "with credentials retry"
+                                ),
+                                severity="INFO",
+                            )
+                        conn_open(
+                            task=task,
+                            host=host,
+                            conn_name=connection_name,
+                            reconnect=run_creds_retry,
+                            raise_on_error=True,
+                            reconnect_splay=connect_splay,
+                            extras=extras,
+                        )
+                    # open connection to host as is
+                    else:
+                        if job is not None:
+                            job.event(
+                                task=f"{job.task}.retryrunner",
+                                resource=[host.name],
+                                message=(
+                                    f"Connecting using '{connection_name}', attempt "
+                                    f"{params['connection_retry'] + 1} of {connect_retry + 1}"
+                                ),
+                                severity="INFO",
+                            )
+                        host.open_connection(
+                            connection_name,
+                            configuration=task.nornir.config,
+                            extras=extras,
+                        )
                     log.info(
-                        f"nornir_salt:RetryRunner {host.name} - connecting with creds retry"
+                        "nornir_salt:RetryRunner {} - started connection: '{}'".format(
+                            host.name, connection_name
+                        )
                     )
                     if job is not None:
                         job.event(
                             task=f"{job.task}.retryrunner",
                             resource=[host.name],
-                            message=(
-                                f"Connecting using '{connection_name}' "
-                                "with credentials retry"
-                            ),
+                            message=f"Connection '{connection_name}' established",
                             severity="INFO",
                         )
-                    conn_open(
-                        task=task,
-                        host=host,
-                        conn_name=connection_name,
-                        reconnect=run_creds_retry,
-                        raise_on_error=True,
-                        extras=extras,
-                    )
-                # open connection to host as is
-                else:
-                    if job is not None:
-                        job.event(
-                            task=f"{job.task}.retryrunner",
-                            resource=[host.name],
-                            message=(
-                                f"Connecting using '{connection_name}', attempt "
-                                f"{params['connection_retry'] + 1} of {connect_retry + 1}"
-                            ),
-                            severity="INFO",
-                        )
-                    host.open_connection(
-                        connection_name, configuration=task.nornir.config, extras=extras
-                    )
-                log.info(
-                    "nornir_salt:RetryRunner {} - started connection: '{}'".format(
-                        host.name, connection_name
-                    )
+            except Exception as e:
+                # close host connections to retry it
+                close_host_connection(host, [connection_name])
+                err_msg = "nornir_salt:RetryRunner {} - connection {}, retry attempt {}, error: '{}'".format(
+                    host.name,
+                    connection_name,
+                    params["connection_retry"],
+                    " ".join([i.strip() for i in str(e).splitlines()]),
                 )
-                if job is not None:
-                    job.event(
-                        task=f"{job.task}.retryrunner",
-                        resource=[host.name],
-                        message=f"Connection '{connection_name}' established",
-                        severity="INFO",
-                    )
-        except Exception as e:
-            # close host connections to retry it
-            close_host_connection(host, [connection_name])
-            err_msg = "nornir_salt:RetryRunner {} - connection {}, retry attempt {}, error: '{}'".format(
+                if params["connection_retry"] < connect_retry:
+                    params["connection_retry"] += 1
+                    params["timestamp"] = time.monotonic()
+                    log.warning(err_msg)
+                    if job is not None:
+                        job.event(
+                            task=f"{job.task}.retryrunner",
+                            resource=[host.name],
+                            message=(
+                                f"Connection '{connection_name}' failed, "
+                                f"retrying attempt {params['connection_retry']} "
+                                f"of {connect_retry}: '{e}'"
+                            ),
+                            severity="WARNING",
+                        )
+                    connectors_q.put(connection)
+                    continue
+                else:
+                    # record exception in params for worker thread to react on it
+                    params["connect_exception"] = err_msg
+                    log.error(err_msg)
+                    log.exception(e)
+                    if job is not None:
+                        job.event(
+                            task=f"{job.task}.retryrunner",
+                            resource=[host.name],
+                            message=err_msg,
+                            severity="ERROR",
+                        )
+            work_q.put((task, host, params, result))
+        except Exception as exc:
+            log.exception(
+                "nornir_salt:RetryRunner %s - unexpected %s error",
                 host.name,
-                connection_name,
-                params["connection_retry"],
-                " ".join([i.strip() for i in str(e).splitlines()]),
+                "connector",
             )
-            if params["connection_retry"] < connect_retry:
-                params["connection_retry"] += 1
-                params["timestamp"] = time.time()
-                connectors_q.put(connection)
-                connectors_q.task_done()
-                log.warning(err_msg)
-                if job is not None:
-                    job.event(
-                        task=f"{job.task}.retryrunner",
-                        resource=[host.name],
-                        message=(
-                            f"Connection '{connection_name}' failed, "
-                            f"retrying attempt {params['connection_retry']} "
-                            f"of {connect_retry}: '{e}'"
-                        ),
-                        severity="WARNING",
-                    )
-                continue
-            else:
-                # record exception in params for worker thread to react on it
-                params["connect_exception"] = err_msg
-                log.error(err_msg)
-                log.exception(e)
-                if job is not None:
-                    job.event(
-                        task=f"{job.task}.retryrunner",
-                        resource=[host.name],
-                        message=err_msg,
-                        severity="ERROR",
-                    )
-        connectors_q.task_done()
-        work_q.put((task, host, params, result))
+            failure = MultiResult(task.name)
+            failure.append(
+                Result(host=host, name=task.name, failed=True, exception=exc)
+            )
+            with LOCK:
+                result[host.name] = failure
+        finally:
+            connectors_q.task_done()
 
 
 def close_host_connection(host: Host, connection_names: List[str]) -> None:
@@ -722,99 +770,77 @@ def connect_to_device_behind_jumphost(
     Establish connection to devices behind jumphost/bastion
     """
 
-    jumphost = {"timeout": 3, "look_for_keys": False, "allow_agent": False}
+    jumphost = {"timeout": 3, "look_for_keys": False, "allow_agent": False, "port": 22}
     jumphost.update(host["jumphost"])
-    # Initiate connection to jumphost if not initiated already or
-    # if it failed before
-    #
-    # jumphosts_connections dictionary shared between threads,
-    # first thread to start will detect that no connection to
-    # jumphost exists and will try to establish it, while doing
-    # so, jumphost key will be added to jumphosts_connections
-    # dictionary with '__connecting__' value, next threads
-    # will see '__connecting__' as value for jumphost and will
-    # continue sleeping until either connection succeeded or
-    # failed. On connection failure, first thread will set value
-    # to '__failed__' to signal other threads to exit.
+    policy = jumphost.pop("hostkey_policy", "autoadd")
+    known_hosts = jumphost.pop("known_hosts", None)
+    policies = {
+        "autoadd": paramiko.AutoAddPolicy,
+        "reject": paramiko.RejectPolicy,
+        "warning": paramiko.WarningPolicy,
+    }
+    if policy not in policies:
+        raise ValueError("jumphost hostkey_policy must be autoadd, reject, or warning")
+    # Include credentials and SSH/trust options without putting secrets in cache keys.
+    identity = repr((sorted(jumphost.items()), policy, known_hosts)).encode()
+    cache_key = hashlib.sha256(identity).hexdigest()
     with LOCK:
-        if (
-            jumphost["hostname"] not in jumphosts_connections
-            or jumphosts_connections.get(jumphost["hostname"]) == "__failed__"
-        ):
-            jumphosts_connections[jumphost["hostname"]] = "__connecting__"
-            needs_connect = True
-        else:
-            needs_connect = False
-
-    if needs_connect:
-        try:
-            jumphost_ssh_client = paramiko.client.SSHClient()
-            jumphost_ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            jumphost_ssh_client.connect(**jumphost)
-            with LOCK:
-                jumphosts_connections[jumphost["hostname"]] = {
-                    "jumphost_ssh_client": jumphost_ssh_client,
-                    "jumphost_ssh_transport": jumphost_ssh_client.get_transport(),
-                }
-            # add jumphost to host connections to close it
-            # on nornir.close_connections() call
-            host.connections["jumphost_{}".format(jumphost["hostname"])] = (
-                jumphost_ssh_client
-            )
+        session = jumphosts_connections.setdefault(
+            cache_key, {"lock": threading.Lock()}
+        )
+    # Serialize creation and replacement for this session only. Never remove an entry
+    # another connector may already be using.
+    with session["lock"]:
+        transport = session.get("jumphost_ssh_transport")
+        if transport is None or not transport.is_active():
+            previous = session.pop("jumphost_ssh_client", None)
+            session.pop("jumphost_ssh_transport", None)
+            if previous is not None:
+                previous.close()
+            client = paramiko.client.SSHClient()
+            try:
+                client.load_system_host_keys()
+                if known_hosts is not None:
+                    client.load_host_keys(known_hosts)
+                client.set_missing_host_key_policy(policies[policy]())
+                client.connect(**jumphost)
+                transport = client.get_transport()
+                if transport is None or not transport.is_active():
+                    raise RuntimeError("jumphost transport is not active")
+            except Exception as exc:
+                client.close()
+                raise RuntimeError(
+                    f"RetryRunner failed connection to jumphost '{jumphost['hostname']}'"
+                ) from exc
+            session["jumphost_ssh_client"] = client
+            session["jumphost_ssh_transport"] = transport
+            # Retain Nornir's close_connections lifecycle for shared clients.
+            host.connections[f"jumphost_{jumphost['hostname']}_{cache_key}"] = client
             log.info(
-                "nornir_salt:RetryRunner Started connection to jumphost '{}' - '{}'".format(
-                    jumphost["hostname"], jumphost_ssh_client
-                )
+                "RetryRunner started connection to jumphost '%s'", jumphost["hostname"]
             )
-        except Exception as e:
-            with LOCK:
-                jumphosts_connections[jumphost["hostname"]] = "__failed__"
-            # add exception info to host data to include in results
-            error_msg = "nornir_salt:RetryRunner failed connection to jumphost '{}', error - {}".format(
-                host["jumphost"]["hostname"], e
+        channel_name = f"jumphost_{jumphost['hostname']}_channel"
+        channel = host.connections.get(channel_name)
+        if channel is not None and (
+            channel.closed or channel.get_transport() is not transport
+        ):
+            channel.close()
+            host.connections.pop(channel_name, None)
+            channel = None
+        if channel is None:
+            channel = transport.open_channel(
+                kind="direct-tcpip",
+                dest_addr=(host.hostname, host.port or 22),
+                src_addr=("localhost", 7777),
+                timeout=3,
             )
-            # host["exception"] = error_msg
-            log.error(error_msg)
-            raise RuntimeError(error_msg)
-    else:
-        # sleep random time waiting for connection to jumphost to establish
-        while jumphosts_connections[jumphost["hostname"]] == "__connecting__":
-            time.sleep(random.randrange(0, 500) / 1000)  # nosec
-        if jumphosts_connections[jumphost["hostname"]] == "__failed__":
-            # add exception info to host data to include in results
-            error_msg = "nornir_salt:RetryRunner failed connection to jumphost '{}' in another thread".format(
-                host["jumphost"]["hostname"]
+            host.connections[channel_name] = channel
+            log.info(
+                "RetryRunner %s opened channel via jumphost '%s'",
+                host.name,
+                jumphost["hostname"],
             )
-            # host["exception"] = error_msg
-            log.error(error_msg)
-            raise RuntimeError(error_msg)
-    # connect to host
-    channel_name = "jumphost_{}_channel".format(jumphost["hostname"])
-    jconn = jumphosts_connections[jumphost["hostname"]]
-    # check if connection to jumphost was closed, reconnect if so
-    if not jconn["jumphost_ssh_transport"].is_active():
-        log.debug(
-            "nornir_salt:RetryRunner jumphost '{}' disconnected, reconnecting".format(
-                jumphost["hostname"]
-            )
-        )
-        jconn["jumphost_ssh_client"].close()
-        jumphosts_connections.pop(jumphost["hostname"])
-        return connect_to_device_behind_jumphost(host, jumphosts_connections)
-    # proceed with openning new channel via jumphost
-    if not host.connections.get(channel_name):
-        host.connections[channel_name] = jconn["jumphost_ssh_transport"].open_channel(
-            kind="direct-tcpip",
-            dest_addr=(host.hostname, host.port or 22),
-            src_addr=("localhost", 7777),
-            timeout=3,
-        )
-        log.info(
-            "nornir_salt:RetryRunner {} - started new channel via jumphost '{}' - '{}'".format(
-                host.name, jumphost["hostname"], jconn["jumphost_ssh_client"]
-            )
-        )
-    return host.connections[channel_name]
+        return channel
 
 
 class RetryRunner:
@@ -823,12 +849,13 @@ class RetryRunner:
 
     :param num_workers: number of threads for tasks execution
     :param num_connectors: number of threads for device connections
-    :param connect_retry: number of connection attempts
-    :param connect_backoff: exponential backoff timer in milliseconds
-    :param connect_splay: random interval between 0 and splay for each connection in milliseconds
-    :param task_retry: number of attempts to run task
-    :param task_backoff: exponential backoff timer in milliseconds
-    :param task_splay: random interval between 0 and splay before task start in milliseconds
+    :param connect_retry: maximum number of additional connection retries. Zero allows only the initial attempt
+    :param connect_backoff: linear backoff timer in milliseconds
+    :param connect_splay: random delay below splay for each connection in milliseconds. Zero disables jitter
+    :param task_retry: maximum number of additional task retries. Zero allows only the initial attempt.
+        Also limited by the remaining connection retry budget
+    :param task_backoff: linear backoff timer in milliseconds
+    :param task_splay: random delay below splay before task start in milliseconds. Zero disables jitter
     :param reconnect_on_fail: boolean, default True, perform reconnect to host on task failure
     :param task_timeout: int, seconds to wait for task to complete before closing all queues
         and stopping connectors and workers threads, default 600
@@ -859,6 +886,22 @@ class RetryRunner:
         connect_check: bool = False,
         connect_timeout: int = 5,
     ) -> None:
+        model_RetryRunner(
+            num_workers=num_workers,
+            num_connectors=num_connectors,
+            connect_retry=connect_retry,
+            task_retry=task_retry,
+            connect_backoff=connect_backoff,
+            task_backoff=task_backoff,
+            connect_splay=connect_splay,
+            task_splay=task_splay,
+            task_timeout=task_timeout,
+            connect_timeout=connect_timeout,
+            reconnect_on_fail=reconnect_on_fail,
+            creds_retry=creds_retry,
+            task_stop_errors=task_stop_errors,
+            connect_check=connect_check,
+        )
         self.num_workers = num_workers
         self.num_connectors = num_connectors
         self.connect_retry = connect_retry
@@ -904,7 +947,6 @@ class RetryRunner:
         run_task_stop_errors = task.params.pop(
             "run_task_stop_errors", list(self.task_stop_errors)
         )
-        run_task_stop_errors.append("*validation error*")
         # attempt to extract a list of connections names this task uses
         if task.params.get("connection_name"):  # use task connection_name argument
             run_connection_name = task.params.pop("connection_name")
@@ -917,11 +959,18 @@ class RetryRunner:
         run_connection_name = [
             i.strip() for i in run_connection_name.split(",") if i.strip()
         ]
-        # do sanity checks
-        if run_num_connectors <= 0:
-            raise RuntimeError("nornir-salt:RetryRunner num_connectors must be above 0")
-        if run_num_workers <= 0:
-            raise RuntimeError("nornir-salt:RetryRunner num_workers must be above 0")
+        model_RetryRunner(
+            run_num_workers=run_num_workers,
+            run_num_connectors=run_num_connectors,
+            run_connect_retry=run_connect_retry,
+            run_task_retry=run_task_retry,
+            run_connect_timeout=run_connect_timeout,
+            run_reconnect_on_fail=run_reconnect_on_fail,
+            run_creds_retry=run_creds_retry,
+            run_task_stop_errors=run_task_stop_errors,
+            run_connect_check=run_connect_check,
+        )
+        run_task_stop_errors.append("*validation error*")
         # enqueu hosts in connectors queue
         params = {
             "connection_retry": 0,
@@ -931,67 +980,67 @@ class RetryRunner:
         }
         for host in hosts:
             connectors_q.put((task.copy(), host, params.copy(), result))
-        # start connectors threads
-        for _ in range(int(run_num_connectors)):
-            t = threading.Thread(
-                target=connector,
-                args=(
-                    stop_event,
-                    connectors_q,
-                    work_q,
-                    self.connect_backoff,
-                    self.connect_splay,
-                    int(run_connect_retry),
-                    self.jumphosts_connections,
-                    run_creds_retry,
-                    run_connect_timeout,
-                    run_connect_check,
-                    self.job,
-                ),
-            )
-            t.start()
-            connector_threads.append(t)
-        # start worker threads
-        for _ in range(int(run_num_workers)):
-            t = threading.Thread(
-                target=worker,
-                args=(
-                    stop_event,
-                    connectors_q,
-                    work_q,
-                    self.task_backoff,
-                    self.task_splay,
-                    int(run_task_retry),
-                    int(run_connect_retry),
-                    run_reconnect_on_fail,
-                    run_task_stop_errors,
-                ),
-            )
-            t.start()
-            worker_threads.append(t)
-        # wait until all hosts completed task or timeout reached
-        task_timeout_timer.start()
-        while not task_timeout_event.is_set():
-            with LOCK:
-                hosts_no_result = [h.name for h in hosts if h.name not in result]
-            if hosts_no_result == []:
-                task_timeout_timer.cancel()
-                break
-            time.sleep(0.1)
-        else:
-            log.warning(
-                "nornir_salt:RetryRunner task '{}', '{}'s task_timeout reached, hosts no results '{}'".format(
-                    task.name, self.task_timeout, hosts_no_result
+        try:
+            # start connectors threads
+            for _ in range(int(run_num_connectors)):
+                t = threading.Thread(
+                    target=connector,
+                    args=(
+                        stop_event,
+                        connectors_q,
+                        work_q,
+                        self.connect_backoff,
+                        self.connect_splay,
+                        int(run_connect_retry),
+                        self.jumphosts_connections,
+                        run_creds_retry,
+                        run_connect_timeout,
+                        run_connect_check,
+                        self.job,
+                    ),
                 )
-            )
-        # block until all queues empty
-        connectors_q.join()
-        work_q.join()
-        # stop and delete connectors and workers threads
-        stop_event.set()
-        while connector_threads:
-            _ = connector_threads.pop().join()
-        while worker_threads:
-            _ = worker_threads.pop().join()
-        self.job = None  # delete job reference
+                t.start()
+                connector_threads.append(t)
+            # start worker threads
+            for _ in range(int(run_num_workers)):
+                t = threading.Thread(
+                    target=worker,
+                    args=(
+                        stop_event,
+                        connectors_q,
+                        work_q,
+                        self.task_backoff,
+                        self.task_splay,
+                        int(run_task_retry),
+                        int(run_connect_retry),
+                        run_reconnect_on_fail,
+                        run_task_stop_errors,
+                    ),
+                )
+                t.start()
+                worker_threads.append(t)
+            # wait until all hosts completed task or timeout reached
+            task_timeout_timer.start()
+            while not task_timeout_event.is_set():
+                with LOCK:
+                    hosts_no_result = [h.name for h in hosts if h.name not in result]
+                if hosts_no_result == []:
+                    task_timeout_timer.cancel()
+                    break
+                time.sleep(0.1)
+            else:
+                log.warning(
+                    "nornir_salt:RetryRunner task '{}', '{}'s task_timeout reached, hosts no results '{}'".format(
+                        task.name, self.task_timeout, hosts_no_result
+                    )
+                )
+            # block until all queues empty
+            connectors_q.join()
+            work_q.join()
+        finally:
+            task_timeout_timer.cancel()
+            stop_event.set()
+            for thread in connector_threads + worker_threads:
+                thread.join()
+            self.job = None  # delete job reference
         return result
