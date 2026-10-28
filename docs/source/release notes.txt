@@ -681,7 +681,7 @@ tasks fail fast with validation error, making overall system more resilient to m
 
 
 # ---------------------------------------------------------------------------
-# nornir-salt 0.23.5 (draft)
+# nornir-salt 0.23.5
 # ---------------------------------------------------------------------------
 
 ## BUGS
@@ -740,6 +740,30 @@ tasks fail fast with validation error, making overall system more resilient to m
 
 1. Added jumphost hostkey_policy options autoadd, reject, and warning, with system known-hosts loading and an optional known_hosts file. The default remains autoadd for compatibility.
 2. Added fresh connect_splay jitter before each RetryRunner credential fallback attempt. Direct conn_open callers can opt in using reconnect_splay. The existing 100 ms delay after failed attempts is retained.
+
+
+# ---------------------------------------------------------------------------
+# nornir-salt 0.23.6 (draft)
+# ---------------------------------------------------------------------------
+
+## BUGS
+
+1. Replaced assertion-based test-suite input checks with Pydantic validation that remains active under Python optimization.
+2. Fixed FFun FP filtering to restore the previous socket default timeout after hostname lookups, including failures.
+   FP continues to use socket.gethostbyname without dnspython. System DNS lookup duration is not bounded by the socket timeout.
+3. Fixed ncclient transactions to finalize persistent confirmed commits without restarting the rollback timer.
+4. Fixed ncclient transactions to stop on RPC error replies even when ncclient exceptions are disabled; direct RPC calls now mark error replies as failed results.
+
+## CHANGES
+
+1. Removed QueueRunner and ConnectionsPool, including their plugin entry points and QueueRunner documentation.
+   Update inventories and imports using these plugins; use a Nornir built-in runner or configure RetryRunner explicitly. No connection-pool replacement is supplied.
+2. Moved ValidateFuncArgs from nornir_salt.utils.yangdantic into nornir_salt.utils.pydantic_models. Update imports to the new path.
+    The decorator now requires an explicit Pydantic model and caches function signatures and integration mixin models once per decorated function.
+3. Moved input checks into Pydantic models for TCP ports, file-diff indexes, inventory group references and updates, jumphost trust settings,
+    resolved credentials, processor options and connection plugin arguments. Invalid inputs now raise Pydantic ValidationError.
+    ToFileProcessor rejects max_files below 1 instead of silently clamping it. Netmiko and PyATS configuration tasks reject dry_run=True through their models.
+4. Removed the MakePlugin boilerplate generator and its validation model. Imports from nornir_salt.utils.MakePlugin and nornir_salt.utils are no longer available.
 
 
 # BACKLOG

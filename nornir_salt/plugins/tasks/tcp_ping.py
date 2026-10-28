@@ -49,9 +49,12 @@ from typing import Dict, List, Optional
 
 from nornir.core.task import Result, Task
 
+from nornir_salt.utils.pydantic_models import model_tcp_ping, ValidateFuncArgs
+
 log = logging.getLogger(__name__)
 
 
+@ValidateFuncArgs(model_tcp_ping)
 def tcp_ping(
     task: Task,
     ports: Optional[List[int]] = None,
@@ -73,12 +76,6 @@ def tcp_ping(
         ports = [int(task.host.port) if task.host.port else 22]
     elif isinstance(ports, int):
         ports = [ports]
-
-    if isinstance(ports, list):
-        if not all(isinstance(port, int) for port in ports):
-            raise ValueError("Invalid value for 'ports'. All ports must be integers.")
-    else:
-        raise ValueError("Invalid value for 'ports'. Expected a list of integers.")
 
     host = host or task.host.hostname
 

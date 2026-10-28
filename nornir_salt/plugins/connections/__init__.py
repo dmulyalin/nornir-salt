@@ -1,4 +1,3 @@
-from .ConnectionsPool import ConnectionsPool
 from .HTTPPlugin import HTTPPlugin
 from .NcclientPlugin import NcclientPlugin
 from .PureSNMPPlugin import PureSNMPPlugin
@@ -9,7 +8,6 @@ __all__ = (
     "NcclientPlugin",
     "HTTPPlugin",
     "PyGNMIPlugin",
-    "ConnectionsPool",
     "PyATSUnicon",
     "PureSNMPPlugin",
 )

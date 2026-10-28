@@ -52,8 +52,7 @@ import traceback
 from nornir.core.task import Result, Task
 
 from nornir_salt.utils import cfg_form_commands
-from nornir_salt.utils.pydantic_models import model_pyats_send_config
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import model_pyats_send_config, ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -90,8 +89,6 @@ def pyats_send_config(task: Task, config: str = None, **kwargs):
     :param bulk_chunk_sleep: sleep between sending command chunks, default is 0.5 sec
     """
     # run sanity check
-    if kwargs.get("dry_run"):
-        raise ValueError("pyats_send_config does not support dry_run")
 
     task.name = "pyats_send_config"
     task_result = Result(host=task.host, result=[], changed=True)

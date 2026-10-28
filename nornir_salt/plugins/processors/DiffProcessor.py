@@ -41,6 +41,8 @@ import traceback
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
 
+from nornir_salt.utils.pydantic_models import model_DiffProcessor, ValidateFuncArgs
+
 log = logging.getLogger(__name__)
 
 
@@ -64,6 +66,7 @@ class DiffProcessor:
     for instance by ignoring timestamps, counters or other uninteresting data.
     """
 
+    @ValidateFuncArgs(model_DiffProcessor)
     def __init__(
         self,
         diff,

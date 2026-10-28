@@ -129,9 +129,9 @@ class DictInventory:
     def __init__(
         self, hosts: Dict = None, groups: Dict = None, defaults: Dict = None
     ) -> None:
-        self.hosts = hosts or {}
-        self.groups = groups or {}
-        self.defaults = defaults or {}
+        self.hosts = hosts if hosts is not None else {}
+        self.groups = groups if groups is not None else {}
+        self.defaults = defaults if defaults is not None else {}
 
         # validate provided inventory data using Pydantic Model
         _ = NornirInventory(
@@ -153,19 +153,7 @@ class DictInventory:
         }
 
         for h in nr_hosts.values():
-            try:
-                h.groups = ParentGroups([nr_groups[g] for g in h.groups])
-            except KeyError as exc:
-                raise ValueError(
-                    f"DictInventory: failed to load host {h.name!r}: "
-                    f"group {exc.args[0]!r} is not defined"
-                ) from exc
+            h.groups = ParentGroups([nr_groups[g] for g in h.groups])
         for g in nr_groups.values():
-            try:
-                g.groups = ParentGroups([nr_groups[g] for g in g.groups])
-            except KeyError as exc:
-                raise ValueError(
-                    f"DictInventory: failed to load group {g.name!r}: "
-                    f"parent group {exc.args[0]!r} is not defined"
-                ) from exc
+            g.groups = ParentGroups([nr_groups[parent] for parent in g.groups])
         return Inventory(hosts=nr_hosts, groups=nr_groups, defaults=nr_defaults)

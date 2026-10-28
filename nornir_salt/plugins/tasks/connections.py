@@ -64,12 +64,13 @@ from nornir.core.inventory import Host
 from nornir.core.task import Result
 
 from nornir_salt.utils.pydantic_models import (
+    ValidateFuncArgs,
+    model_ConnectionParameters,
     model_conn_close,
     model_conn_list,
     model_conn_open,
     model_connections,
 )
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -430,8 +431,7 @@ def conn_open(
             param_name = param
             param = host.get("credentials", {}).get(param)
 
-        if not isinstance(param, dict):
-            raise TypeError("'{}' parameters not found or invalid".format(param_name))
+        model_ConnectionParameters.model_validate(param)
 
         # extract connection_options and merge with params for non kwargs params
         # do not deepcopy kwaergs params as they might contain Jumphost socket

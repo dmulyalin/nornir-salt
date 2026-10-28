@@ -124,6 +124,8 @@ import logging
 
 from nornir.core.inventory import ConnectionOptions, Host
 
+from nornir_salt.utils.pydantic_models import model_InventoryUpdate, ValidateFuncArgs
+
 from .FFun import FFun
 
 log = logging.getLogger(__name__)
@@ -198,6 +200,7 @@ def _read_inventory(nr, **kwargs):
     return hosts.inventory.dict()
 
 
+@ValidateFuncArgs(model_InventoryUpdate)
 def _update_host(
     nr,
     name,
@@ -229,14 +232,6 @@ def _update_host(
     groups = groups or []
     connection_options = connection_options or {}
     data = data or {}
-
-    # do sanity checks
-    if groups_action not in ["append", "insert", "remove"]:
-        raise ValueError(
-            "nornir-salt:InventoryFun groups_action should be append, insert or remove, not '{}'".format(
-                groups_action
-            )
-        )
 
     # get host object to update
     try:

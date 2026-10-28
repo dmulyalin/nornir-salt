@@ -66,13 +66,13 @@ from multiprocessing import Lock
 from nornir.core.task import Result
 
 from nornir_salt.utils.pydantic_models import (
+    ValidateFuncArgs,
     model_file_diff,
     model_file_list,
     model_file_read,
     model_file_remove,
     model_files,
 )
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -370,16 +370,10 @@ def file_diff(
     if isinstance(last, int):
         new = 1
         old = last
-    elif isinstance(last, list) and len(last) == 2:
+    elif isinstance(last, list):
         new, old = last
-    elif isinstance(last, str) and "," in last:
-        new, old = [int(i.strip()) for i in last.split(",")][:2]
     else:
-        raise TypeError(
-            "nornir_data:files:diff last is not list or int or string but {}, last: {}".format(
-                type(last), last
-            )
-        )
+        new, old = [int(i.strip()) for i in last.split(",")]
 
     filegroups = filegroup if isinstance(filegroup, list) else [filegroup]
 

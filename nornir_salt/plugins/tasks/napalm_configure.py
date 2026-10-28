@@ -44,8 +44,7 @@ import logging
 from nornir.core.task import Result, Task
 
 from nornir_salt.utils import cfg_form_commands
-from nornir_salt.utils.pydantic_models import model_napalm_configure
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import model_napalm_configure, ValidateFuncArgs
 
 try:
     from nornir_napalm.plugins.tasks import napalm_configure as nornir_napalm_configure

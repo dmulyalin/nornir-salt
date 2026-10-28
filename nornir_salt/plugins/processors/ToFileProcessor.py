@@ -41,6 +41,8 @@ from multiprocessing import Lock
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Task
 
+from nornir_salt.utils.pydantic_models import model_ToFileProcessor, ValidateFuncArgs
+
 log = logging.getLogger(__name__)
 
 
@@ -110,6 +112,7 @@ class ToFileProcessor:
     it could be considered as a simplified index database.
     """
 
+    @ValidateFuncArgs(model_ToFileProcessor)
     def __init__(
         self,
         tf,
@@ -121,7 +124,7 @@ class ToFileProcessor:
     ):
         self.tf = tf
         self.base_url = base_url
-        self.max_files = max(1, max_files)
+        self.max_files = max_files
         self.index = index or "common"
         self.skip_failed = skip_failed
         self.tf_index_lock = tf_index_lock or Lock()

@@ -26,8 +26,7 @@ import time
 
 from nornir.core.task import Result
 
-from nornir_salt.utils.pydantic_models import model_sleep
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import model_sleep, ValidateFuncArgs
 
 
 @ValidateFuncArgs(model_sleep)

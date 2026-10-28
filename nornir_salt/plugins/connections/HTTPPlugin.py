@@ -14,6 +14,8 @@ from typing import Any, Dict, Optional
 
 from nornir.core.configuration import Config
 
+from nornir_salt.utils.pydantic_models import model_ConnectionOpen, ValidateFuncArgs
+
 CONNECTION_NAME = "http"
 
 
@@ -64,6 +66,7 @@ class HTTPPlugin:
     absolute URL provided on task call.
     """  # noqa
 
+    @ValidateFuncArgs(model_ConnectionOpen)
     def open(
         self,
         hostname: Optional[str],

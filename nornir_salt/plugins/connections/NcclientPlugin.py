@@ -16,6 +16,8 @@ from typing import Any, Dict, Optional
 
 from nornir.core.configuration import Config
 
+from nornir_salt.utils.pydantic_models import model_ConnectionOpen, ValidateFuncArgs
+
 log = logging.getLogger(__name__)
 
 try:
@@ -62,6 +64,7 @@ class NcclientPlugin:
     - ``all`` - don't look at the `error-type`, always raise
     """  # noqa
 
+    @ValidateFuncArgs(model_ConnectionOpen)
     def open(
         self,
         hostname: Optional[str],

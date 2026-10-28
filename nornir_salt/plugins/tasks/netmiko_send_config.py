@@ -54,8 +54,10 @@ import traceback
 from nornir.core.task import Result, Task
 
 from nornir_salt.utils import cfg_form_commands
-from nornir_salt.utils.pydantic_models import model_netmiko_send_config
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import (
+    model_netmiko_send_config,
+    ValidateFuncArgs,
+)
 
 try:
     from nornir_netmiko.tasks import (  # noqa
@@ -115,8 +117,6 @@ def netmiko_send_config(
             failed=True,
             exception="No nornir_netmiko found, is it installed?",
         )
-    if kwargs.get("dry_run"):
-        raise ValueError("netmiko_send_config does not support dry_run")
 
     task.name = "netmiko_send_config"
     kwargs.setdefault("cmd_verify", False)

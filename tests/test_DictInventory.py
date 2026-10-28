@@ -171,12 +171,12 @@ def test_DictInvetnory_empty_inventory():
     ],
 )
 def test_DictInventory_missing_group(options, message):
-    with pytest.raises(ValueError) as exc_info:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError) as exc_info:
         DictInventory(**options).load()
 
-    assert str(exc_info.value) == message
-    assert isinstance(exc_info.value.__cause__, KeyError)
-    assert exc_info.value.__cause__.args == ("arista",)
+    assert message in str(exc_info.value)
 
 
 @skip_if_no_nornir

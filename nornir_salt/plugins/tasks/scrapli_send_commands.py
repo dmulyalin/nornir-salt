@@ -48,8 +48,10 @@ API Reference
 from nornir.core.task import Result, Task
 
 from nornir_salt.utils import cli_form_commands, cli_send_commands
-from nornir_salt.utils.pydantic_models import model_scrapli_send_commands
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import (
+    model_scrapli_send_commands,
+    ValidateFuncArgs,
+)
 
 try:
     from nornir_scrapli.tasks import send_command

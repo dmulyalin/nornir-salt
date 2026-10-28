@@ -49,8 +49,11 @@ from typing import Union
 
 from nornir.core.task import Result
 
-from nornir_salt.utils.pydantic_models import model_network, model_network_resolve_dns
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import (
+    model_network,
+    model_network_resolve_dns,
+    ValidateFuncArgs,
+)
 
 log = logging.getLogger(__name__)
 

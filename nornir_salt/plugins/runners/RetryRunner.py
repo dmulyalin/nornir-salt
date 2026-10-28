@@ -280,7 +280,7 @@ Sample code to use RetryRunner task parameters::
         },
     )
 
-    # run task without retrying - simulate QueueRunner behavior
+    # run task without retrying - disable connection and task retries
     result1 = NornirObj.run(
         task=netmiko_send_command,
         command_string="show clock",
@@ -427,7 +427,7 @@ from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
 from nornir_salt.plugins.tasks.connections import conn_check, conn_open
-from nornir_salt.utils.pydantic_models import model_RetryRunner
+from nornir_salt.utils.pydantic_models import model_Jumphost, model_RetryRunner
 
 try:
     import paramiko
@@ -772,15 +772,17 @@ def connect_to_device_behind_jumphost(
 
     jumphost = {"timeout": 3, "look_for_keys": False, "allow_agent": False, "port": 22}
     jumphost.update(host["jumphost"])
-    policy = jumphost.pop("hostkey_policy", "autoadd")
-    known_hosts = jumphost.pop("known_hosts", None)
+    # Validate trust settings before creating or reusing an SSH session.
+    settings = model_Jumphost.model_validate(jumphost)
+    policy = settings.hostkey_policy
+    known_hosts = settings.known_hosts
+    jumphost.pop("hostkey_policy", None)
+    jumphost.pop("known_hosts", None)
     policies = {
         "autoadd": paramiko.AutoAddPolicy,
         "reject": paramiko.RejectPolicy,
         "warning": paramiko.WarningPolicy,
     }
-    if policy not in policies:
-        raise ValueError("jumphost hostkey_policy must be autoadd, reject, or warning")
     # Include credentials and SSH/trust options without putting secrets in cache keys.
     identity = repr((sorted(jumphost.items()), policy, known_hosts)).encode()
     cache_key = hashlib.sha256(identity).hexdigest()

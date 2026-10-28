@@ -20,6 +20,8 @@ from typing import Any, Dict, Optional
 
 from nornir.core.configuration import Config
 
+from nornir_salt.utils.pydantic_models import model_ConnectionOpen, ValidateFuncArgs
+
 try:
     from pygnmi.client import gNMIclient
 
@@ -52,6 +54,7 @@ class PyGNMIPlugin:
     ``gNMIclient`` class object instantiation.
     """  # noqa
 
+    @ValidateFuncArgs(model_ConnectionOpen)
     def open(
         self,
         hostname: Optional[str],

@@ -29,6 +29,8 @@ from typing import Any, Dict, Optional
 
 from nornir.core.configuration import Config
 
+from nornir_salt.utils.pydantic_models import model_ConnectionOpen, ValidateFuncArgs
+
 log = logging.getLogger(__name__)
 
 try:
@@ -120,6 +122,7 @@ class PureSNMPPlugin:
         snmp-server user snmpv3_user snmpview v3 auth md5 auth_pass priv des priv_pass
     """  # noqa
 
+    @ValidateFuncArgs(model_ConnectionOpen)
     def open(
         self,
         hostname: Optional[str],

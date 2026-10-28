@@ -343,6 +343,9 @@ from nornir.core.task import AggregatedResult, MultiResult, Result, Task
 
 from nornir_salt.plugins.functions import FFun
 from nornir_salt.utils.pydantic_models import (
+    ValidateFuncArgs,
+    model_RenderedTests,
+    model_TestsProcessor,
     modelTestsProcessorSuite,
     modelTestsProcessorTests,
 )
@@ -1066,6 +1069,7 @@ class TestsProcessor:
     :param tests_data: (dict) dictionary of parameters to supply for test suite templates rendering
     """
 
+    @ValidateFuncArgs(model_TestsProcessor)
     def __init__(
         self,
         tests: Optional[List[Dict[str, Any]]] = None,
@@ -1139,10 +1143,7 @@ class TestsProcessor:
             # load rendered data from YAML string
             elif load is True:
                 ret = yaml.safe_load(ret)
-                if not isinstance(ret, list):
-                    raise ValueError(
-                        f"Rendered string did not produce list but '{type(ret)}'"
-                    )
+                model_RenderedTests(tests=ret)
 
         return ret
 
@@ -1199,8 +1200,6 @@ class TestsProcessor:
                         if test_["task"] is None:  # skip if not rendered
                             continue
                     tests_ = [test_]
-                else:
-                    raise ValueError(f"Unsupported test item type '{type(test)}'")
 
                 # process tests items further
                 while tests_:

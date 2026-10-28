@@ -262,6 +262,12 @@ import pprint
 import re
 import socket
 import traceback
+
+from nornir_salt.utils.pydantic_models import (
+    ValidateFuncArgs,
+    model_DataProcessor,
+    model_DataProcessorPath,
+)
 from collections import deque
 from fnmatch import fnmatchcase
 
@@ -713,6 +719,7 @@ def xml_rm_ns(data, recover=True, ret_xml=True, **kwargs):
         return tree
 
 
+@ValidateFuncArgs(model_DataProcessorPath)
 def path_(data, path, **kwargs):
     """
     Reference name ``path_``
@@ -759,11 +766,6 @@ def path_(data, path, **kwargs):
                 path_list[-1] += char
     elif isinstance(path, list):
         path_list = path
-    else:
-        raise TypeError(
-            "nornir-salt:DataProcessor:path unsupported path type {}".format(type(path))
-        )
-
     # descend down the data path
     for item in path_list:
         if item in ret or isinstance(item, int):
@@ -1725,6 +1727,7 @@ class DataProcessor:
     * ``kN`` - Any additional key-word arguments to use with function
     """
 
+    @ValidateFuncArgs(model_DataProcessor)
     def __init__(self, dp=None):
         dp = dp or []
         self.dp = []
@@ -1734,20 +1737,8 @@ class DataProcessor:
                     self.dp.append({"fun": i.strip()})
                 elif isinstance(i, dict):
                     self.dp.append(i)
-                else:
-                    raise TypeError(
-                        "nornir_salt:DataProcessor dp list items should be dictionary or string not '{}'".format(
-                            type(i)
-                        )
-                    )
         elif isinstance(dp, str):
             self.dp = [{"fun": i.strip()} for i in dp.split(",")]
-        else:
-            raise TypeError(
-                "nornir_salt:DataProcessor dp argument should be list or string not '{}'".format(
-                    type(dp)
-                )
-            )
 
     def task_started(self, task: Task) -> None:
         """Pre-Process Task details before executing it"""

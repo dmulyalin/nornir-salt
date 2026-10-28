@@ -43,8 +43,7 @@ from typing import List
 
 from nornir.core.task import Result, Task
 
-from nornir_salt.utils.pydantic_models import model_salt_clear_hcache
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import model_salt_clear_hcache, ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 

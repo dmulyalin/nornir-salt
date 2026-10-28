@@ -6,5 +6,4 @@ Runner plugins control Nornir task execution logic. Reference `documentation <ht
 .. toctree::
    :maxdepth: 2
 
-   QueueRunner
    RetryRunner

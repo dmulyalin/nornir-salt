@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir_salt"
-version = "0.23.5"
+version = "0.23.6"
 description = "Nornir plugins used with SaltStack Salt-Nornir Proxy Minion and NorFab"
 authors = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
 maintainers = ["Denis Mulyalin <d.mulyalin@gmail.com>"]
@@ -176,14 +176,12 @@ dataprocessor = [
 "DictInventory" = "nornir_salt.plugins.inventory:DictInventory"
 
 [tool.poetry.plugins."nornir.plugins.runners"]
-"QueueRunner" = "nornir_salt.plugins.runners:QueueRunner"
 "RetryRunner" = "nornir_salt.plugins.runners:RetryRunner"
 
 [tool.poetry.plugins."nornir.plugins.connections"]
 "ncclient" = "nornir_salt.plugins.connections:NcclientPlugin"
 "http" = "nornir_salt.plugins.connections:HTTPPlugin"
 "pygnmi" = "nornir_salt.plugins.connections:PyGNMIPlugin"
-"ConnectionsPool" = "nornir_salt.plugins.connections:ConnectionsPool"
 "pyats" = "nornir_salt.plugins.connections:PyATSUnicon"
 "puresnmp" = "nornir_salt.plugins.connections:PureSNMPPlugin"
 

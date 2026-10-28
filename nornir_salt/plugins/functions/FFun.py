@@ -113,6 +113,10 @@ If host's inventory hostname is IP, will use it as is, if it is FQDN, will
 attempt to resolve it to obtain IP address, if DNS resolution fails, host
 fails the check.
 
+Hostname lookups use ``socket.gethostbyname`` without additional dependencies.
+The previous socket default timeout is restored after each lookup, including failures.
+The system resolver controls DNS lookup duration; the socket timeout does not bound it.
+
 FL - Filter List
 ----------------
 
@@ -430,11 +434,10 @@ def _filter_FG(ret, group):
 def _filter_FP(ret, pfx):
     """
     Function to filter hosts based on IP Prefixes
+
     """
     import ipaddress
     import socket
-
-    socket.setdefaulttimeout(1)
 
     def _filter_net(host):
         # convert host's ip to ip address object
@@ -442,7 +445,10 @@ def _filter_FP(ret, pfx):
             ip_addr = ipaddress.ip_address(host.hostname)
         except ValueError:
             # try to resolve hostname using DNS
+            previous_timeout = socket.getdefaulttimeout()
             try:
+                # This socket timeout does not bound system DNS resolution.
+                socket.setdefaulttimeout(1)
                 ip_str = socket.gethostbyname(host.hostname)
                 ip_addr = ipaddress.ip_address(ip_str)
             except Exception as e:
@@ -450,6 +456,8 @@ def _filter_FP(ret, pfx):
                     "FP failed to convert host IP '{}', error '{}'".format(host.name, e)
                 )
                 return False
+            finally:
+                socket.setdefaulttimeout(previous_timeout)
         # run filtering
         for net in networks:
             if ip_addr in net:

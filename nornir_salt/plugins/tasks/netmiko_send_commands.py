@@ -38,8 +38,10 @@ import logging
 from nornir.core.task import Result, Task
 
 from nornir_salt.utils import cli_form_commands, cli_send_commands
-from nornir_salt.utils.pydantic_models import model_netmiko_send_commands
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import (
+    model_netmiko_send_commands,
+    ValidateFuncArgs,
+)
 
 from .netmiko_send_command_ps import netmiko_send_command_ps, send_command_ps
 

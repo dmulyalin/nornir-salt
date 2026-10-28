@@ -49,8 +49,7 @@ import logging
 from nornir.core.task import Result, Task
 
 from nornir_salt.plugins.connections.PureSNMPPlugin import CONNECTION_NAME
-from nornir_salt.utils.pydantic_models import model_puresnmp_call
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import model_puresnmp_call, ValidateFuncArgs
 
 try:
     from typing import AsyncGenerator

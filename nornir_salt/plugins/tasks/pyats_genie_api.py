@@ -40,8 +40,7 @@ import logging
 
 from nornir.core.task import Result, Task
 
-from nornir_salt.utils.pydantic_models import model_pyats_genie_api
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import model_pyats_genie_api, ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 

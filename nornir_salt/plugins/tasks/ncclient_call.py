@@ -73,8 +73,7 @@ from fnmatch import fnmatchcase
 from nornir.core.task import Result, Task
 
 from nornir_salt.plugins.connections.NcclientPlugin import CONNECTION_NAME
-from nornir_salt.utils.pydantic_models import model_ncclient_call
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import model_ncclient_call, ValidateFuncArgs
 
 log = logging.getLogger(__name__)
 
@@ -116,14 +115,17 @@ except ImportError:
                 return self._request(ele)
 
 
-def _form_result(result) -> str:
+def _form_result(result, raise_on_error=False) -> str:
     """
     Helper function to extract XML string results from Ncclient
     response.
 
     :param result: (obj) Ncclient RPC call result object
+    :param raise_on_error: stop a transaction on RPC errors, even when ncclient does not raise
     """
     if hasattr(result, "_root"):
+        if raise_on_error and not result.ok:
+            raise RuntimeError(result.xml)
         result = etree.tostring(result._root, pretty_print=True).decode()
     elif isinstance(result, (list, dict, bool)):
         pass
@@ -195,16 +197,16 @@ def _call_transaction(manager, *args, **kwargs):
 
     # execute transaction
     with manager.locked(target=target):
-        if has_candidate_datastore and target == "candidate":
-            r = manager.discard_changes()
-            result.append({"discard_changes": _form_result(r)})
         try:
+            if has_candidate_datastore and target == "candidate":
+                r = manager.discard_changes()
+                result.append({"discard_changes": _form_result(r, raise_on_error=True)})
             r = getattr(manager, edit_rpc)(**edit_arg)
-            result.append({edit_rpc: _form_result(r)})
+            result.append({edit_rpc: _form_result(r, raise_on_error=True)})
             # validate configuration
             if can_validate and kwargs.get("validate", True):
                 r = manager.validate(source=target)
-                result.append({"validate": _form_result(r)})
+                result.append({"validate": _form_result(r, raise_on_error=True)})
             if target == "candidate" and has_candidate_datastore:
                 # run commit confirmed
                 if can_commit_confirmed and kwargs.get("confirmed", True):
@@ -214,24 +216,28 @@ def _call_transaction(manager, *args, **kwargs):
                     try:
                         pid = "dob04041989"
                         r = manager.commit(**commit_arg, persist=pid)
-                        result.append({"commit_confirmed": _form_result(r)})
+                        result.append(
+                            {"commit_confirmed": _form_result(r, raise_on_error=True)}
+                        )
                         # run final commit
                         time.sleep(commit_final_delay)
-                        r = manager.commit(confirmed=True, persist_id=pid)
-                        result.append({"commit": _form_result(r)})
+                        r = manager.commit(persist_id=pid)
+                        result.append({"commit": _form_result(r, raise_on_error=True)})
                     # Ncclient juniper driver uses juniper custom RPC for
                     # commit and throws TypeError for "persist" argument
                     except TypeError:
                         r = manager.commit(**commit_arg)
-                        result.append({"commit_confirmed": _form_result(r)})
+                        result.append(
+                            {"commit_confirmed": _form_result(r, raise_on_error=True)}
+                        )
                         # run final commit
                         time.sleep(commit_final_delay)
                         r = manager.commit()
-                        result.append({"commit": _form_result(r)})
+                        result.append({"commit": _form_result(r, raise_on_error=True)})
                 # run normal commit
                 else:
                     r = manager.commit(**commit_arg)
-                    result.append({"commit": _form_result(r)})
+                    result.append({"commit": _form_result(r, raise_on_error=True)})
         except Exception:
             tb = traceback.format_exc()
             log.error(f"nornir_salt:ncclient_call transaction error: {tb}")
@@ -343,5 +349,6 @@ def ncclient_call(task: Task, call: str, *args, **kwargs) -> Result:
     # call manager object method otherwise
     else:
         result = getattr(manager, call)(*args, **kwargs)
+        failed = bool(getattr(result, "errors", None))
 
     return Result(host=task.host, result=_form_result(result), failed=failed)

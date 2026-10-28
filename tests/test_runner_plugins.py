@@ -22,7 +22,7 @@ except ImportError:
 
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.runners import QueueRunner, RetryRunner
+from nornir_salt.plugins.runners import RetryRunner
 from nornir_salt.plugins.tasks import netmiko_send_commands, nr_test
 
 logging.basicConfig(level=logging.ERROR)
@@ -61,52 +61,12 @@ def init(opts, runner):
     return nr
 
 
-RunnersPluginRegister.register("QueueRunner", QueueRunner)
 RunnersPluginRegister.register("RetryRunner", RetryRunner)
 
 
 # ----------------------------------------------------------------------
 # tests that need Nornir
 # ----------------------------------------------------------------------
-
-
-@skip_if_no_nornir
-def test_nr_runner_QueueRunner_with_connection_name():
-    lab_inventory = """
-hosts:
-  IOL1:
-    hostname: 192.168.217.10
-    platform: ios
-    groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
-    platform: ios
-    groups: [lab]
-
-groups:
-  lab:
-    username: cisco
-    password: cisco
-
-defaults: {}
-"""
-    lab_inventory_dict = yaml.safe_load(lab_inventory)
-    nr = init(lab_inventory_dict, "QueueRunner")
-    output = nr.run(
-        task=nr_test,
-        name="check ntp config",
-        connection_name="netmiko",
-    )
-    result = ResultSerializer(output)
-    pprint.pprint(result)
-    # verify output does not contains connection_name k/v pair
-    assert result == {
-        "IOL1": {"check ntp config": {}},
-        "IOL2": {"check ntp config": {}},
-    }
-
-
-# test_nr_runner_QueueRunner_with_connection_name()
 
 
 @skip_if_no_nornir

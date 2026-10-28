@@ -519,6 +519,66 @@ def test_FP():
     }
 
 
+@pytest.mark.parametrize("empty", [False, True])
+@pytest.mark.parametrize("prefix", ["192.168.1.0/24", "not-a-prefix"])
+@pytest.mark.parametrize("timeout", [None, 7])
+def test_FP_preserves_global_socket_timeout(empty, prefix, timeout):
+    import socket
+
+    previous = socket.getdefaulttimeout()
+    try:
+        socket.setdefaulttimeout(timeout)
+        nr = NornirObj.filter(filter_func=lambda host: not empty)
+        FFun(nr, FP=prefix)
+        assert socket.getdefaulttimeout() == timeout
+    finally:
+        socket.setdefaulttimeout(previous)
+
+
+@pytest.mark.parametrize("failure", [None, "dns", "timeout"])
+@pytest.mark.parametrize("timeout", [None, 7])
+def test_FP_hostname_lookup_restores_timeout(monkeypatch, failure, timeout):
+    import socket
+    from unittest.mock import Mock
+
+    nr = InitNornir(
+        logging={"enabled": False},
+        inventory={
+            "plugin": "DictInventory",
+            "options": {
+                "hosts": {"dns-host": {"hostname": "router.example.test"}},
+            },
+        },
+    )
+    observed = []
+    error = {"dns": socket.gaierror, "timeout": socket.timeout}.get(failure)
+    lookup = Mock(
+        side_effect=error
+        or (lambda hostname: observed.append(socket.getdefaulttimeout()) or "192.0.2.1")
+    )
+    monkeypatch.setattr(socket, "gethostbyname", lookup)
+    monkeypatch.setitem(sys.modules, "dns.resolver", None)
+    previous = socket.getdefaulttimeout()
+    try:
+        socket.setdefaulttimeout(timeout)
+        result = FFun(nr, FP="192.0.2.0/24")
+        assert list(result.inventory.hosts) == ([] if failure else ["dns-host"])
+        lookup.assert_called_once_with("router.example.test")
+        if not failure:
+            assert observed == [1]
+        assert socket.getdefaulttimeout() == timeout
+    finally:
+        socket.setdefaulttimeout(previous)
+
+
+def test_FP_numeric_addresses_do_not_resolve(monkeypatch):
+    import socket
+
+    monkeypatch.setattr(socket, "gethostbyname", None)
+    result = FFun(NornirObj, FP="192.168.1.0/24")
+    assert set(result.inventory.hosts) == {"R1", "R2"}
+
+
 # test_FP()
 
 

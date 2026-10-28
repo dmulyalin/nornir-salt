@@ -1,9 +1,11 @@
 """
-File to contain pydantic models for plugins input/output data validation
+Pydantic models and argument validation for Nornir-Salt plugins
 """
 
+import inspect
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from functools import wraps
+from typing import Annotated, Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 from nornir.core.inventory import Host
 from nornir.core.task import Task
@@ -16,8 +18,66 @@ from pydantic import (
     StrictFloat,
     StrictInt,
     StrictStr,
+    create_model,
+    field_validator,
     model_validator,
 )
+
+
+class ValidateFuncArgs:
+    """Validate supplied arguments without replacing live Nornir objects.
+
+    Optional integration functions extend the model with their argument fields.
+    The explicit model takes precedence and controls unknown argument handling.
+    """
+
+    def __init__(self, model: type[BaseModel], mixins=None):
+        self.model = model
+        self.mixins = mixins or []
+
+    def __call__(self, function):
+        signature = inspect.signature(function)
+        model = self.model
+        for mixin in self.mixins:
+            if mixin is None:
+                continue
+            fields = {}
+            for name, parameter in inspect.signature(
+                mixin, eval_str=True
+            ).parameters.items():
+                if (
+                    name == "self"
+                    or name in model.model_fields
+                    or parameter.kind
+                    in (
+                        inspect.Parameter.VAR_POSITIONAL,
+                        inspect.Parameter.VAR_KEYWORD,
+                    )
+                ):
+                    continue
+                annotation = parameter.annotation
+                if annotation is inspect.Parameter.empty:
+                    annotation = Any
+                default = parameter.default
+                # Integration arguments are optional unless the explicit model requires them.
+                if default is inspect.Parameter.empty:
+                    default = None
+                fields[name] = (annotation, default)
+            if fields:
+                model = create_model(model.__name__, __base__=model, **fields)
+
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            bound = signature.bind(*args, **kwargs)
+            values = dict(bound.arguments)
+            values.pop("self", None)
+            for name, parameter in signature.parameters.items():
+                if parameter.kind is inspect.Parameter.VAR_KEYWORD:
+                    values.update(values.pop(name, {}))
+            model.model_validate(values)
+            return function(*args, **kwargs)
+
+        return wrapper
 
 
 class model_RetryRunner(BaseModel):
@@ -305,6 +365,22 @@ class model_file_diff(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
+    @field_validator("last")
+    @classmethod
+    def check_last(cls, value):
+        if isinstance(value, list) and len(value) != 2:
+            raise ValueError("last must contain two file indexes")
+        if isinstance(value, str):
+            try:
+                first, second = value.split(",")
+                int(first)
+                int(second)
+            except ValueError:
+                raise ValueError(
+                    "last must contain two comma-separated file indexes"
+                ) from None
+        return value
+
 
 class FilesCallsEnum(str, Enum):
     files_ls = "ls"
@@ -400,6 +476,7 @@ class model_netmiko_send_config(BaseModel):
     commit_final_delay: Optional[StrictInt] = None
     batch: Optional[StrictInt] = None
     enable: Optional[StrictBool] = None
+    dry_run: Literal[False] = False
 
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
@@ -409,6 +486,7 @@ class model_pyats_send_config(BaseModel):
 
     task: Task
     config: Optional[Union[StrictStr, List[StrictStr]]] = None
+    dry_run: Literal[False] = False
 
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
@@ -572,15 +650,21 @@ class modelTestsProcessorTest(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_commands_given(cls, values):
-        test = values["test"]
+        if not isinstance(values, dict):
+            return values
+        test = values.get("test")
+        if not isinstance(test, str):
+            return values  # Let the field report missing or invalid test names.
         # verify that test has task defined except for when use_all_tasks is True
         if not values.get("use_all_tasks"):
-            assert values.get("task"), f"No task defined for test '{test}'"
+            if not values.get("task"):
+                raise ValueError(f"No task defined for test '{test}'")
         # iterate over test types and verify required parameters provided
         if any(i in test.lower() for i in ["contains", "equal"]):
-            assert "pattern" in values, f"No pattern provided for test '{test}'"
+            if "pattern" not in values:
+                raise ValueError(f"No pattern provided for test '{test}'")
         elif any(i in test.lower() for i in ["custom"]):
-            assert any(  # nosec
+            if not any(
                 i in values
                 for i in [
                     "function_file",
@@ -588,13 +672,14 @@ class modelTestsProcessorTest(BaseModel):
                     "function_call",
                     "function_import",
                 ]
-            ), f"No function provided for test '{test}'"
+            ):
+                raise ValueError(f"No function provided for test '{test}'")
         elif any(i in test.lower() for i in ["cerberus"]):
-            assert values.get("schema"), f"No schema provided for test '{test}'"
+            if not values.get("schema"):
+                raise ValueError(f"No schema provided for test '{test}'")
         elif any(i in test.lower() for i in ["eval"]):
-            assert values.get(
-                "expr"
-            ), f"No evaluate expression provided for test '{test}'"
+            if not values.get("expr"):
+                raise ValueError(f"No evaluate expression provided for test '{test}'")
         return values
 
 
@@ -660,6 +745,123 @@ class NornirInventory(BaseModel):
     hosts: Optional[Dict[StrictStr, NornirInventoryHost]] = None
     groups: Optional[Dict[StrictStr, NornirInventoryHost]] = None
     defaults: Optional[NornirInventoryHost] = None
+
+    @model_validator(mode="after")
+    def check_group_references(self):
+        groups = self.groups or {}
+        for kind, items in (("host", self.hosts or {}), ("group", groups)):
+            for name, item in items.items():
+                for group in item.groups or []:
+                    if group not in groups:
+                        relation = "parent group" if kind == "group" else "group"
+                        raise ValueError(
+                            f"DictInventory: failed to load {kind} {name!r}: "
+                            f"{relation} {group!r} is not defined"
+                        )
+        return self
+
+
+class model_tcp_ping(BaseModel):
+    task: Task
+    ports: Optional[
+        Union[
+            Annotated[StrictInt, Field(ge=0, le=65535)],
+            List[Annotated[StrictInt, Field(ge=0, le=65535)]],
+        ]
+    ] = None
+    timeout: Union[StrictInt, StrictFloat] = Field(1, ge=0, allow_inf_nan=False)
+    host: Optional[StrictStr] = None
+
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+
+
+class model_Jumphost(BaseModel):
+    hostkey_policy: Literal["autoadd", "reject", "warning"] = "autoadd"
+    known_hosts: Optional[StrictStr] = None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class model_ConnectionParameters(NornirInventoryConnection):
+    """Resolved credentials must be a mapping before connection setup."""
+
+    model_config = ConfigDict(extra="allow")
+
+    default_to_host_attributes: Optional[StrictBool] = None
+    connection_options: Optional[Dict[StrictStr, NornirInventoryConnection]] = None
+
+
+class model_ConnectionOpen(NornirInventoryConnection):
+    """Common connection plugin inputs; integrations own their extras schemas."""
+
+    configuration: Any = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class model_ToFileProcessor(BaseModel):
+    tf: StrictStr
+    base_url: StrictStr = "/var/nornir-salt/"
+    max_files: StrictInt = Field(5, ge=1)
+    index: Optional[StrictStr] = None
+    skip_failed: StrictBool = False
+    tf_index_lock: Any = None
+
+
+class model_DiffProcessor(BaseModel):
+    diff: StrictStr
+    base_url: StrictStr = "/var/nornir-salt/"
+    last: StrictInt = Field(1, ge=1)
+    in_diff: StrictBool = False
+    ignore_lines: Optional[List[StrictStr]] = None
+    remove_patterns: Optional[List[StrictStr]] = None
+    index: Optional[StrictStr] = None
+
+
+class model_TestsProcessor(BaseModel):
+    # Test items have separate models because rendered and static suites differ.
+    tests: Any = None
+    remove_tasks: StrictBool = True
+    failed_only: StrictBool = False
+    jinja_kwargs: Optional[Dict] = None
+    tests_data: Optional[Dict] = None
+    build_per_host_tests: StrictBool = False
+    render_tests: StrictBool = True
+    subset: Optional[Union[StrictStr, List[StrictStr]]] = None
+    groups: Optional[Union[StrictStr, List[StrictStr]]] = None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class model_InventoryUpdate(NornirInventoryHost):
+    nr: Any
+    name: StrictStr
+    groups_action: Literal["append", "insert", "remove"] = "append"
+
+    model_config = ConfigDict(extra="allow")
+
+
+class model_DataProcessorStep(BaseModel):
+    fun: StrictStr
+
+    model_config = ConfigDict(extra="allow")
+
+
+class model_DataProcessor(BaseModel):
+    dp: Optional[Union[StrictStr, List[Union[StrictStr, model_DataProcessorStep]]]] = (
+        None
+    )
+
+
+class model_DataProcessorPath(BaseModel):
+    data: Any
+    path: Union[StrictStr, List[Union[StrictStr, StrictInt]]]
+
+    model_config = ConfigDict(extra="allow")
+
+
+class model_RenderedTests(BaseModel):
+    tests: List[Any]
 
 
 class model_network(BaseModel):

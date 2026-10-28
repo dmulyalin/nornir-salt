@@ -64,8 +64,10 @@ from fnmatch import fnmatchcase
 
 from nornir.core.task import Result, Task
 
-from nornir_salt.utils.pydantic_models import model_scrapli_netconf_call
-from nornir_salt.utils.yangdantic import ValidateFuncArgs
+from nornir_salt.utils.pydantic_models import (
+    model_scrapli_netconf_call,
+    ValidateFuncArgs,
+)
 
 log = logging.getLogger(__name__)
 
