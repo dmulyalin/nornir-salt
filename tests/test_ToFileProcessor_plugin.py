@@ -40,13 +40,15 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -110,11 +112,11 @@ def test_to_file():
     output = nr_with_tf.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -125,28 +127,26 @@ ntp server 7.7.7.7
     for file in files:
         if "tf_index_common.json" in file:
             continue
-        assert "config__" in file and ("__IOL1.txt" in file or "__IOL2.txt" in file)
+        assert "config__" in file and ("__iol-r1.txt" in file or "__csr1k-r1.txt" in file)
 
 
 # test_to_file()
 
 
 @skip_if_no_nornir
-def test_to_file_max_files():
-    clean_up_folder()
-
+def test_to_file_max_files(tmp_path):
     # run test
     nr_with_tf = nr.with_processors(
-        [ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)]
+        [ToFileProcessor(tf="config", base_url=str(tmp_path), max_files=2)]
     )
     output = nr_with_tf.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -154,16 +154,16 @@ ntp server 7.7.7.7
     )
     time.sleep(1)
     nr_with_tf = nr.with_processors(
-        [ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)]
+        [ToFileProcessor(tf="config", base_url=str(tmp_path), max_files=2)]
     )
     output = nr_with_tf.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -171,25 +171,30 @@ ntp server 7.7.7.7
     )
     time.sleep(1)
     nr_with_tf = nr.with_processors(
-        [ToFileProcessor(tf="config", base_url="./tofile_outputs/", max_files=2)]
+        [ToFileProcessor(tf="config", base_url=str(tmp_path), max_files=2)]
     )
     output = nr_with_tf.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
         name="show run | inc ntp",
     )
-    files = os.listdir("./tofile_outputs/")
+    files = os.listdir(tmp_path)
 
     assert "tf_index_common.json" in files, "tf_index_common.json not found"
     assert len(files) == 5, "above max_files found in directory"
+    index = json.loads((tmp_path / "tf_index_common.json").read_text())
+    assert {host: len(entries) for host, entries in index["config"].items()} == {
+        "iol-r1": 2,
+        "csr1k-r1": 2,
+    }
 
 
 # test_to_file_max_files()
@@ -200,12 +205,12 @@ def test_to_file_struct_data():
     """test that structured data saves as a json"""
     clean_up_folder()
 
-    iol1_res = [
+    iol_r1_res = [
         {"ip": "1.2.3.4", "interface": "Gi123"},
         {"ip": "2.2.2.2", "interface": "Gi2"},
         {"ip": "3.3.3.3", "interface": "Gi3"},
     ]
-    iol2_res = [
+    csr1k_r1_res = [
         {"ip": "4.4.4.4", "interface": "Gi2"},
     ]
 
@@ -216,8 +221,8 @@ def test_to_file_struct_data():
     output = nr_with_tf.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": iol1_res,
-            "IOL2": iol2_res,
+            "iol-r1": iol_r1_res,
+            "csr1k-r1": csr1k_r1_res,
         },
         name="show run | inc ntp",
     )
@@ -232,14 +237,14 @@ def test_to_file_struct_data():
                 assert (
                     tf_index_common_content.count('"content_type": "json"') == 2
                 ), "Not all files converted to json"
-        elif "IOL1" in filname:
+        elif "iol-r1" in filname:
             with open(filname, "r") as f:
                 content = json.loads(f.read())
-                assert content == iol1_res
-        elif "IOL2" in filname:
+                assert content == iol_r1_res
+        elif "csr1k-r1" in filname:
             with open(filname, "r") as f:
                 content = json.loads(f.read())
-                assert content == iol2_res
+                assert content == csr1k_r1_res
 
 
 # test_to_file_struct_data()

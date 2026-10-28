@@ -17,7 +17,7 @@ except ImportError:
 
 from nornir_salt.plugins.functions import ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import nr_test, sleep, tcp_ping
+from nornir_salt.plugins.tasks import nr_test, sleep
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -31,17 +31,18 @@ skip_if_no_nornir = pytest.mark.skipif(
     HAS_NORNIR == False,
     reason="Failed to import all required Nornir modules and plugins",
 )
-skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -58,8 +59,6 @@ def init(opts):
     """
     Initiate nornir by calling InitNornir()
     """
-    global skip_if_no_lab
-
     nr = InitNornir(
         logging={"enabled": False},
         runner={"plugin": "serial"},
@@ -71,16 +70,6 @@ def init(opts):
                 "defaults": opts.get("defaults", {}),
             },
         },
-    )
-
-    ping_check = ResultSerializer(nr.run(tcp_ping))
-    HAS_LAB = True
-    for hostname, result in ping_check.items():
-        if result["tcp_ping"][22] == False:
-            HAS_LAB = False
-
-    skip_if_no_lab = pytest.mark.skipif(
-        HAS_LAB == False, reason="Failed connect to LAB"
     )
 
     return nr
@@ -109,13 +98,13 @@ ntp server 7.7.7.7
     result = ResultSerializer(output)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "check ntp config": "\n"
             "ntp server 7.7.7.8\n"
             "ntp server 7.7.7.7\n"
             "        "
         },
-        "IOL2": {
+        "csr1k-r1": {
             "check ntp config": "\n"
             "ntp server 7.7.7.8\n"
             "ntp server 7.7.7.7\n"
@@ -133,8 +122,8 @@ def test_nr_test_kwargs():
     result = ResultSerializer(output)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {"check ntp config": {"a": "b", "c": "d"}},
-        "IOL2": {"check ntp config": {"a": "b", "c": "d"}},
+        "iol-r1": {"check ntp config": {"a": "b", "c": "d"}},
+        "csr1k-r1": {"check ntp config": {"a": "b", "c": "d"}},
     }
 
 
@@ -146,11 +135,11 @@ def test_nr_test_ret_data_per_host():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -159,13 +148,13 @@ ntp server 7.7.7.7
     result = ResultSerializer(output)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "check ntp config": "\n"
             "ntp server 7.7.7.8\n"
             "ntp server 7.7.7.7\n"
             "        "
         },
-        "IOL2": {"check ntp config": "\nntp server 7.7.7.7\n        "},
+        "csr1k-r1": {"check ntp config": "\nntp server 7.7.7.7\n        "},
     }
 
 
@@ -180,8 +169,8 @@ def test_task_sleep_random_two_digits():
     )
     result = ResultSerializer(output)
     pprint.pprint(result)
-    assert "Slept for" in result["IOL1"]["sleep"]
-    assert "Slept for" in result["IOL2"]["sleep"]
+    assert "Slept for" in result["iol-r1"]["sleep"]
+    assert "Slept for" in result["csr1k-r1"]["sleep"]
 
 
 # test_task_sleep_random_two_digits()
@@ -195,8 +184,8 @@ def test_task_sleep_random_digit():
     )
     result = ResultSerializer(output)
     pprint.pprint(result)
-    assert "Slept for" in result["IOL1"]["sleep"]
-    assert "Slept for" in result["IOL2"]["sleep"]
+    assert "Slept for" in result["iol-r1"]["sleep"]
+    assert "Slept for" in result["csr1k-r1"]["sleep"]
 
 
 # test_task_sleep_random_digit()
@@ -212,8 +201,8 @@ def test_nr_test_ret_task_data():
     result = ResultSerializer(output)
     pprint.pprint(result)
     assert result == {
-        "IOL1": {"nr_test": {"cmds": ["foo", "bar"]}},
-        "IOL2": {"nr_test": {"cmds": ["foo", "bar"]}},
+        "iol-r1": {"nr_test": {"cmds": ["foo", "bar"]}},
+        "csr1k-r1": {"nr_test": {"cmds": ["foo", "bar"]}},
     }
 
 
@@ -227,6 +216,6 @@ def test_nr_test_ret_task_data_key():
     result = ResultSerializer(output)
     pprint.pprint(result)
     assert result == {
-        "IOL1": {"nr_test": ["foo", "bar"]},
-        "IOL2": {"nr_test": ["foo", "bar"]},
+        "iol-r1": {"nr_test": ["foo", "bar"]},
+        "csr1k-r1": {"nr_test": ["foo", "bar"]},
     }

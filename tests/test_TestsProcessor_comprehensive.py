@@ -42,9 +42,10 @@ skip_if_no_nornir = pytest.mark.skipif(
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
     data:
       interfaces:
@@ -59,9 +60,10 @@ hosts:
           line: line protocol is up
           admin: admin up
       version: xe1.2.3.4
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
     data:
       version: xe1.2.3.4
@@ -118,17 +120,17 @@ def test_ncontains_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8\nntp server 7.7.7.7",
-            "IOL2": "ntp server 7.7.7.7",
+            "iol-r1": "ntp server 7.7.7.8\nntp server 7.7.7.7",
+            "csr1k-r1": "ntp server 7.7.7.7",
         },
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 has the pattern so ncontains should FAIL, IOL2 does not so PASS
-    assert check_result["IOL1"]["Test NTP absent"]["result"] == "FAIL"
-    assert check_result["IOL1"]["Test NTP absent"]["exception"] == "Pattern in output"
-    assert check_result["IOL2"]["Test NTP absent"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP absent"]["exception"] is None
+    # iol-r1 has the pattern so ncontains should FAIL, csr1k-r1 does not so PASS
+    assert check_result["iol-r1"]["Test NTP absent"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP absent"]["exception"] == "Pattern in output"
+    assert check_result["csr1k-r1"]["Test NTP absent"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP absent"]["exception"] is None
 
 
 @skip_if_no_nornir
@@ -147,18 +149,18 @@ def test_ncontains_re_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "no ntp configured",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "no ntp configured",
         },
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP regex absent"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP regex absent"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Test NTP regex absent"]["exception"]
+        check_result["iol-r1"]["Test NTP regex absent"]["exception"]
         == "Regex pattern in output"
     )
-    assert check_result["IOL2"]["Test NTP regex absent"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP regex absent"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -177,20 +179,20 @@ def test_nequal_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "Version A",
-            "IOL2": "Version B",
+            "iol-r1": "Version A",
+            "csr1k-r1": "Version B",
         },
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 is equal so nequal should FAIL
-    assert check_result["IOL1"]["Check version differs"]["result"] == "FAIL"
+    # iol-r1 is equal so nequal should FAIL
+    assert check_result["iol-r1"]["Check version differs"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Check version differs"]["exception"]
+        check_result["iol-r1"]["Check version differs"]["exception"]
         == "Pattern and output equal"
     )
-    # IOL2 is not equal so nequal should PASS
-    assert check_result["IOL2"]["Check version differs"]["result"] == "PASS"
+    # csr1k-r1 is not equal so nequal should PASS
+    assert check_result["csr1k-r1"]["Check version differs"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -209,16 +211,16 @@ def test_ncontains_lines_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "logging host 1.1.1.1\nlogging host 2.2.2.2",
-            "IOL2": "logging host 9.9.9.9\nlogging host 8.8.8.8",
+            "iol-r1": "logging host 1.1.1.1\nlogging host 2.2.2.2",
+            "csr1k-r1": "logging host 9.9.9.9\nlogging host 8.8.8.8",
         },
         name="show run | inc logging",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 does not have the bad lines - PASS
-    assert check_result["IOL1"]["Test no bad logging"]["result"] == "PASS"
-    # IOL2 has the bad lines - FAIL
-    assert check_result["IOL2"]["Test no bad logging"]["result"] == "FAIL"
+    # iol-r1 does not have the bad lines - PASS
+    assert check_result["iol-r1"]["Test no bad logging"]["result"] == "PASS"
+    # csr1k-r1 has the bad lines - FAIL
+    assert check_result["csr1k-r1"]["Test no bad logging"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -237,17 +239,17 @@ def test_contains_lines_re_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8\nntp server 7.7.7.7",
-            "IOL2": "ntp server 7.7.7.7",
+            "iol-r1": "ntp server 7.7.7.8\nntp server 7.7.7.7",
+            "csr1k-r1": "ntp server 7.7.7.7",
         },
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP lines regex"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP lines regex"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP lines regex"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP lines regex"]["result"] == "FAIL"
     assert (
         "Regex pattern not in output"
-        in check_result["IOL2"]["Test NTP lines regex"]["exception"]
+        in check_result["csr1k-r1"]["Test NTP lines regex"]["exception"]
     )
 
 
@@ -267,16 +269,16 @@ def test_ncontains_lines_re_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "no ntp configured",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "no ntp configured",
         },
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 has the regex match, so inverted should FAIL
-    assert check_result["IOL1"]["Test no NTP lines regex"]["result"] == "FAIL"
-    # IOL2 doesn't match, so inverted should PASS
-    assert check_result["IOL2"]["Test no NTP lines regex"]["result"] == "PASS"
+    # iol-r1 has the regex match, so inverted should FAIL
+    assert check_result["iol-r1"]["Test no NTP lines regex"]["result"] == "FAIL"
+    # csr1k-r1 doesn't match, so inverted should PASS
+    assert check_result["csr1k-r1"]["Test no NTP lines regex"]["result"] == "PASS"
 
 
 # ======================================================================
@@ -302,17 +304,17 @@ def test_contains_count_ge_and_count_le_combined():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 1\nntp server 2\nntp server 3",  # 3 - in range
-            "IOL2": "ntp server 1",  # 1 - below range
+            "iol-r1": "ntp server 1\nntp server 2\nntp server 3",  # 3 - in range
+            "csr1k-r1": "ntp server 1",  # 1 - below range
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP count range"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP count range"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP count range"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP count range"]["result"] == "FAIL"
     assert (
         "between 2 and 4 times"
-        in check_result["IOL2"]["Test NTP count range"]["exception"]
+        in check_result["csr1k-r1"]["Test NTP count range"]["exception"]
     )
 
 
@@ -335,20 +337,20 @@ def test_contains_count_ge_and_count_le_combined_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 1\nntp server 2\nntp server 3",  # 3 - in range
-            "IOL2": "ntp server 1",  # 1 - below range
+            "iol-r1": "ntp server 1\nntp server 2\nntp server 3",  # 3 - in range
+            "csr1k-r1": "ntp server 1",  # 1 - below range
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 was in range, reverted should FAIL
-    assert check_result["IOL1"]["Test NTP count range revert"]["result"] == "FAIL"
+    # iol-r1 was in range, reverted should FAIL
+    assert check_result["iol-r1"]["Test NTP count range revert"]["result"] == "FAIL"
     assert (
         "between 2 and 4 times"
-        in check_result["IOL1"]["Test NTP count range revert"]["exception"]
+        in check_result["iol-r1"]["Test NTP count range revert"]["exception"]
     )
-    # IOL2 was out of range, reverted should PASS
-    assert check_result["IOL2"]["Test NTP count range revert"]["result"] == "PASS"
+    # csr1k-r1 was out of range, reverted should PASS
+    assert check_result["csr1k-r1"]["Test NTP count range revert"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -368,16 +370,16 @@ def test_contains_with_use_re_and_err_msg():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "no ntp",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "no ntp",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP regex err_msg"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP regex err_msg"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP regex err_msg"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP regex err_msg"]["result"] == "FAIL"
     assert (
-        check_result["IOL2"]["Test NTP regex err_msg"]["exception"]
+        check_result["csr1k-r1"]["Test NTP regex err_msg"]["exception"]
         == "NTP 7.7.7.8 regex match failed"
     )
 
@@ -399,16 +401,16 @@ def test_contains_pattern_criteria_truncation():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": long_pattern,
-            "IOL2": "short",
+            "iol-r1": long_pattern,
+            "csr1k-r1": "short",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # Criteria should be truncated to first 24 chars
-    assert len(check_result["IOL1"]["Test long pattern criteria"]["criteria"]) == 24
+    assert len(check_result["iol-r1"]["Test long pattern criteria"]["criteria"]) == 24
     assert (
-        check_result["IOL1"]["Test long pattern criteria"]["criteria"]
+        check_result["iol-r1"]["Test long pattern criteria"]["criteria"]
         == long_pattern[:24]
     )
 
@@ -434,14 +436,14 @@ def test_contains_lines_with_multiline_string_pattern():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "logging host 1.1.1.1\nlogging host 2.2.2.2\nlogging host 3.3.3.3",
-            "IOL2": "logging host 1.1.1.1",
+            "iol-r1": "logging host 1.1.1.1\nlogging host 2.2.2.2\nlogging host 3.3.3.3",
+            "csr1k-r1": "logging host 1.1.1.1",
         },
         name="show run | inc logging",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test logging lines string"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test logging lines string"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test logging lines string"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test logging lines string"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -461,14 +463,14 @@ def test_contains_lines_with_count():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 1\nntp server 2",  # 2 occurrences
-            "IOL2": "ntp server 1",  # 1 occurrence
+            "iol-r1": "ntp server 1\nntp server 2",  # 2 occurrences
+            "csr1k-r1": "ntp server 1",  # 1 occurrence
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP lines count"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP lines count"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP lines count"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP lines count"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -492,14 +494,14 @@ def test_equal_with_list_pattern():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": ["Gi1", "Gi2", "Gi3"],
-            "IOL2": ["Gi1", "Gi2"],
+            "iol-r1": ["Gi1", "Gi2", "Gi3"],
+            "csr1k-r1": ["Gi1", "Gi2"],
         },
         name="get interfaces",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test interfaces list equal"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test interfaces list equal"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test interfaces list equal"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test interfaces list equal"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -519,16 +521,16 @@ def test_equal_with_custom_err_msg():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "xe1.2.3.4",
-            "IOL2": "xe4.3.2.1",
+            "iol-r1": "xe1.2.3.4",
+            "csr1k-r1": "xe4.3.2.1",
         },
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test version equal"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test version equal"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test version equal"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test version equal"]["result"] == "FAIL"
     assert (
-        check_result["IOL2"]["Test version equal"]["exception"]
+        check_result["csr1k-r1"]["Test version equal"]["exception"]
         == "Version mismatch detected"
     )
 
@@ -550,19 +552,19 @@ def test_nequal_with_custom_err_msg():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "xe1.2.3.4",
-            "IOL2": "xe4.3.2.1",
+            "iol-r1": "xe1.2.3.4",
+            "csr1k-r1": "xe4.3.2.1",
         },
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 matches, nequal should FAIL with custom err_msg
-    assert check_result["IOL1"]["Test version nequal"]["result"] == "FAIL"
+    # iol-r1 matches, nequal should FAIL with custom err_msg
+    assert check_result["iol-r1"]["Test version nequal"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Test version nequal"]["exception"]
+        check_result["iol-r1"]["Test version nequal"]["exception"]
         == "Version should differ"
     )
-    assert check_result["IOL2"]["Test version nequal"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test version nequal"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -581,11 +583,11 @@ def test_equal_criteria_truncation_long_string():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": long_pattern, "IOL2": "short"},
+        ret_data_per_host={"iol-r1": long_pattern, "csr1k-r1": "short"},
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert len(check_result["IOL1"]["Test long equal criteria"]["criteria"]) == 24
+    assert len(check_result["iol-r1"]["Test long equal criteria"]["criteria"]) == 24
 
 
 @skip_if_no_nornir
@@ -604,16 +606,16 @@ def test_equal_with_dict_pattern():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"hostname": "router1", "model": "ISR4451"},
-            "IOL2": {"hostname": "router2", "model": "ISR4451"},
+            "iol-r1": {"hostname": "router1", "model": "ISR4451"},
+            "csr1k-r1": {"hostname": "router2", "model": "ISR4451"},
         },
         name="get facts",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test facts equal"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test facts equal"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test facts equal"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test facts equal"]["result"] == "FAIL"
     # criteria should be empty for non-string patterns
-    assert check_result["IOL1"]["Test facts equal"]["criteria"] == ""
+    assert check_result["iol-r1"]["Test facts equal"]["criteria"] == ""
 
 
 @skip_if_no_nornir
@@ -631,12 +633,12 @@ def test_equal_with_integer_pattern():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": 9200, "IOL2": 1500},
+        ret_data_per_host={"iol-r1": 9200, "csr1k-r1": 1500},
         name="get mtu",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test MTU equal"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test MTU equal"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test MTU equal"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test MTU equal"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -661,20 +663,20 @@ def test_eval_with_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "no ntp",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "no ntp",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 matches so revert should FAIL
-    assert check_result["IOL1"]["Test NTP eval revert"]["result"] == "FAIL"
+    # iol-r1 matches so revert should FAIL
+    assert check_result["iol-r1"]["Test NTP eval revert"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Test NTP eval revert"]["exception"]
+        check_result["iol-r1"]["Test NTP eval revert"]["exception"]
         == "Pattern and output equal"
     )
-    # IOL2 doesn't match so revert should PASS
-    assert check_result["IOL2"]["Test NTP eval revert"]["result"] == "PASS"
+    # csr1k-r1 doesn't match so revert should PASS
+    assert check_result["csr1k-r1"]["Test NTP eval revert"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -695,15 +697,15 @@ def test_eval_with_revert_and_err_msg():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "no ntp",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "no ntp",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test eval revert err_msg"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test eval revert err_msg"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Test eval revert err_msg"]["exception"]
+        check_result["iol-r1"]["Test eval revert err_msg"]["exception"]
         == "NTP should not be present"
     )
 
@@ -723,7 +725,7 @@ def test_eval_exec_error():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -749,13 +751,13 @@ def test_eval_exec_error_with_custom_err_msg():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data"},
+        ret_data_per_host={"iol-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test eval error msg"]["result"] == "ERROR"
+    assert check_result["iol-r1"]["Test eval error msg"]["result"] == "ERROR"
     assert (
-        check_result["IOL1"]["Test eval error msg"]["exception"]
+        check_result["iol-r1"]["Test eval error msg"]["exception"]
         == "Custom error message"
     )
 
@@ -775,13 +777,13 @@ def test_eval_assert_without_message():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data"},
+        ret_data_per_host={"iol-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test assert no msg"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test assert no msg"]["result"] == "FAIL"
     # When assertion has no message, str(e) is empty so fallback to "AssertionError"
-    assert check_result["IOL1"]["Test assert no msg"]["exception"] == "AssertionError"
+    assert check_result["iol-r1"]["Test assert no msg"]["exception"] == "AssertionError"
 
 
 @skip_if_no_nornir
@@ -799,12 +801,12 @@ def test_eval_expression_evaluates_to_true():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data"},
+        ret_data_per_host={"iol-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test eval true"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test eval true"]["success"] is True
+    assert check_result["iol-r1"]["Test eval true"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test eval true"]["success"] is True
 
 
 @skip_if_no_nornir
@@ -823,14 +825,14 @@ def test_eval_with_host_reference():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "Hostname: IOL1",
-            "IOL2": "Hostname: IOL3",  # doesn't contain IOL2
+            "iol-r1": "Hostname: iol-r1",
+            "csr1k-r1": "Hostname: IOL3",  # doesn't contain csr1k-r1
         },
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test eval host ref"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test eval host ref"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test eval host ref"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test eval host ref"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -855,14 +857,14 @@ def test_path_with_list_index():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"interfaces": [{"mtu": 1500}, {"mtu": 9200}]},
-            "IOL2": {"interfaces": [{"mtu": 9200}]},
+            "iol-r1": {"interfaces": [{"mtu": 1500}, {"mtu": 9200}]},
+            "csr1k-r1": {"interfaces": [{"mtu": 9200}]},
         },
         name="get interfaces",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test first interface MTU"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test first interface MTU"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test first interface MTU"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test first interface MTU"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -882,25 +884,25 @@ def test_path_with_cerberus():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "interfaces": [
                     {"name": "Gi1", "mtu": 1500},
                     {"name": "Gi2", "mtu": 9200},
                 ]
             },
-            "IOL2": {"interfaces": [{"name": "Eth1", "mtu": 1500}]},
+            "csr1k-r1": {"interfaces": [{"name": "Eth1", "mtu": 1500}]},
         },
         name="get interfaces",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
-    # IOL1 should have one FAIL (Gi2 mtu=9200)
-    iol1_results = [r for r in check_result if r["host"] == "IOL1"]
-    assert len(iol1_results) == 1  # only failed results reported by default
-    assert iol1_results[0]["result"] == "FAIL"
-    # IOL2 should PASS
-    iol2_results = [r for r in check_result if r["host"] == "IOL2"]
-    assert len(iol2_results) == 1
-    assert iol2_results[0]["result"] == "PASS"
+    # iol-r1 should have one FAIL (Gi2 mtu=9200)
+    iol_r1_results = [r for r in check_result if r["host"] == "iol-r1"]
+    assert len(iol_r1_results) == 1  # only failed results reported by default
+    assert iol_r1_results[0]["result"] == "FAIL"
+    # csr1k-r1 should PASS
+    csr1k_r1_results = [r for r in check_result if r["host"] == "csr1k-r1"]
+    assert len(csr1k_r1_results) == 1
+    assert csr1k_r1_results[0]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -920,7 +922,7 @@ def test_path_with_contains_lines():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "config": {
                     "sections": [
                         "state: enabled\nmode: active",
@@ -928,16 +930,16 @@ def test_path_with_contains_lines():
                     ]
                 }
             },
-            "IOL2": {"config": {"sections": ["state: enabled\nmode: active"]}},
+            "csr1k-r1": {"config": {"sections": ["state: enabled\nmode: active"]}},
         },
         name="show config",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
-    # IOL1 has one failing section, IOL2 PASS
-    iol1_results = [r for r in check_result if r["host"] == "IOL1"]
-    assert any(r["result"] == "FAIL" for r in iol1_results)
-    iol2_results = [r for r in check_result if r["host"] == "IOL2"]
-    assert all(r["result"] == "PASS" for r in iol2_results)
+    # iol-r1 has one failing section, csr1k-r1 PASS
+    iol_r1_results = [r for r in check_result if r["host"] == "iol-r1"]
+    assert any(r["result"] == "FAIL" for r in iol_r1_results)
+    csr1k_r1_results = [r for r in check_result if r["host"] == "csr1k-r1"]
+    assert all(r["result"] == "PASS" for r in csr1k_r1_results)
 
 
 @skip_if_no_nornir
@@ -957,14 +959,14 @@ def test_path_with_nested_dict_traversal():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"config": {"system": {"hostname": "router1"}}},
-            "IOL2": {"config": {"system": {"hostname": "router2"}}},
+            "iol-r1": {"config": {"system": {"hostname": "router1"}}},
+            "csr1k-r1": {"config": {"system": {"hostname": "router2"}}},
         },
         name="get config",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test hostname"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test hostname"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test hostname"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test hostname"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -1002,16 +1004,16 @@ def test_subset_filtering():
         task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "ntp server 7.7.7.8",
-                "IOL2": "ntp server 7.7.7.7",
+                "iol-r1": "ntp server 7.7.7.8",
+                "csr1k-r1": "ntp server 7.7.7.7",
             },
             name="show ntp",
         )
         task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "logging host 1.1.1.1",
-                "IOL2": "logging host 2.2.2.2",
+                "iol-r1": "logging host 1.1.1.1",
+                "csr1k-r1": "logging host 2.2.2.2",
             },
             name="show logging",
         )
@@ -1064,22 +1066,22 @@ def test_subset_filtering_comma_string():
         task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "ntp server 7.7.7.8",
-                "IOL2": "ntp server 7.7.7.7",
+                "iol-r1": "ntp server 7.7.7.8",
+                "csr1k-r1": "ntp server 7.7.7.7",
             },
             name="show ntp",
         )
         task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "logging host 1.1.1.1",
-                "IOL2": "logging host 2.2.2.2",
+                "iol-r1": "logging host 1.1.1.1",
+                "csr1k-r1": "logging host 2.2.2.2",
             },
             name="show logging",
         )
         task.run(
             task=nr_test,
-            ret_data_per_host={"IOL1": "Version 1.2.3", "IOL2": "Version 4.5.6"},
+            ret_data_per_host={"iol-r1": "Version 1.2.3", "csr1k-r1": "Version 4.5.6"},
             name="show version",
         )
         return Result(host=task.host)
@@ -1110,12 +1112,12 @@ def test_render_tests_false():
     )
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server 7.7.7.8", "IOL2": "ntp"},
+        ret_data_per_host={"iol-r1": "ntp server 7.7.7.8", "csr1k-r1": "ntp"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP config"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP config"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP config"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP config"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -1137,7 +1139,7 @@ def test_auto_generated_name_when_name_missing():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server 7.7.7.8", "IOL2": "ntp server 7.7.7.7"},
+        ret_data_per_host={"iol-r1": "ntp server 7.7.7.8", "csr1k-r1": "ntp server 7.7.7.7"},
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1165,7 +1167,7 @@ def run(result):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1197,7 +1199,7 @@ def run(result):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1225,7 +1227,7 @@ def run(result):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1252,7 +1254,7 @@ def run(result):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1280,7 +1282,7 @@ def run(result):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1307,7 +1309,7 @@ def run(result):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1338,15 +1340,15 @@ def run(result, threshold=0):
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "line1\nline2\nline3\nline4",  # 4 lines >= 3
-            "IOL2": "line1",  # 1 line < 3
+            "iol-r1": "line1\nline2\nline3\nline4",  # 4 lines >= 3
+            "csr1k-r1": "line1",  # 1 line < 3
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test custom kwargs"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test custom kwargs"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test custom kwargs"]["exception"] == "Not enough lines"
+    assert check_result["iol-r1"]["Test custom kwargs"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test custom kwargs"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test custom kwargs"]["exception"] == "Not enough lines"
 
 
 @skip_if_no_nornir
@@ -1354,9 +1356,9 @@ def test_custom_function_with_add_host():
     """Test custom function with add_host=True parameter."""
     custom_function = """
 def run(result, host=None):
-    if host and host.name == 'IOL1':
+    if host and host.name == 'iol-r1':
         return {"result": "PASS", "success": True}
-    return {"result": "FAIL", "success": False, "exception": "Host is not IOL1"}
+    return {"result": "FAIL", "success": False, "exception": "Host is not iol-r1"}
 """
     tests = [
         {
@@ -1371,12 +1373,12 @@ def run(result, host=None):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test custom add_host"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test custom add_host"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test custom add_host"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test custom add_host"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -1398,7 +1400,7 @@ def run(result):
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1432,14 +1434,14 @@ def run(result):
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 1",
-            "IOL2": "no ntp",
+            "iol-r1": "ntp server 1",
+            "csr1k-r1": "no ntp",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test custom globals"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test custom globals"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test custom globals"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test custom globals"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -1474,7 +1476,7 @@ def test_custom_function_bad_function_import():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1508,20 +1510,20 @@ def run(results):
     def grouped_task(task):
         task.run(
             task=nr_test,
-            ret_data_per_host={"IOL1": "ntp ok", "IOL2": "ntp ok"},
+            ret_data_per_host={"iol-r1": "ntp ok", "csr1k-r1": "ntp ok"},
             name="show ntp",
         )
         task.run(
             task=nr_test,
-            ret_data_per_host={"IOL1": "logging ok", "IOL2": "logging error found"},
+            ret_data_per_host={"iol-r1": "logging ok", "csr1k-r1": "logging error found"},
             name="show logging",
         )
         return Result(host=task.host)
 
     output = nr_with_tests.run(task=grouped_task)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test multi-task custom"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test multi-task custom"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test multi-task custom"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test multi-task custom"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -1544,7 +1546,7 @@ def test_cerberus_unsupported_result_type():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "just a string", "IOL2": "another string"},
+        ret_data_per_host={"iol-r1": "just a string", "csr1k-r1": "another string"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1570,14 +1572,14 @@ def test_cerberus_allow_unknown_false():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"hostname": "router1"},  # passes - only known field
-            "IOL2": {"hostname": "router2", "model": "ISR"},  # fails - unknown field
+            "iol-r1": {"hostname": "router1"},  # passes - only known field
+            "csr1k-r1": {"hostname": "router2", "model": "ISR"},  # fails - unknown field
         },
         name="get facts",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test strict schema"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test strict schema"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test strict schema"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test strict schema"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -1627,12 +1629,12 @@ def test_no_matching_task_results():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp data", "IOL2": "ntp data"},
+        ret_data_per_host={"iol-r1": "ntp data", "csr1k-r1": "ntp data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # "Test no results" should get ERROR because its task name doesn't match
-    for host in ["IOL1", "IOL2"]:
+    for host in ["iol-r1", "csr1k-r1"]:
         assert check_result[host]["Test no results"]["result"] == "ERROR"
         assert (
             "Found no results to test"
@@ -1659,7 +1661,7 @@ def test_single_test_single_task_auto_match():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "data", "IOL2": "data"},
+        ret_data_per_host={"iol-r1": "data", "csr1k-r1": "data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -1697,20 +1699,20 @@ def test_multiple_tests_on_same_task():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8\nntp server 7.7.7.7",
-            "IOL2": "ntp server 7.7.7.7",
+            "iol-r1": "ntp server 7.7.7.8\nntp server 7.7.7.7",
+            "csr1k-r1": "ntp server 7.7.7.7",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1: all three should pass
-    assert check_result["IOL1"]["Test NTP server 8"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test NTP server 7"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test NTP count"]["result"] == "PASS"
-    # IOL2: first fails, second passes, third fails (count 1 != 2)
-    assert check_result["IOL2"]["Test NTP server 8"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test NTP server 7"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP count"]["result"] == "FAIL"
+    # iol-r1: all three should pass
+    assert check_result["iol-r1"]["Test NTP server 8"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test NTP server 7"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test NTP count"]["result"] == "PASS"
+    # csr1k-r1: first fails, second passes, third fails (count 1 != 2)
+    assert check_result["csr1k-r1"]["Test NTP server 8"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test NTP server 7"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP count"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -1729,19 +1731,19 @@ def test_list_of_lists_format_with_auto_name():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "no ntp",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "no ntp",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
     assert len(check_result) == 2
-    iol1 = [r for r in check_result if r["host"] == "IOL1"][0]
-    iol2 = [r for r in check_result if r["host"] == "IOL2"][0]
-    assert iol1["result"] == "PASS"
-    assert iol2["result"] == "FAIL"
+    iol_r1 = [r for r in check_result if r["host"] == "iol-r1"][0]
+    csr1k_r1 = [r for r in check_result if r["host"] == "csr1k-r1"][0]
+    assert iol_r1["result"] == "PASS"
+    assert csr1k_r1["result"] == "FAIL"
     # Name should be auto-generated
-    assert iol1["name"] is not None
+    assert iol_r1["name"] is not None
 
 
 @skip_if_no_nornir
@@ -1759,12 +1761,12 @@ def test_list_of_lists_eval_format():
     )
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server 7.7.7.8", "IOL2": "no data"},
+        ret_data_per_host={"iol-r1": "ntp server 7.7.7.8", "csr1k-r1": "no data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP eval"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP eval"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP eval"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP eval"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -1796,7 +1798,7 @@ def test_jinja2_template_renders_empty():
         task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "Interface mtu 1500",
+                "iol-r1": "Interface mtu 1500",
             },
             name="show interface Eth1",
         )
@@ -1804,11 +1806,11 @@ def test_jinja2_template_renders_empty():
 
     output = nr_with_tests.run(task=grouped_task)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 has interfaces defined, so tests should run
-    assert "IOL1" in check_result
-    assert "Test IOL1 Eth1 MTU" in check_result["IOL1"]
-    # IOL2 has no interfaces, template should render empty => no tests
-    assert check_result.get("IOL2", {}) == {}
+    # iol-r1 has interfaces defined, so tests should run
+    assert "iol-r1" in check_result
+    assert "Test iol-r1 Eth1 MTU" in check_result["iol-r1"]
+    # csr1k-r1 has no interfaces, template should render empty => no tests
+    assert check_result.get("csr1k-r1", {}) == {}
 
 
 # ======================================================================
@@ -1833,12 +1835,12 @@ def test_build_per_host_tests_with_dict_items():
     )
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server 7.7.7.8", "IOL2": "no ntp"},
+        ret_data_per_host={"iol-r1": "ntp server 7.7.7.8", "csr1k-r1": "no ntp"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP config"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP config"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP config"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP config"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -1853,12 +1855,12 @@ def test_build_per_host_tests_with_list_items():
     )
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server 7.7.7.8", "IOL2": "no ntp"},
+        ret_data_per_host={"iol-r1": "ntp server 7.7.7.8", "csr1k-r1": "no ntp"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP config"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP config"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP config"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP config"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -1873,12 +1875,12 @@ def test_build_per_host_tests_with_eval_list():
     )
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server", "IOL2": "no data"},
+        ret_data_per_host={"iol-r1": "ntp server", "csr1k-r1": "no data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP eval"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP eval"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP eval"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP eval"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -1954,8 +1956,8 @@ def test_failed_only_all_pass():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "ntp server 7.7.7.7",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "ntp server 7.7.7.7",
         },
         name="show ntp",
     )
@@ -1988,18 +1990,18 @@ def test_failed_only_mixed_results():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp 7.7.7.8",  # passes test 1, fails test 2
-            "IOL2": "ntp 7.7.7.7",  # fails both
+            "iol-r1": "ntp 7.7.7.8",  # passes test 1, fails test 2
+            "csr1k-r1": "ntp 7.7.7.7",  # fails both
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1 should only have failing test (Test NTP 9)
-    assert "Test NTP 8" not in check_result.get("IOL1", {})
-    assert check_result["IOL1"]["Test NTP 9"]["result"] == "FAIL"
-    # IOL2 should have both failing tests
-    assert check_result["IOL2"]["Test NTP 8"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test NTP 9"]["result"] == "FAIL"
+    # iol-r1 should only have failing test (Test NTP 9)
+    assert "Test NTP 8" not in check_result.get("iol-r1", {})
+    assert check_result["iol-r1"]["Test NTP 9"]["result"] == "FAIL"
+    # csr1k-r1 should have both failing tests
+    assert check_result["csr1k-r1"]["Test NTP 8"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test NTP 9"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -2017,7 +2019,7 @@ def test_remove_tasks_true_removes_original_output():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp configured", "IOL2": "ntp configured"},
+        ret_data_per_host={"iol-r1": "ntp configured", "csr1k-r1": "ntp configured"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
@@ -2042,7 +2044,7 @@ def test_remove_tasks_false_keeps_original_output():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=False)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp configured", "IOL2": "ntp configured"},
+        ret_data_per_host={"iol-r1": "ntp configured", "csr1k-r1": "ntp configured"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
@@ -2072,13 +2074,13 @@ def test_calling_by_global_name_EqualTest():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "1.0", "IOL2": "2.0"},
+        ret_data_per_host={"iol-r1": "1.0", "csr1k-r1": "2.0"},
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test version"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test version"]["test"] == "EqualTest"
-    assert check_result["IOL2"]["Test version"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test version"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test version"]["test"] == "EqualTest"
+    assert check_result["csr1k-r1"]["Test version"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -2097,14 +2099,14 @@ def test_calling_by_global_name_ContainsLinesTest():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "server 1\nserver 2\nserver 3",
-            "IOL2": "server 1\nserver 3",
+            "iol-r1": "server 1\nserver 2\nserver 3",
+            "csr1k-r1": "server 1\nserver 3",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP lines"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP lines"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP lines"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP lines"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -2122,12 +2124,12 @@ def test_calling_by_global_name_EvalTest():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server", "IOL2": "no data"},
+        ret_data_per_host={"iol-r1": "ntp server", "csr1k-r1": "no data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP eval"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP eval"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP eval"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP eval"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -2146,14 +2148,14 @@ def test_calling_by_global_name_CerberusTest():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"hostname": "router1"},
-            "IOL2": {"hostname": 123},  # wrong type
+            "iol-r1": {"hostname": "router1"},
+            "csr1k-r1": {"hostname": 123},  # wrong type
         },
         name="get facts",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test facts schema"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test facts schema"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test facts schema"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test facts schema"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -2176,7 +2178,7 @@ def test_result_serializer_to_dict_false():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server", "IOL2": "no data"},
+        ret_data_per_host={"iol-r1": "ntp server", "csr1k-r1": "no data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -2203,7 +2205,7 @@ def test_result_serializer_add_details_false():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server", "IOL2": "no data"},
+        ret_data_per_host={"iol-r1": "ntp server", "csr1k-r1": "no data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=False, to_dict=False)
@@ -2234,13 +2236,13 @@ def test_contains_pattern_with_newlines_in_criteria():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "line1\nline2", "IOL2": "line1"},
+        ret_data_per_host={"iol-r1": "line1\nline2", "csr1k-r1": "line1"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # Criteria should have escaped newlines
-    assert "\\n" in check_result["IOL1"]["Test newline pattern"]["criteria"]
-    assert "\n" not in check_result["IOL1"]["Test newline pattern"]["criteria"]
+    assert "\\n" in check_result["iol-r1"]["Test newline pattern"]["criteria"]
+    assert "\n" not in check_result["iol-r1"]["Test newline pattern"]["criteria"]
 
 
 # ======================================================================
@@ -2264,14 +2266,14 @@ def test_contains_re_regex_match():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "10.0.0.1  Active  0  0  0  0",
-            "IOL2": "10.0.0.1  Established  100  200  50  0",
+            "iol-r1": "10.0.0.1  Active  0  0  0  0",
+            "csr1k-r1": "10.0.0.1  Established  100  200  50  0",
         },
         name="show bgp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test BGP state regex"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test BGP state regex"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test BGP state regex"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test BGP state regex"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -2291,18 +2293,18 @@ def test_ncontains_with_err_msg():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp bad_server",  # has it - FAIL
-            "IOL2": "ntp good_server",  # doesn't have it - PASS
+            "iol-r1": "ntp bad_server",  # has it - FAIL
+            "csr1k-r1": "ntp good_server",  # doesn't have it - PASS
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test no bad server"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test no bad server"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Test no bad server"]["exception"]
+        check_result["iol-r1"]["Test no bad server"]["exception"]
         == "Bad server found in config"
     )
-    assert check_result["IOL2"]["Test no bad server"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test no bad server"]["result"] == "PASS"
 
 
 # ======================================================================
@@ -2326,14 +2328,14 @@ def test_contains_pattern_coerced_to_string():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "Interface MTU 9200",
-            "IOL2": "Interface MTU 1500",
+            "iol-r1": "Interface MTU 9200",
+            "csr1k-r1": "Interface MTU 1500",
         },
         name="show mtu",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test MTU contains int"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test MTU contains int"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test MTU contains int"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test MTU contains int"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -2357,11 +2359,11 @@ def test_equal_pattern_newlines_escaped_in_criteria():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "line1\nline2"},
+        ret_data_per_host={"iol-r1": "line1\nline2"},
         name="show data",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert "\\n" in check_result["IOL1"]["Test equal newline"]["criteria"]
+    assert "\\n" in check_result["iol-r1"]["Test equal newline"]["criteria"]
 
 
 # ======================================================================
@@ -2387,22 +2389,22 @@ def test_path_with_contains_report_all():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"config": ["state: enabled", "mode: enabled"]},
-            "IOL2": {"config": ["state: disabled", "mode: enabled"]},
+            "iol-r1": {"config": ["state: enabled", "mode: enabled"]},
+            "csr1k-r1": {"config": ["state: disabled", "mode: enabled"]},
         },
         name="get config",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
     # With report_all=True, all results (PASS and FAIL) should be reported
-    iol1_results = [r for r in check_result if r["host"] == "IOL1"]
-    iol2_results = [r for r in check_result if r["host"] == "IOL2"]
-    # IOL1 both pass
-    assert len(iol1_results) == 2
-    assert all(r["result"] == "PASS" for r in iol1_results)
-    # IOL2 one fails, one passes
-    assert len(iol2_results) == 2
-    assert any(r["result"] == "FAIL" for r in iol2_results)
-    assert any(r["result"] == "PASS" for r in iol2_results)
+    iol_r1_results = [r for r in check_result if r["host"] == "iol-r1"]
+    csr1k_r1_results = [r for r in check_result if r["host"] == "csr1k-r1"]
+    # iol-r1 both pass
+    assert len(iol_r1_results) == 2
+    assert all(r["result"] == "PASS" for r in iol_r1_results)
+    # csr1k-r1 one fails, one passes
+    assert len(csr1k_r1_results) == 2
+    assert any(r["result"] == "FAIL" for r in csr1k_r1_results)
+    assert any(r["result"] == "PASS" for r in csr1k_r1_results)
 
 
 # ======================================================================
@@ -2426,15 +2428,15 @@ def test_cerberus_name_format_from_data():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"interface": "Gi1", "mtu": 1500},
-            "IOL2": {"interface": "Gi2", "mtu": 9200},
+            "iol-r1": {"interface": "Gi1", "mtu": 1500},
+            "csr1k-r1": {"interface": "Gi2", "mtu": 9200},
         },
         name="get interfaces",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # Names should be formatted with data values
-    assert "Test Gi1 config" in check_result["IOL1"]
-    assert "Test Gi2 config" in check_result["IOL2"]
+    assert "Test Gi1 config" in check_result["iol-r1"]
+    assert "Test Gi2 config" in check_result["csr1k-r1"]
 
 
 # ======================================================================
@@ -2458,18 +2460,18 @@ def test_contains_re_revert_using_exclamation_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",
-            "IOL2": "no ntp configured",
+            "iol-r1": "ntp server 7.7.7.8",
+            "csr1k-r1": "no ntp configured",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test no NTP regex"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test no NTP regex"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Test no NTP regex"]["exception"]
+        check_result["iol-r1"]["Test no NTP regex"]["exception"]
         == "Regex pattern in output"
     )
-    assert check_result["IOL2"]["Test no NTP regex"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test no NTP regex"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -2488,14 +2490,14 @@ def test_contains_lines_revert_using_exclamation_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "Idle\nActive\nEstablished",  # has them - inverted FAIL
-            "IOL2": "Established\nEstablished",  # no bad lines - inverted PASS
+            "iol-r1": "Idle\nActive\nEstablished",  # has them - inverted FAIL
+            "csr1k-r1": "Established\nEstablished",  # no bad lines - inverted PASS
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test no bad lines"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test no bad lines"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test no bad lines"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test no bad lines"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -2514,14 +2516,14 @@ def test_contains_revert_using_exclamation_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "bad_config present",
-            "IOL2": "good_config only",
+            "iol-r1": "bad_config present",
+            "csr1k-r1": "good_config only",
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test no pattern"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test no pattern"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test no pattern"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test no pattern"]["result"] == "PASS"
 
 
 @skip_if_no_nornir
@@ -2540,14 +2542,14 @@ def test_nequal_using_exclamation_alias():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "oldversion",  # equal, inverted -> FAIL
-            "IOL2": "newversion",  # not equal, inverted -> PASS
+            "iol-r1": "oldversion",  # equal, inverted -> FAIL
+            "csr1k-r1": "newversion",  # not equal, inverted -> PASS
         },
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test version not equal"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test version not equal"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test version not equal"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test version not equal"]["result"] == "PASS"
 
 
 # ======================================================================
@@ -2572,21 +2574,21 @@ def test_extra_attributes_in_contains_test():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server 7.7.7.8", "IOL2": "no ntp"},
+        ret_data_per_host={"iol-r1": "ntp server 7.7.7.8", "csr1k-r1": "no ntp"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # Extra attributes should be present in results
     assert (
-        check_result["IOL1"]["Test NTP extra attrs"]["description"]
+        check_result["iol-r1"]["Test NTP extra attrs"]["description"]
         == "Verify NTP configuration"
     )
-    assert check_result["IOL1"]["Test NTP extra attrs"]["severity"] == "critical"
+    assert check_result["iol-r1"]["Test NTP extra attrs"]["severity"] == "critical"
     assert (
-        check_result["IOL2"]["Test NTP extra attrs"]["description"]
+        check_result["csr1k-r1"]["Test NTP extra attrs"]["description"]
         == "Verify NTP configuration"
     )
-    assert check_result["IOL2"]["Test NTP extra attrs"]["severity"] == "critical"
+    assert check_result["csr1k-r1"]["Test NTP extra attrs"]["severity"] == "critical"
 
 
 @skip_if_no_nornir
@@ -2605,11 +2607,11 @@ def test_extra_attributes_in_eval_test():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server"},
+        ret_data_per_host={"iol-r1": "ntp server"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test eval extra"]["category"] == "network"
+    assert check_result["iol-r1"]["Test eval extra"]["category"] == "network"
 
 
 # ======================================================================
@@ -2633,19 +2635,19 @@ def test_contains_with_none_result_data():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp configured",
-            # IOL2 not in ret_data_per_host, gets None
+            "iol-r1": "ntp configured",
+            # csr1k-r1 not in ret_data_per_host, gets None
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP none data"]["result"] == "PASS"
-    # IOL2 gets None result - ContainsTest calls str(pattern) on pattern and checks
+    assert check_result["iol-r1"]["Test NTP none data"]["result"] == "PASS"
+    # csr1k-r1 gets None result - ContainsTest calls str(pattern) on pattern and checks
     # pattern in result.result but result.result is None, should error
-    assert "IOL2" in check_result
-    iol2_test = check_result["IOL2"]["Test NTP none data"]
+    assert "csr1k-r1" in check_result
+    csr1k_r1_test = check_result["csr1k-r1"]["Test NTP none data"]
     # When result data is None, ContainsTest will try "ntp" in None which raises TypeError
-    assert iol2_test["result"] in ("FAIL", "ERROR")
+    assert csr1k_r1_test["result"] in ("FAIL", "ERROR")
 
 
 # ======================================================================
@@ -2670,19 +2672,19 @@ def test_contains_count_exact_zero():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp good_server",  # 0 occurrences of bad_server - PASS
-            "IOL2": "ntp bad_server",  # 1 occurrence - FAIL
+            "iol-r1": "ntp good_server",  # 0 occurrences of bad_server - PASS
+            "csr1k-r1": "ntp bad_server",  # 1 occurrence - FAIL
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1: 0 occurrences == count(0) -> PASS
-    assert check_result["IOL1"]["Test NTP count 0"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test NTP count 0"]["success"] is True
-    # IOL2: 1 occurrence != count(0) -> FAIL
-    assert check_result["IOL2"]["Test NTP count 0"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test NTP count 0"]["success"] is False
-    assert "0 times" in check_result["IOL2"]["Test NTP count 0"]["exception"]
+    # iol-r1: 0 occurrences == count(0) -> PASS
+    assert check_result["iol-r1"]["Test NTP count 0"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test NTP count 0"]["success"] is True
+    # csr1k-r1: 1 occurrence != count(0) -> FAIL
+    assert check_result["csr1k-r1"]["Test NTP count 0"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test NTP count 0"]["success"] is False
+    assert "0 times" in check_result["csr1k-r1"]["Test NTP count 0"]["exception"]
 
 
 @skip_if_no_nornir
@@ -2703,16 +2705,16 @@ def test_contains_count_zero_with_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp good_server",  # 0 occurrences -> normally PASS, reverted -> FAIL
-            "IOL2": "ntp bad_server",  # 1 occurrence -> normally FAIL, reverted -> PASS
+            "iol-r1": "ntp good_server",  # 0 occurrences -> normally PASS, reverted -> FAIL
+            "csr1k-r1": "ntp bad_server",  # 1 occurrence -> normally FAIL, reverted -> PASS
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test count 0 revert"]["result"] == "FAIL"
-    assert "0 times" in check_result["IOL1"]["Test count 0 revert"]["exception"]
-    assert check_result["IOL2"]["Test count 0 revert"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test count 0 revert"]["exception"] is None
+    assert check_result["iol-r1"]["Test count 0 revert"]["result"] == "FAIL"
+    assert "0 times" in check_result["iol-r1"]["Test count 0 revert"]["exception"]
+    assert check_result["csr1k-r1"]["Test count 0 revert"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test count 0 revert"]["exception"] is None
 
 
 @skip_if_no_nornir
@@ -2731,12 +2733,12 @@ def test_contains_count_zero_reported_in_result():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "no match here"},
+        ret_data_per_host={"iol-r1": "no match here"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # count=0 should appear in the result metadata
-    assert check_result["IOL1"]["Test count 0 in result"]["count"] == 0
+    assert check_result["iol-r1"]["Test count 0 in result"]["count"] == 0
 
 
 @skip_if_no_nornir
@@ -2756,17 +2758,17 @@ def test_contains_count_ge_zero():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 7.7.7.8",  # 0 occurrences of pattern, 0 >= 0 -> PASS
-            "IOL2": "some other data",  # 0 occurrences, 0 >= 0 -> PASS
+            "iol-r1": "ntp server 7.7.7.8",  # 0 occurrences of pattern, 0 >= 0 -> PASS
+            "csr1k-r1": "some other data",  # 0 occurrences, 0 >= 0 -> PASS
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # count_ge=0 means pattern must appear >= 0 times, which is always true
-    assert check_result["IOL1"]["Test count_ge 0"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test count_ge 0"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test count_ge 0"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test count_ge 0"]["result"] == "PASS"
     # count_ge=0 should be reported in result
-    assert check_result["IOL1"]["Test count_ge 0"]["count_ge"] == 0
+    assert check_result["iol-r1"]["Test count_ge 0"]["count_ge"] == 0
 
 
 @skip_if_no_nornir
@@ -2786,21 +2788,21 @@ def test_contains_count_le_zero():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp good_server",  # 0 occurrences <= 0 -> PASS
-            "IOL2": "bad_server is here",  # 1 occurrence > 0 -> FAIL
+            "iol-r1": "ntp good_server",  # 0 occurrences <= 0 -> PASS
+            "csr1k-r1": "bad_server is here",  # 1 occurrence > 0 -> FAIL
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test count_le 0"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test count_le 0"]["success"] is True
-    assert check_result["IOL2"]["Test count_le 0"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test count_le 0"]["success"] is False
+    assert check_result["iol-r1"]["Test count_le 0"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test count_le 0"]["success"] is True
+    assert check_result["csr1k-r1"]["Test count_le 0"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test count_le 0"]["success"] is False
     assert (
-        "lower or equal 0 times" in check_result["IOL2"]["Test count_le 0"]["exception"]
+        "lower or equal 0 times" in check_result["csr1k-r1"]["Test count_le 0"]["exception"]
     )
     # count_le=0 should be reported in result
-    assert check_result["IOL1"]["Test count_le 0"]["count_le"] == 0
+    assert check_result["iol-r1"]["Test count_le 0"]["count_le"] == 0
 
 
 @skip_if_no_nornir
@@ -2821,16 +2823,16 @@ def test_contains_count_ge_zero_and_count_le_zero_combined():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp good_server",  # 0 in [0,0] -> PASS
-            "IOL2": "bad_server configured",  # 1 not in [0,0] -> FAIL
+            "iol-r1": "ntp good_server",  # 0 in [0,0] -> PASS
+            "csr1k-r1": "bad_server configured",  # 1 not in [0,0] -> FAIL
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test range 0-0"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test range 0-0"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test range 0-0"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test range 0-0"]["result"] == "FAIL"
     assert (
-        "between 0 and 0 times" in check_result["IOL2"]["Test range 0-0"]["exception"]
+        "between 0 and 0 times" in check_result["csr1k-r1"]["Test range 0-0"]["exception"]
     )
 
 
@@ -2874,19 +2876,19 @@ def test_mixed_test_suite():
     def grouped_task(task):
         task.run(
             task=nr_test,
-            ret_data_per_host={"IOL1": "ntp server 1", "IOL2": "ntp server 2"},
+            ret_data_per_host={"iol-r1": "ntp server 1", "csr1k-r1": "ntp server 2"},
             name="show ntp",
         )
         task.run(
             task=nr_test,
-            ret_data_per_host={"IOL1": "v1.0", "IOL2": "v2.0"},
+            ret_data_per_host={"iol-r1": "v1.0", "csr1k-r1": "v2.0"},
             name="show version",
         )
         task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "syslog enabled\nlogging active",
-                "IOL2": "syslog disabled",
+                "iol-r1": "syslog enabled\nlogging active",
+                "csr1k-r1": "syslog disabled",
             },
             name="show logging",
         )
@@ -2894,16 +2896,16 @@ def test_mixed_test_suite():
 
     output = nr_with_tests.run(task=grouped_task)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1: all should PASS
-    assert check_result["IOL1"]["Test NTP contains"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test version equal"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test NTP eval"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test logging lines"]["result"] == "PASS"
-    # IOL2: version and logging should FAIL
-    assert check_result["IOL2"]["Test NTP contains"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test version equal"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test NTP eval"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test logging lines"]["result"] == "FAIL"
+    # iol-r1: all should PASS
+    assert check_result["iol-r1"]["Test NTP contains"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test version equal"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test NTP eval"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test logging lines"]["result"] == "PASS"
+    # csr1k-r1: version and logging should FAIL
+    assert check_result["csr1k-r1"]["Test NTP contains"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test version equal"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test NTP eval"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test logging lines"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -2949,19 +2951,19 @@ def _groups_grouped_task(task):
     """Helper: runs the four tasks expected by _groups_suite."""
     task.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server 1", "IOL2": "ntp server 2"},
+        ret_data_per_host={"iol-r1": "ntp server 1", "csr1k-r1": "ntp server 2"},
         name="show ntp",
     )
     task.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "v1.0", "IOL2": "v2.0"},
+        ret_data_per_host={"iol-r1": "v1.0", "csr1k-r1": "v2.0"},
         name="show version",
     )
     task.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "syslog enabled\nlogging active",
-            "IOL2": "syslog disabled",
+            "iol-r1": "syslog enabled\nlogging active",
+            "csr1k-r1": "syslog disabled",
         },
         name="show logging",
     )
@@ -2987,7 +2989,7 @@ def test_groups_filter_single_group_sys():
     # SYS group includes: "Test NTP contains" (NTP,SYS), "Test version equal" (SYS),
     #                      "Test logging lines" (LOG,SYS)
     # Should exclude:     "Test NTP eval" (NTP only)
-    for host in ["IOL1", "IOL2"]:
+    for host in ["iol-r1", "csr1k-r1"]:
         assert (
             "Test NTP contains" in check_result[host]
         ), f"Missing NTP contains for {host}"
@@ -3020,7 +3022,7 @@ def test_groups_filter_single_group_ntp():
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # NTP group includes: "Test NTP contains" (NTP,SYS), "Test NTP eval" (NTP)
     # Should exclude:     "Test version equal" (SYS), "Test logging lines" (LOG,SYS)
-    for host in ["IOL1", "IOL2"]:
+    for host in ["iol-r1", "csr1k-r1"]:
         assert "Test NTP contains" in check_result[host]
         assert "Test NTP eval" in check_result[host]
         assert "Test version equal" not in check_result[host]
@@ -3044,7 +3046,7 @@ def test_groups_filter_single_group_log():
     output = nr_with_tests.run(task=_groups_grouped_task)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # LOG group includes only: "Test logging lines" (LOG,SYS)
-    for host in ["IOL1", "IOL2"]:
+    for host in ["iol-r1", "csr1k-r1"]:
         assert "Test logging lines" in check_result[host]
         assert "Test NTP contains" not in check_result[host]
         assert "Test version equal" not in check_result[host]
@@ -3070,7 +3072,7 @@ def test_groups_filter_multiple_groups():
     # NTP|LOG includes: "Test NTP contains" (NTP,SYS), "Test NTP eval" (NTP),
     #                   "Test logging lines" (LOG,SYS)
     # Should exclude:   "Test version equal" (SYS only)
-    for host in ["IOL1", "IOL2"]:
+    for host in ["iol-r1", "csr1k-r1"]:
         assert "Test NTP contains" in check_result[host]
         assert "Test NTP eval" in check_result[host]
         assert "Test logging lines" in check_result[host]
@@ -3094,7 +3096,7 @@ def test_groups_filter_comma_separated_string():
     output = nr_with_tests.run(task=_groups_grouped_task)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # Same as multiple groups list: NTP|LOG
-    for host in ["IOL1", "IOL2"]:
+    for host in ["iol-r1", "csr1k-r1"]:
         assert "Test NTP contains" in check_result[host]
         assert "Test NTP eval" in check_result[host]
         assert "Test logging lines" in check_result[host]
@@ -3117,7 +3119,7 @@ def test_groups_filter_no_groups_runs_all():
     )
     output = nr_with_tests.run(task=_groups_grouped_task)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    for host in ["IOL1", "IOL2"]:
+    for host in ["iol-r1", "csr1k-r1"]:
         assert "Test NTP contains" in check_result[host]
         assert "Test version equal" in check_result[host]
         assert "Test NTP eval" in check_result[host]
@@ -3160,14 +3162,14 @@ def test_groups_filter_results_correctness():
     )
     output = nr_with_tests.run(task=_groups_grouped_task)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    # IOL1: ntp server present -> PASS, v1.0 matches -> PASS, syslog+enabled -> PASS
-    assert check_result["IOL1"]["Test NTP contains"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test version equal"]["result"] == "PASS"
-    assert check_result["IOL1"]["Test logging lines"]["result"] == "PASS"
-    # IOL2: ntp server present -> PASS, v2.0 != v1.0 -> FAIL, "syslog disabled" missing "enabled" -> FAIL
-    assert check_result["IOL2"]["Test NTP contains"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test version equal"]["result"] == "FAIL"
-    assert check_result["IOL2"]["Test logging lines"]["result"] == "FAIL"
+    # iol-r1: ntp server present -> PASS, v1.0 matches -> PASS, syslog+enabled -> PASS
+    assert check_result["iol-r1"]["Test NTP contains"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test version equal"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test logging lines"]["result"] == "PASS"
+    # csr1k-r1: ntp server present -> PASS, v2.0 != v1.0 -> FAIL, "syslog disabled" missing "enabled" -> FAIL
+    assert check_result["csr1k-r1"]["Test NTP contains"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test version equal"]["result"] == "FAIL"
+    assert check_result["csr1k-r1"]["Test logging lines"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -3193,15 +3195,15 @@ def test_jinja2_with_job_data():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "Software version: xe1.2.3.4",
-            "IOL2": "Software version: xe1.2.3.4",
+            "iol-r1": "Software version: xe1.2.3.4",
+            "csr1k-r1": "Software version: xe1.2.3.4",
         },
         name="show version",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # Both hosts have version xe1.2.3.4 in inventory data
-    assert check_result["IOL1"]["Test IOL1 version"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test IOL2 version"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test iol-r1 version"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test csr1k-r1 version"]["result"] == "PASS"
 
 
 # ======================================================================
@@ -3226,7 +3228,7 @@ def test_task_completed_cleans_up_host_data():
     )
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server", "IOL2": "ntp server"},
+        ret_data_per_host={"iol-r1": "ntp server", "csr1k-r1": "ntp server"},
         name="show ntp",
     )
     # After task completion, __task__ should not contain tests_suite or commands
@@ -3259,8 +3261,8 @@ def test_skip_results_attribute():
         r = task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "should be skipped",
-                "IOL2": "should be skipped",
+                "iol-r1": "should be skipped",
+                "csr1k-r1": "should be skipped",
             },
             name="setup task",
         )
@@ -3270,8 +3272,8 @@ def test_skip_results_attribute():
         task.run(
             task=nr_test,
             ret_data_per_host={
-                "IOL1": "ntp server 7.7.7.8",
-                "IOL2": "ntp server 7.7.7.7",
+                "iol-r1": "ntp server 7.7.7.8",
+                "csr1k-r1": "ntp server 7.7.7.7",
             },
             name="show ntp",
         )
@@ -3280,8 +3282,8 @@ def test_skip_results_attribute():
     output = nr_with_tests.run(task=task_with_skip)
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # The test should match "show ntp" task, not the skipped "setup task"
-    assert check_result["IOL1"]["Test NTP"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP"]["result"] == "PASS"
+    assert check_result["iol-r1"]["Test NTP"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP"]["result"] == "PASS"
 
 
 # ======================================================================
@@ -3305,14 +3307,14 @@ def test_eval_with_structured_data():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"uptime": 7200, "hostname": "r1"},
-            "IOL2": {"uptime": 1800, "hostname": "r2"},
+            "iol-r1": {"uptime": 7200, "hostname": "r1"},
+            "csr1k-r1": {"uptime": 1800, "hostname": "r2"},
         },
         name="get facts",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test uptime eval"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test uptime eval"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test uptime eval"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test uptime eval"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -3335,7 +3337,7 @@ def test_contains_empty_pattern():
     nr_with_tests = nr.with_processors([TestsProcessor(tests, remove_tasks=True)])
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "any output", "IOL2": "any output"},
+        ret_data_per_host={"iol-r1": "any output", "csr1k-r1": "any output"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=False)
@@ -3366,12 +3368,12 @@ def test_single_test_kwargs_with_eval():
     )
     output = nr_with_tests.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": "ntp server", "IOL2": "no data"},
+        ret_data_per_host={"iol-r1": "ntp server", "csr1k-r1": "no data"},
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test NTP eval kwargs"]["result"] == "PASS"
-    assert check_result["IOL2"]["Test NTP eval kwargs"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test NTP eval kwargs"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test NTP eval kwargs"]["result"] == "FAIL"
 
 
 # ======================================================================
@@ -3398,15 +3400,15 @@ def test_contains_count_revert_with_err_msg():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "ntp server 1\nntp server 2",  # 2 matches - pass reversed to FAIL
-            "IOL2": "ntp server 1",  # 1 match - fail reversed to PASS
+            "iol-r1": "ntp server 1\nntp server 2",  # 2 matches - pass reversed to FAIL
+            "csr1k-r1": "ntp server 1",  # 1 match - fail reversed to PASS
         },
         name="show ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
-    assert check_result["IOL1"]["Test count revert err_msg"]["result"] == "FAIL"
+    assert check_result["iol-r1"]["Test count revert err_msg"]["result"] == "FAIL"
     assert (
-        check_result["IOL1"]["Test count revert err_msg"]["exception"]
+        check_result["iol-r1"]["Test count revert err_msg"]["exception"]
         == "Found exactly 2 NTP servers"
     )
-    assert check_result["IOL2"]["Test count revert err_msg"]["result"] == "PASS"
+    assert check_result["csr1k-r1"]["Test count revert err_msg"]["result"] == "PASS"

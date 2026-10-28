@@ -37,13 +37,15 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -107,8 +109,8 @@ def test_tabulate_from_list():
     # print(table)
     # result              changed    diff    failed    name              exception    host
     # ------------------  ---------  ------  --------  ----------------  -----------  ------
-    # ntp server 7.7.7.8  False              False     check ntp config               IOL1
-    # ntp server 7.7.7.8  False              False     check ntp config               IOL2
+    # ntp server 7.7.7.8  False              False     check ntp config               iol-r1
+    # ntp server 7.7.7.8  False              False     check ntp config               csr1k-r1
     assert isinstance(table, str)
     assert "result" in table
     assert "host" in table
@@ -130,14 +132,14 @@ def test_tabulate_from_aggregatedresult():
     assert (
         table
         == """result              changed    diff    failed    exception    name              host
-------------------  ---------  ------  --------  -----------  ----------------  ------
-ntp server 7.7.7.8  False              False                  check ntp config  IOL1
-ntp server 7.7.7.8  False              False                  check ntp config  IOL2"""
+------------------  ---------  ------  --------  -----------  ----------------  --------
+ntp server 7.7.7.8  False              False                  check ntp config  iol-r1
+ntp server 7.7.7.8  False              False                  check ntp config  csr1k-r1"""
         or table
         == """result              changed    diff    failed    name              exception    host
-------------------  ---------  ------  --------  ----------------  -----------  ------
-ntp server 7.7.7.8  False              False     check ntp config               IOL1
-ntp server 7.7.7.8  False              False     check ntp config               IOL2"""
+------------------  ---------  ------  --------  ----------------  -----------  --------
+ntp server 7.7.7.8  False              False     check ntp config               iol-r1
+ntp server 7.7.7.8  False              False     check ntp config               csr1k-r1"""
     )
 
 
@@ -161,17 +163,17 @@ def test_tabulate_from_aggregatedresult_brief():
     # print(table)
     assert (
         table
-        == """+----+--------+---------------------------------------+----------+-----------------------+
-|    | host   | name                                  | result   | exception             |
-+====+========+=======================================+==========+=======================+
-|  0 | IOL1   | show run | inc ntp contains 7.7.7.8.. | PASS     |                       |
-+----+--------+---------------------------------------+----------+-----------------------+
-|  1 | IOL1   | show run | inc ntp contains 7.7.7.7.. | FAIL     | Pattern not in output |
-+----+--------+---------------------------------------+----------+-----------------------+
-|  2 | IOL2   | show run | inc ntp contains 7.7.7.8.. | PASS     |                       |
-+----+--------+---------------------------------------+----------+-----------------------+
-|  3 | IOL2   | show run | inc ntp contains 7.7.7.7.. | FAIL     | Pattern not in output |
-+----+--------+---------------------------------------+----------+-----------------------+"""
+        == """+----+----------+---------------------------------------+----------+-----------------------+
+|    | host     | name                                  | result   | exception             |
++====+==========+=======================================+==========+=======================+
+|  0 | iol-r1   | show run | inc ntp contains 7.7.7.8.. | PASS     |                       |
++----+----------+---------------------------------------+----------+-----------------------+
+|  1 | iol-r1   | show run | inc ntp contains 7.7.7.7.. | FAIL     | Pattern not in output |
++----+----------+---------------------------------------+----------+-----------------------+
+|  2 | csr1k-r1 | show run | inc ntp contains 7.7.7.8.. | PASS     |                       |
++----+----------+---------------------------------------+----------+-----------------------+
+|  3 | csr1k-r1 | show run | inc ntp contains 7.7.7.7.. | FAIL     | Pattern not in output |
++----+----------+---------------------------------------+----------+-----------------------+"""
     )
 
 
@@ -189,12 +191,12 @@ ntp server 7.7.7.7""",
     )
     table = TabulateFormatter(output, headers=["host", "failed", "name", "result"])
     # print(table)
-    assert table == """host    failed    name              result
-------  --------  ----------------  ------------------
-IOL1    False     check ntp config  ntp server 7.7.7.8
-                                    ntp server 7.7.7.7
-IOL2    False     check ntp config  ntp server 7.7.7.8
-                                    ntp server 7.7.7.7"""
+    assert table == """host      failed    name              result
+--------  --------  ----------------  ------------------
+iol-r1    False     check ntp config  ntp server 7.7.7.8
+                                      ntp server 7.7.7.7
+csr1k-r1  False     check ntp config  ntp server 7.7.7.8
+                                      ntp server 7.7.7.7"""
 
 
 # test_tabulate_from_aggregatedresult_with_headers()
@@ -202,16 +204,16 @@ IOL2    False     check ntp config  ntp server 7.7.7.8
 
 @skip_if_no_nornir
 def test_tabulate_sort_by_key_value():
-    iol1_res_ntp = [
+    iol_r1_res_ntp = [
         {"ntp": "1.1.1.1"},
     ]
-    iol2_res_ntp = [
+    csr1k_r1_res_ntp = [
         {"ntp": "2.2.2.2"},
     ]
-    iol1_res_log = [
+    iol_r1_res_log = [
         {"log": "3.3.3.3"},
     ]
-    iol2_res_log = [
+    csr1k_r1_res_log = [
         {"log": "4.4.4.4"},
     ]
     result = nr.run(
@@ -219,16 +221,16 @@ def test_tabulate_sort_by_key_value():
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_ntp,
-                "IOL2": iol2_res_ntp,
+                "iol-r1": iol_r1_res_ntp,
+                "csr1k-r1": csr1k_r1_res_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_log,
-                "IOL2": iol2_res_log,
+                "iol-r1": iol_r1_res_log,
+                "csr1k-r1": csr1k_r1_res_log,
             },
             "name": "show run | inc logging",
         },
@@ -237,12 +239,12 @@ def test_tabulate_sort_by_key_value():
         result, headers=["host", "failed", "name", "result"], sortby="host"
     )
     print(table)
-    assert table == """host    failed    name                    result
-------  --------  ----------------------  --------------------
-IOL1    False     show run | inc ntp      [{'ntp': '1.1.1.1'}]
-IOL1    False     show run | inc logging  [{'log': '3.3.3.3'}]
-IOL2    False     show run | inc ntp      [{'ntp': '2.2.2.2'}]
-IOL2    False     show run | inc logging  [{'log': '4.4.4.4'}]"""
+    assert table == """host      failed    name                    result
+--------  --------  ----------------------  --------------------
+csr1k-r1  False     show run | inc ntp      [{'ntp': '2.2.2.2'}]
+csr1k-r1  False     show run | inc logging  [{'log': '4.4.4.4'}]
+iol-r1    False     show run | inc ntp      [{'ntp': '1.1.1.1'}]
+iol-r1    False     show run | inc logging  [{'log': '3.3.3.3'}]"""
 
 
 # test_tabulate_sort_by_key_value()
@@ -250,16 +252,16 @@ IOL2    False     show run | inc logging  [{'log': '4.4.4.4'}]"""
 
 @skip_if_no_nornir
 def test_tabulate_sort_by_key_value_reverse():
-    iol1_res_ntp = [
+    iol_r1_res_ntp = [
         {"ntp": "1.1.1.1"},
     ]
-    iol2_res_ntp = [
+    csr1k_r1_res_ntp = [
         {"ntp": "2.2.2.2"},
     ]
-    iol1_res_log = [
+    iol_r1_res_log = [
         {"log": "3.3.3.3"},
     ]
-    iol2_res_log = [
+    csr1k_r1_res_log = [
         {"log": "4.4.4.4"},
     ]
     result = nr.run(
@@ -267,16 +269,16 @@ def test_tabulate_sort_by_key_value_reverse():
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_ntp,
-                "IOL2": iol2_res_ntp,
+                "iol-r1": iol_r1_res_ntp,
+                "csr1k-r1": csr1k_r1_res_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_log,
-                "IOL2": iol2_res_log,
+                "iol-r1": iol_r1_res_log,
+                "csr1k-r1": csr1k_r1_res_log,
             },
             "name": "show run | inc logging",
         },
@@ -288,12 +290,12 @@ def test_tabulate_sort_by_key_value_reverse():
         reverse=True,
     )
     # print(table)
-    assert table == """host    failed    name                    result
-------  --------  ----------------------  --------------------
-IOL2    False     show run | inc ntp      [{'ntp': '2.2.2.2'}]
-IOL2    False     show run | inc logging  [{'log': '4.4.4.4'}]
-IOL1    False     show run | inc ntp      [{'ntp': '1.1.1.1'}]
-IOL1    False     show run | inc logging  [{'log': '3.3.3.3'}]"""
+    assert table == """host      failed    name                    result
+--------  --------  ----------------------  --------------------
+iol-r1    False     show run | inc ntp      [{'ntp': '1.1.1.1'}]
+iol-r1    False     show run | inc logging  [{'log': '3.3.3.3'}]
+csr1k-r1  False     show run | inc ntp      [{'ntp': '2.2.2.2'}]
+csr1k-r1  False     show run | inc logging  [{'log': '4.4.4.4'}]"""
 
 
 # test_tabulate_sort_by_key_value_reverse()

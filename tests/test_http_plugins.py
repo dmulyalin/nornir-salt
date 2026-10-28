@@ -63,13 +63,15 @@ skip_if_no_nornir = pytest.mark.skipif(
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -162,23 +164,23 @@ def test_http_connection_open():
     http_conn = ResultSerializer(nr.run(task=task_open_http_connection))
     # pprint.pprint(res)
 
-    assert "configuration" in http_conn["IOL1"]["task_open_http_connection"]
-    assert http_conn["IOL1"]["task_open_http_connection"]["extras"] == {"verify": False}
+    assert "configuration" in http_conn["iol-r1"]["task_open_http_connection"]
+    assert http_conn["iol-r1"]["task_open_http_connection"]["extras"] == {"verify": False}
     assert (
-        http_conn["IOL1"]["task_open_http_connection"]["hostname"] == "192.168.217.10"
+        http_conn["iol-r1"]["task_open_http_connection"]["hostname"] == "containerlab.lab"
     )
-    assert http_conn["IOL1"]["task_open_http_connection"]["password"] == "cisco"
-    assert http_conn["IOL1"]["task_open_http_connection"]["platform"] == "ios"
-    assert http_conn["IOL1"]["task_open_http_connection"]["port"] == 8080
-    assert http_conn["IOL1"]["task_open_http_connection"]["username"] == "cisco"
+    assert http_conn["iol-r1"]["task_open_http_connection"]["password"] == "cisco"
+    assert http_conn["iol-r1"]["task_open_http_connection"]["platform"] == "ios"
+    assert http_conn["iol-r1"]["task_open_http_connection"]["port"] == 8080
+    assert http_conn["iol-r1"]["task_open_http_connection"]["username"] == "cisco"
 
-    assert "configuration" in http_conn["IOL2"]["task_open_http_connection"]
-    assert http_conn["IOL2"]["task_open_http_connection"]["extras"] == {"verify": False}
-    assert http_conn["IOL2"]["task_open_http_connection"]["hostname"] == "192.168.217.7"
-    assert http_conn["IOL2"]["task_open_http_connection"]["password"] == "cisco"
-    assert http_conn["IOL2"]["task_open_http_connection"]["platform"] == "ios"
-    assert http_conn["IOL2"]["task_open_http_connection"]["port"] == 8080
-    assert http_conn["IOL2"]["task_open_http_connection"]["username"] == "cisco"
+    assert "configuration" in http_conn["csr1k-r1"]["task_open_http_connection"]
+    assert http_conn["csr1k-r1"]["task_open_http_connection"]["extras"] == {"verify": False}
+    assert http_conn["csr1k-r1"]["task_open_http_connection"]["hostname"] == "containerlab.lab"
+    assert http_conn["csr1k-r1"]["task_open_http_connection"]["password"] == "cisco"
+    assert http_conn["csr1k-r1"]["task_open_http_connection"]["platform"] == "ios"
+    assert http_conn["csr1k-r1"]["task_open_http_connection"]["port"] == 8080
+    assert http_conn["csr1k-r1"]["task_open_http_connection"]["username"] == "cisco"
 
 
 # test_http_connection_open()
@@ -202,10 +204,10 @@ def test_http_connection_get_google():
     )
     # pprint.pprint(res)
 
-    assert len(res["IOL1"]["get"]["result"]) > 100
-    assert len(res["IOL2"]["get"]["result"]) > 100
-    assert res["IOL1"]["get"]["failed"] == False
-    assert res["IOL2"]["get"]["failed"] == False
+    assert len(res["iol-r1"]["get"]["result"]) > 100
+    assert len(res["csr1k-r1"]["get"]["result"]) > 100
+    assert res["iol-r1"]["get"]["failed"] == False
+    assert res["csr1k-r1"]["get"]["failed"] == False
 
 
 # test_http_connection_get_google()

@@ -743,7 +743,7 @@ tasks fail fast with validation error, making overall system more resilient to m
 
 
 # ---------------------------------------------------------------------------
-# nornir-salt 0.23.6 (draft)
+# nornir-salt 0.23.6
 # ---------------------------------------------------------------------------
 
 ## BUGS
@@ -764,7 +764,6 @@ tasks fail fast with validation error, making overall system more resilient to m
     resolved credentials, processor options and connection plugin arguments. Invalid inputs now raise Pydantic ValidationError.
     ToFileProcessor rejects max_files below 1 instead of silently clamping it. Netmiko and PyATS configuration tasks reject dry_run=True through their models.
 4. Removed the MakePlugin boilerplate generator and its validation model. Imports from nornir_salt.utils.MakePlugin and nornir_salt.utils are no longer available.
-
 
 # BACKLOG
 

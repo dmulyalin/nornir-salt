@@ -35,13 +35,15 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab, bma]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab, eu]
 
 groups:
@@ -121,10 +123,10 @@ InventoryPluginRegister.register("DictInventory", DictInventory)
 @skip_if_no_nornir
 def test_DictInvetnory_nested_groups():
     nr = init(lab_inventory_dict)
-    assert nr.inventory.hosts["IOL1"].get("asn") == 65100
-    assert nr.inventory.hosts["IOL1"].get("domain") == "global.local"
-    assert nr.inventory.hosts["IOL2"].get("asn") == 65100
-    assert nr.inventory.hosts["IOL2"].get("domain") is None
+    assert nr.inventory.hosts["iol-r1"].get("asn") == 65100
+    assert nr.inventory.hosts["iol-r1"].get("domain") == "global.local"
+    assert nr.inventory.hosts["csr1k-r1"].get("asn") == 65100
+    assert nr.inventory.hosts["csr1k-r1"].get("domain") is None
 
 
 # test_DictInvetnory_nested_groups()

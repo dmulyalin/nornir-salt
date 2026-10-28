@@ -34,30 +34,15 @@ skip_if_no_nornir = pytest.mark.skipif(
     reason="Failed to import all required Nornir modules and plugins",
 )
 
-# ---------------------------------------------------
-# cisco always on ios xe lab details
-# ---------------------------------------------------
-cisco_iosxe_always_on_router = """
+lab_inventory = yaml.safe_load("""
 hosts:
-  sandbox-iosxe-recomm-1:
-    hostname: "sandbox-iosxe-recomm-1.cisco.com"
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
-    username: developer
-    password: lastorangerestoreball8876
-"""
-s = socket.socket()
-s.settimeout(1)
-status = s.connect_ex(("sandbox-iosxe-recomm-1.cisco.com", 22))
-if status == 0:
-    has_connection_to_cisco_iosxe_always_on_router = True
-else:
-    has_connection_to_cisco_iosxe_always_on_router = False
-skip_if_has_no_cisco_iosxe_always_on_router = pytest.mark.skipif(
-    has_connection_to_cisco_iosxe_always_on_router == False,
-    reason="Has no connection to sandbox-iosxe-recomm-1.cisco.com router",
-)
-
-cisco_iosxe_always_on_router_dict = yaml.safe_load(cisco_iosxe_always_on_router)
+    username: admin
+    password: admin
+    port: 2207
+""")
 
 
 def init(opts):
@@ -80,10 +65,15 @@ def init(opts):
     return nr
 
 
-@skip_if_has_no_cisco_iosxe_always_on_router
 @skip_if_no_nornir
 def test_run_ttp_docs():
-    nr = init(cisco_iosxe_always_on_router_dict)
+    host = lab_inventory["hosts"]["csr1k-r1"]
+    try:
+        with socket.create_connection((host["hostname"], host["port"]), timeout=1):
+            pass
+    except OSError as exc:
+        pytest.skip(f"IOS XE lab unavailable: {exc}")
+    nr = init(lab_inventory)
 
     # define TTP template with inputs having commands attributes
     template = """
@@ -100,7 +90,7 @@ Internet  {{ ip }}   {{ age }}   {{ mac }}  ARPA   {{ interface }}
 </group>
 
 <group name="facts.version" input="version">
-Cisco IOS XE Software, Version {{ iose_xe_version }}
+Cisco IOS XE Software, Version {{ ios_xe_version }}
 </group>
     """
 
@@ -113,39 +103,18 @@ Cisco IOS XE Software, Version {{ iose_xe_version }}
     # run_ttp function with commands defined within TTP template inputs
     result = nr_with_dp.run(task=netmiko_send_commands)
 
+    nr.close_connections()
+    assert not result.failed, ResultSerializer(result, add_details=True)
+
     # serialize results to dictionary
     dict_result = ResultSerializer(result)
 
     pprint.pprint(dict_result)
-    # prints:
-    # {'sandbox-iosxe-recomm-1': {'run_ttp': [[{'arp_cache': [{'age': '0',
-    #                                                          'interface': 'GigabitEthernet1',
-    #                                                          'ip': '10.10.20.28',
-    #                                                          'mac': '0050.56bf.f0be'},
-    #                                                         {'age': '-',
-    #                                                          'interface': 'GigabitEthernet1',
-    #                                                          'ip': '10.10.20.48',
-    #                                                          'mac': '0050.56bf.9379'},
-    #                                                         {'age': '-',
-    #                                                          'interface': 'GigabitEthernet1',
-    #                                                          'ip': '10.10.20.248',
-    #                                                          'mac': '0050.56bf.9379'},
-    #                                                         {'age': '147',
-    #                                                          'interface': 'GigabitEthernet1',
-    #                                                          'ip': '10.10.20.254',
-    #                                                          'mac': '0050.56bf.a3cf'},
-    #                                                         {'age': '-',
-    #                                                          'interface': 'GigabitEthernet2',
-    #                                                          'ip': '10.255.255.1',
-    #                                                          'mac': '0050.56bf.ea76'},
-    #                                                         {'age': '-',
-    #                                                          'interface': 'GigabitEthernet2',
-    #                                                          'ip': '172.16.255.1',
-    #                                                          'mac': '0050.56bf.ea76'}]},
-    #                                          {'facts': {'version': {'iose_xe_version': '16.09.03'}}}]]}}
-    assert "arp_cache" in dict_result["sandbox-iosxe-recomm-1"]["run_ttp"][0][0]
-    assert "facts" in dict_result["sandbox-iosxe-recomm-1"]["run_ttp"][0][1]
-    assert len(dict_result["sandbox-iosxe-recomm-1"]["run_ttp"][0][0]["arp_cache"]) > 0
+    parsed = dict_result["csr1k-r1"]["run_ttp"][0]
+    assert len(parsed) == 2
+    # A fresh lab device may have an empty ARP table.
+    assert parsed[0] == {} or "arp_cache" in parsed[0]
+    assert parsed[1]["facts"]["version"]["ios_xe_version"]
 
 
 # test_run_ttp_docs()

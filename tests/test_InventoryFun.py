@@ -35,13 +35,15 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab, bma]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab, eu]
 
 groups:
@@ -145,10 +147,10 @@ def test_InventoryFun_create_host():
 @skip_if_no_nornir
 def test_InventoryFun_delete_host():
     nr = init(lab_inventory_dict)
-    res = InventoryFun(nr, "delete_host", name="IOL2")
-    assert res == {"IOL2": True}
-    assert "IOL2" not in nr.inventory.hosts
-    assert "IOL1" in nr.inventory.hosts
+    res = InventoryFun(nr, "delete_host", name="csr1k-r1")
+    assert res == {"csr1k-r1": True}
+    assert "csr1k-r1" not in nr.inventory.hosts
+    assert "iol-r1" in nr.inventory.hosts
 
 
 # test_InventoryFun_delete_host()
@@ -157,12 +159,12 @@ def test_InventoryFun_delete_host():
 @skip_if_no_nornir
 def test_InventoryFun_delete_hosts():
     nr = init(lab_inventory_dict)
-    res = InventoryFun(nr, "delete_host", name=["IOL2", "IOL1"])
+    res = InventoryFun(nr, "delete_host", name=["csr1k-r1", "iol-r1"])
     print("\nDeleted hosts:\n")
     pprint.pprint(res)
-    assert res == {"IOL1": True, "IOL2": True}
-    assert "IOL2" not in nr.inventory.hosts
-    assert "IOL1" not in nr.inventory.hosts
+    assert res == {"iol-r1": True, "csr1k-r1": True}
+    assert "csr1k-r1" not in nr.inventory.hosts
+    assert "iol-r1" not in nr.inventory.hosts
 
 
 # test_InventoryFun_delete_hosts()
@@ -172,7 +174,7 @@ def test_InventoryFun_delete_hosts():
 def test_InventoryFun_update_host_groups_append():
     nr = init(lab_inventory_dict)
     host_data = {
-        "name": "IOL2",
+        "name": "csr1k-r1",
         "hostname": "192.168.217.99",
         "platform": "ios_xe",
         "username": "new_username",
@@ -187,28 +189,28 @@ def test_InventoryFun_update_host_groups_append():
 
     res = InventoryFun(nr, "update_host", groups_action="append", **host_data)
 
-    assert res == {"IOL2": True}
+    assert res == {"csr1k-r1": True}
     # check data
-    assert nr.inventory.hosts["IOL2"].platform == "ios_xe"
-    assert nr.inventory.hosts["IOL2"].hostname == "192.168.217.99"
-    assert nr.inventory.hosts["IOL2"].username == "new_username"
-    assert nr.inventory.hosts["IOL2"].password == "new_password"
-    assert nr.inventory.hosts["IOL2"].port == 123
-    assert nr.inventory.hosts["IOL2"].get("domain") == "global.local"
-    assert nr.inventory.hosts["IOL2"].get("asn") == 65100
-    assert nr.inventory.hosts["IOL2"].get("made_by") == "humans"
+    assert nr.inventory.hosts["csr1k-r1"].platform == "ios_xe"
+    assert nr.inventory.hosts["csr1k-r1"].hostname == "192.168.217.99"
+    assert nr.inventory.hosts["csr1k-r1"].username == "new_username"
+    assert nr.inventory.hosts["csr1k-r1"].password == "new_password"
+    assert nr.inventory.hosts["csr1k-r1"].port == 123
+    assert nr.inventory.hosts["csr1k-r1"].get("domain") == "global.local"
+    assert nr.inventory.hosts["csr1k-r1"].get("asn") == 65100
+    assert nr.inventory.hosts["csr1k-r1"].get("made_by") == "humans"
     # check connection options
-    assert nr.inventory.hosts["IOL2"].get_connection_parameters("ncclient").extras == {
+    assert nr.inventory.hosts["csr1k-r1"].get_connection_parameters("ncclient").extras == {
         "allow_agent": False,
         "hostkey_verify": False,
         "device_params": {"name": "iosxe"},
     }
-    assert nr.inventory.hosts["IOL2"].get_connection_parameters("napalm").port == 2022
-    assert nr.inventory.hosts["IOL2"].get_connection_parameters("napalm").extras == {
+    assert nr.inventory.hosts["csr1k-r1"].get_connection_parameters("napalm").port == 2022
+    assert nr.inventory.hosts["csr1k-r1"].get_connection_parameters("napalm").extras == {
         "foo": "bar1"
     }
     # check defaults
-    assert nr.inventory.hosts["IOL2"].get("location") == "earth"
+    assert nr.inventory.hosts["csr1k-r1"].get("location") == "earth"
 
 
 # test_InventoryFun_update_host_groups_append()
@@ -217,10 +219,10 @@ def test_InventoryFun_update_host_groups_append():
 @skip_if_no_nornir
 def test_InventoryFun_update_host_groups_insert():
     nr = init(lab_inventory_dict)
-    host_data = {"name": "IOL2", "groups": ["bma"], "groups_action": "insert"}
+    host_data = {"name": "csr1k-r1", "groups": ["bma"], "groups_action": "insert"}
     res = InventoryFun(nr, "update_host", **host_data)
-    assert res == {"IOL2": True}
-    assert nr.inventory.groups["bma"] == nr.inventory.hosts["IOL2"].groups[0]
+    assert res == {"csr1k-r1": True}
+    assert nr.inventory.groups["bma"] == nr.inventory.hosts["csr1k-r1"].groups[0]
 
 
 # test_InventoryFun_update_host_groups_insert()
@@ -229,12 +231,12 @@ def test_InventoryFun_update_host_groups_insert():
 @skip_if_no_nornir
 def test_InventoryFun_update_host_groups_remove():
     nr = init(lab_inventory_dict)
-    host_data = {"name": "IOL2", "groups": ["bma", "lab"], "groups_action": "remove"}
+    host_data = {"name": "csr1k-r1", "groups": ["bma", "lab"], "groups_action": "remove"}
     res = InventoryFun(nr, "update_host", **host_data)
-    assert res == {"IOL2": True}
-    assert nr.inventory.groups["bma"] not in nr.inventory.hosts["IOL2"].groups
-    assert nr.inventory.groups["lab"] not in nr.inventory.hosts["IOL2"].groups
-    assert nr.inventory.groups["eu"] in nr.inventory.hosts["IOL2"].groups
+    assert res == {"csr1k-r1": True}
+    assert nr.inventory.groups["bma"] not in nr.inventory.hosts["csr1k-r1"].groups
+    assert nr.inventory.groups["lab"] not in nr.inventory.hosts["csr1k-r1"].groups
+    assert nr.inventory.groups["eu"] in nr.inventory.hosts["csr1k-r1"].groups
 
 
 # test_InventoryFun_update_host_groups_remove()
@@ -252,11 +254,11 @@ def test_InventoryFun_load():
         },
         {
             "call": "delete_host",
-            "name": "IOL2",
+            "name": "csr1k-r1",
         },
         {
             "call": "update_host",
-            "name": "IOL1",
+            "name": "iol-r1",
             "hostname": "1.2.3.4",
             "platform": "ios_xe",
             "groups": ["bma"],
@@ -274,9 +276,9 @@ def test_InventoryFun_load():
     res = InventoryFun(nr, "load", data=data)
     pprint.pprint(res)
 
-    assert res == [{"IOL3": True}, {"IOL2": True}, {"IOL1": True}, {"IOL4": True}]
+    assert res == [{"IOL3": True}, {"csr1k-r1": True}, {"iol-r1": True}, {"IOL4": True}]
     # check hosts deleted/created
-    assert "IOL2" not in nr.inventory.hosts
+    assert "csr1k-r1" not in nr.inventory.hosts
     assert "IOL3" in nr.inventory.hosts
     assert "IOL4" in nr.inventory.hosts
     # check IOL3
@@ -289,11 +291,11 @@ def test_InventoryFun_load():
     assert nr.inventory.hosts["IOL4"].hostname == "192.168.217.4"
     assert nr.inventory.hosts["IOL4"].username == "cisco"
     assert nr.inventory.hosts["IOL4"].password == "cisco"
-    # check IOL1
-    assert nr.inventory.hosts["IOL1"].platform == "ios_xe"
-    assert nr.inventory.hosts["IOL1"].hostname == "1.2.3.4"
-    assert nr.inventory.groups["bma"] not in nr.inventory.hosts["IOL1"].groups
-    assert nr.inventory.hosts["IOL1"].get("domain") != "global.local"
+    # check iol-r1
+    assert nr.inventory.hosts["iol-r1"].platform == "ios_xe"
+    assert nr.inventory.hosts["iol-r1"].hostname == "1.2.3.4"
+    assert nr.inventory.groups["bma"] not in nr.inventory.hosts["iol-r1"].groups
+    assert nr.inventory.hosts["iol-r1"].get("domain") != "global.local"
 
 
 # test_InventoryFun_load()
@@ -301,10 +303,10 @@ def test_InventoryFun_load():
 
 def test_InventoryFun_read_host():
     nr = init(lab_inventory_dict)
-    res = InventoryFun(nr, "read", FB="IOL[13]")
+    res = InventoryFun(nr, "read", FB=["iol-r1", "IOL3"])
     # pprint.pprint(res)
-    assert "IOL1" in res
-    assert "IOL2" not in res
+    assert "iol-r1" in res
+    assert "csr1k-r1" not in res
 
 
 # test_InventoryFun_read_host()
@@ -312,11 +314,11 @@ def test_InventoryFun_read_host():
 
 def test_InventoryFun_read_inventory():
     nr = init(lab_inventory_dict)
-    res = InventoryFun(nr, "read_inventory", FB="IOL1")
+    res = InventoryFun(nr, "read_inventory", FB="iol-r1")
     pprint.pprint(res)
     assert "hosts" in res
-    assert "IOL1" in res["hosts"]
-    assert "IOL2" not in res["hosts"]
+    assert "iol-r1" in res["hosts"]
+    assert "csr1k-r1" not in res["hosts"]
     assert "defaults" in res
     assert "groups" in res
 
@@ -328,8 +330,8 @@ def test_InventoryFun_list_hosts():
     nr = init(lab_inventory_dict)
     res = InventoryFun(nr, "list_hosts", FB="*")
     assert isinstance(res, list)
-    assert "IOL1" in res
-    assert "IOL2" in res
+    assert "iol-r1" in res
+    assert "csr1k-r1" in res
     assert len(res) == 2
 
 

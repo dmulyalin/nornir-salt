@@ -57,13 +57,15 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -124,16 +126,16 @@ def generate_files(tf):
     """
     Helper function to generate files by running task
     """
-    iol1_res_ntp = [
+    iol_r1_res_ntp = [
         {"ntp": "1.1.1.1"},
     ]
-    iol2_res_ntp = [
+    csr1k_r1_res_ntp = [
         {"ntp": "2.2.2.2"},
     ]
-    iol1_res_log = [
+    iol_r1_res_log = [
         {"log": "3.3.3.3"},
     ]
-    iol2_res_log = [
+    csr1k_r1_res_log = [
         {"log": "4.4.4.4"},
     ]
 
@@ -148,16 +150,16 @@ def generate_files(tf):
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_ntp,
-                "IOL2": iol2_res_ntp,
+                "iol-r1": iol_r1_res_ntp,
+                "csr1k-r1": csr1k_r1_res_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_log,
-                "IOL2": iol2_res_log,
+                "iol-r1": iol_r1_res_log,
+                "csr1k-r1": csr1k_r1_res_log,
             },
             "name": "show run | inc logging",
         },
@@ -174,19 +176,19 @@ def test_file_diff_certain_task_name():
     clean_up_folder()
 
     # generate text files
-    iol1_res_old_ntp = """
+    iol_r1_res_old_ntp = """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """
-    iol1_res_new_ntp = """
+    iol_r1_res_new_ntp = """
 ntp server 7.7.6.8
 ntp server 7.7.7.7
 ntp server 1.1.1.1
         """
-    iol2_res_old_ntp = """
+    csr1k_r1_res_old_ntp = """
 ntp server 7.7.7.7
         """
-    iol2_res_new_ntp = """
+    csr1k_r1_res_new_ntp = """
 ntp server 7.7.7.9
         """
     nr_with_tf1 = nr.with_processors(
@@ -199,16 +201,16 @@ ntp server 7.7.7.9
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_old_ntp,
-                "IOL2": iol2_res_old_ntp,
+                "iol-r1": iol_r1_res_old_ntp,
+                "csr1k-r1": csr1k_r1_res_old_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": "old logging results",
-                "IOL2": "old logging results",
+                "iol-r1": "old logging results",
+                "csr1k-r1": "old logging results",
             },
             "name": "show run | inc logging",
         },
@@ -220,16 +222,16 @@ ntp server 7.7.7.9
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_new_ntp,
-                "IOL2": iol2_res_new_ntp,
+                "iol-r1": iol_r1_res_new_ntp,
+                "csr1k-r1": csr1k_r1_res_new_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": "new logging results",
-                "IOL2": "new logging results",
+                "iol-r1": "new logging results",
+                "csr1k-r1": "new logging results",
             },
             "name": "show run | inc logging",
         },
@@ -250,12 +252,12 @@ ntp server 7.7.7.9
     assert """-ntp server 7.7.7.8
 +ntp server 7.7.6.8
  ntp server 7.7.7.7
-+ntp server 1.1.1.1""" in res_task_diff["IOL1"]["device_config"]["result"]
-    assert res_task_diff["IOL1"]["device_config"]["result"].count("device_config") == 2
++ntp server 1.1.1.1""" in res_task_diff["iol-r1"]["device_config"]["result"]
+    assert res_task_diff["iol-r1"]["device_config"]["result"].count("device_config") == 2
 
     assert """-ntp server 7.7.7.7
-+ntp server 7.7.7.9""" in res_task_diff["IOL2"]["device_config"]["result"]
-    assert res_task_diff["IOL2"]["device_config"]["result"].count("device_config") == 2
++ntp server 7.7.7.9""" in res_task_diff["csr1k-r1"]["device_config"]["result"]
+    assert res_task_diff["csr1k-r1"]["device_config"]["result"].count("device_config") == 2
 
 
 # test_file_diff_certain_task_name()
@@ -266,19 +268,19 @@ def test_file_diff_whole_result_non_exist_filegroup():
     clean_up_folder()
 
     # generate text files
-    iol1_res_old = """
+    iol_r1_res_old = """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """
-    iol1_res_new = """
+    iol_r1_res_new = """
 ntp server 7.7.6.8
 ntp server 7.7.7.7
 ntp server 1.1.1.1
         """
-    iol2_res_old = """
+    csr1k_r1_res_old = """
 ntp server 7.7.7.7
         """
-    iol2_res_new = """
+    csr1k_r1_res_new = """
 ntp server 7.7.7.9
         """
 
@@ -289,16 +291,16 @@ ntp server 7.7.7.9
     _ = nr_with_tf.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": iol1_res_old,
-            "IOL2": iol2_res_old,
+            "iol-r1": iol_r1_res_old,
+            "csr1k-r1": csr1k_r1_res_old,
         },
         name="show run | inc ntp",
     )
     _ = nr_with_tf.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": iol1_res_new,
-            "IOL2": iol2_res_new,
+            "iol-r1": iol_r1_res_new,
+            "csr1k-r1": csr1k_r1_res_new,
         },
         name="show run | inc ntp",
     )
@@ -313,10 +315,10 @@ ntp server 7.7.7.9
 
     # pprint.pprint(res, width=150)
 
-    assert res["IOL1"]["non_existing"]["failed"] == True
-    assert "non_existing files not found" in res["IOL1"]["non_existing"]["exception"]
-    assert res["IOL2"]["non_existing"]["failed"] == True
-    assert "non_existing files not found" in res["IOL2"]["non_existing"]["exception"]
+    assert res["iol-r1"]["non_existing"]["failed"] == True
+    assert "non_existing files not found" in res["iol-r1"]["non_existing"]["exception"]
+    assert res["csr1k-r1"]["non_existing"]["failed"] == True
+    assert "non_existing files not found" in res["csr1k-r1"]["non_existing"]["exception"]
 
 
 # test_file_diff_whole_result_non_exist_filegroup()

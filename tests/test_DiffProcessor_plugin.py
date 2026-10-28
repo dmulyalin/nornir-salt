@@ -39,13 +39,15 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -109,13 +111,13 @@ def test_diff_processor():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 Timestamp 12:12:12
 
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -129,12 +131,12 @@ ntp server 7.7.7.7
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 Timestamp 14:14:14
 
 ntp server 7.7.7.8
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
 ntp server 9.9.9.9
         """,
@@ -145,24 +147,24 @@ ntp server 9.9.9.9
     res = ResultSerializer(output, add_details=True)
 
     pprint.pprint(res)
-    # {'IOL1': {'show run | inc ntp': {'changed': False,
+    # {'iol-r1': {'show run | inc ntp': {'changed': False,
     #                                  'diff': '',
     #                                  'exception': None,
     #                                  'failed': False,
     #                                  'result': '--- old '
-    #                                            './tofile_outputs/config_for_diff__23_August_2021_22_12_40__634__IOL1.txt\n'
+    #                                            './tofile_outputs/config_for_diff__23_August_2021_22_12_40__634__iol-r1.txt\n'
     #                                            '+++ new results\n'
     #                                            '@@ -1,3 +1,2 @@\n'
     #                                            '-Timestamp 12:12:12\n'
     #                                            '+Timestamp 14:14:14\n'
     #                                            ' ntp server 7.7.7.8\n'
     #                                            '-ntp server 7.7.7.7\n'}},
-    #  'IOL2': {'show run | inc ntp': {'changed': False,
+    #  'csr1k-r1': {'show run | inc ntp': {'changed': False,
     #                                  'diff': '',
     #                                  'exception': None,
     #                                  'failed': False,
     #                                  'result': '--- old '
-    #                                            './tofile_outputs/config_for_diff__23_August_2021_22_12_40__397__IOL2.txt\n'
+    #                                            './tofile_outputs/config_for_diff__23_August_2021_22_12_40__397__csr1k-r1.txt\n'
     #                                            '+++ new results\n'
     #                                            '@@ -1 +1,2 @@\n'
     #                                            ' ntp server 7.7.7.7\n'
@@ -171,10 +173,10 @@ ntp server 9.9.9.9
     assert """-Timestamp 12:12:12
 +Timestamp 14:14:14
  ntp server 7.7.7.8
--ntp server 7.7.7.7""" in res["IOL1"]["show run | inc ntp"]["result"]
+-ntp server 7.7.7.7""" in res["iol-r1"]["show run | inc ntp"]["result"]
     assert """
  ntp server 7.7.7.7
-+ntp server 9.9.9.9""" in res["IOL2"]["show run | inc ntp"]["result"]
++ntp server 9.9.9.9""" in res["csr1k-r1"]["show run | inc ntp"]["result"]
 
 
 test_diff_processor()
@@ -191,13 +193,13 @@ def test_diff_processor_in_diff_is_true():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 Timestamp 12:12:12
 
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -215,12 +217,12 @@ ntp server 7.7.7.7
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 Timestamp 14:14:14
 
 ntp server 7.7.7.8
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
 ntp server 9.9.9.9
         """,
@@ -231,9 +233,9 @@ ntp server 9.9.9.9
     res = ResultSerializer(output, add_details=True)
 
     # pprint.pprint(res)
-    # {'IOL1': {'show run | inc ntp': {'changed': False,
+    # {'iol-r1': {'show run | inc ntp': {'changed': False,
     #                                  'diff': '--- old '
-    #                                          './tofile_outputs/config_for_diff__22_August_2021_20_44_04__IOL1.txt\n'
+    #                                          './tofile_outputs/config_for_diff__22_August_2021_20_44_04__iol-r1.txt\n'
     #                                          '+++ new results\n'
     #                                          '@@ -1,3 +1,2 @@\n'
     #                                          '-Timestamp 12:12:12\n'
@@ -247,9 +249,9 @@ ntp server 9.9.9.9
     #                                            '\n'
     #                                            'ntp server 7.7.7.8\n'
     #                                            '        '}},
-    #  'IOL2': {'show run | inc ntp': {'changed': False,
+    #  'csr1k-r1': {'show run | inc ntp': {'changed': False,
     #                                  'diff': '--- old '
-    #                                          './tofile_outputs/config_for_diff__22_August_2021_20_44_04__IOL2.txt\n'
+    #                                          './tofile_outputs/config_for_diff__22_August_2021_20_44_04__csr1k-r1.txt\n'
     #                                          '+++ new results\n'
     #                                          '@@ -1 +1,2 @@\n'
     #                                          ' ntp server 7.7.7.7\n'
@@ -263,10 +265,10 @@ ntp server 9.9.9.9
     assert """-Timestamp 12:12:12
 +Timestamp 14:14:14
  ntp server 7.7.7.8
--ntp server 7.7.7.7""" in res["IOL1"]["show run | inc ntp"]["diff"]
+-ntp server 7.7.7.7""" in res["iol-r1"]["show run | inc ntp"]["diff"]
     assert """
  ntp server 7.7.7.7
-+ntp server 9.9.9.9""" in res["IOL2"]["show run | inc ntp"]["diff"]
++ntp server 9.9.9.9""" in res["csr1k-r1"]["show run | inc ntp"]["diff"]
 
 
 # test_diff_processor_in_diff_is_true()

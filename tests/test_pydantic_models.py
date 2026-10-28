@@ -4,7 +4,6 @@ Test docs code examples
 
 import logging
 import pprint
-import socket
 import sys
 
 import pytest
@@ -16,7 +15,7 @@ try:
     from nornir import InitNornir
     from nornir.core.plugins.inventory import InventoryPluginRegister
     from nornir.core.plugins.runners import RunnersPluginRegister
-    from nornir.core.task import Result
+    from nornir.core.task import Result, Task
 
     HAS_NORNIR = True
 except ImportError:
@@ -40,30 +39,15 @@ skip_if_no_nornir = pytest.mark.skipif(
     reason="Failed to import all required Nornir modules and plugins",
 )
 
-# ---------------------------------------------------
-# cisco always on ios xe lab details
-# ---------------------------------------------------
-cisco_iosxe_always_on_router = """
+lab_inventory = yaml.safe_load("""
 hosts:
-  sandbox-iosxe-latest-1:
-    hostname: "sandbox-iosxe-latest-1.cisco.com"
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
-    username: developer
-    password: C1sco12345
-"""
-s = socket.socket()
-s.settimeout(1)
-status = s.connect_ex(("sandbox-iosxe-latest-1.cisco.com", 22))
-if status == 0:
-    has_connection_to_cisco_iosxe_always_on_router = True
-else:
-    has_connection_to_cisco_iosxe_always_on_router = False
-skip_if_has_no_cisco_iosxe_always_on_router = pytest.mark.skipif(
-    has_connection_to_cisco_iosxe_always_on_router == False,
-    reason="Has no connection to sandbox-iosxe-latest-1.cisco.com router",
-)
-
-cisco_iosxe_always_on_router_dict = yaml.safe_load(cisco_iosxe_always_on_router)
+    username: admin
+    password: admin
+    port: 2207
+""")
 
 
 def init(opts):
@@ -92,28 +76,21 @@ def init(opts):
     return nr
 
 
-@skip_if_has_no_cisco_iosxe_always_on_router
 @skip_if_no_nornir
 def test_model_netmiko_send_commands():
-    nr = init(cisco_iosxe_always_on_router_dict)
-    res = nr.run(
-        task=netmiko_send_commands,
-        commands=["show clock"],
-        repeat=1.5,
+    nr = init(lab_inventory)
+    task = Task(
+        task=netmiko_send_commands, nornir=nr, global_dry_run=False, processors=[]
     )
-    ret = ResultSerializer(res, add_details=True)
-    pprint.pprint(ret)
-    assert ret["sandbox-iosxe-latest-1"]["netmiko_send_commands"]["failed"] == True
-    assert ret["sandbox-iosxe-latest-1"]["netmiko_send_commands"]["task_retry"] == 0
-    assert (
-        "validation error"
-        in ret["sandbox-iosxe-latest-1"]["netmiko_send_commands"]["exception"]
-    )
+    task.host = nr.inventory.hosts["csr1k-r1"]
+    # Argument validation must not depend on SSH connectivity or authentication.
+    with pytest.raises(ValidationError, match="repeat"):
+        netmiko_send_commands(task, commands=["show clock"], repeat=1.5)
 
 
 @skip_if_no_nornir
 def test_model_nr_test():
-    nr = init(cisco_iosxe_always_on_router_dict)
+    nr = init(lab_inventory)
     good_res = nr.run(
         task=nr_test,
         command="show clock",
@@ -130,13 +107,11 @@ def test_model_nr_test():
     bad_ret = ResultSerializer(bad_res, add_details=True)
     pprint.pprint(bad_ret)
 
-    assert good_ret["sandbox-iosxe-latest-1"]["nr_test"]["failed"] == False
-    assert good_ret["sandbox-iosxe-latest-1"]["nr_test"]["result"] == {
-        "command": "show clock"
-    }
+    assert good_ret["csr1k-r1"]["nr_test"]["failed"] == False
+    assert good_ret["csr1k-r1"]["nr_test"]["result"] == {"command": "show clock"}
 
-    assert bad_ret["sandbox-iosxe-latest-1"]["nr_test"]["failed"] == True
-    assert "ValidationError" in bad_ret["sandbox-iosxe-latest-1"]["nr_test"]["result"]
+    assert bad_ret["csr1k-r1"]["nr_test"]["failed"] == True
+    assert "ValidationError" in bad_ret["csr1k-r1"]["nr_test"]["result"]
 
 
 def test_modelTestsProcessorSuite_wrong_test_name():

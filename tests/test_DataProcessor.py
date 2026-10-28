@@ -174,13 +174,15 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -241,16 +243,16 @@ def test_struct_to_json():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"a": 1, "b": 2},
-            "IOL2": {"c": 3, "d": 4},
+            "iol-r1": {"a": 1, "b": 2},
+            "csr1k-r1": {"c": 3, "d": 4},
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {"show run | inc ntp": '{\n    "a": 1,\n    "b": 2\n}'},
-        "IOL2": {"show run | inc ntp": '{\n    "c": 3,\n    "d": 4\n}'},
+        "iol-r1": {"show run | inc ntp": '{\n    "a": 1,\n    "b": 2\n}'},
+        "csr1k-r1": {"show run | inc ntp": '{\n    "c": 3,\n    "d": 4\n}'},
     }
 
 
@@ -264,16 +266,16 @@ def test_struct_to_json_kwargs():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"a": 1, "b": 2},
-            "IOL2": {"c": 3, "d": 4},
+            "iol-r1": {"a": 1, "b": 2},
+            "csr1k-r1": {"c": 3, "d": 4},
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {"show run | inc ntp": '{\n  "a": 1,\n  "b": 2\n}'},
-        "IOL2": {"show run | inc ntp": '{\n  "c": 3,\n  "d": 4\n}'},
+        "iol-r1": {"show run | inc ntp": '{\n  "a": 1,\n  "b": 2\n}'},
+        "csr1k-r1": {"show run | inc ntp": '{\n  "c": 3,\n  "d": 4\n}'},
     }
 
 
@@ -287,16 +289,16 @@ def test_struct_to_yaml():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"a": 1, "b": 2},
-            "IOL2": {"c": 3, "d": 4},
+            "iol-r1": {"a": 1, "b": 2},
+            "csr1k-r1": {"c": 3, "d": 4},
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {"show run | inc ntp": "a: 1\nb: 2\n"},
-        "IOL2": {"show run | inc ntp": "c: 3\nd: 4\n"},
+        "iol-r1": {"show run | inc ntp": "a: 1\nb: 2\n"},
+        "csr1k-r1": {"show run | inc ntp": "c: 3\nd: 4\n"},
     }
 
 
@@ -310,16 +312,16 @@ def test_struct_to_str():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"a": 1, "b": 2},
-            "IOL2": {"c": 3, "d": 4},
+            "iol-r1": {"a": 1, "b": 2},
+            "csr1k-r1": {"c": 3, "d": 4},
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {"show run | inc ntp": "{'a': 1, 'b': 2}"},
-        "IOL2": {"show run | inc ntp": "{'c': 3, 'd': 4}"},
+        "iol-r1": {"show run | inc ntp": "{'a': 1, 'b': 2}"},
+        "csr1k-r1": {"show run | inc ntp": "{'c': 3, 'd': 4}"},
     }
 
 
@@ -333,15 +335,15 @@ def test_xml_string_load_to_dict():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result, width=150, indent=1)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {
                 "rpc-reply": {
                     "@message-id": "urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6",
@@ -383,7 +385,7 @@ def test_xml_string_load_to_dict():
                 }
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": {
                 "rpc-reply": {
                     "@message-id": "urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6",
@@ -438,15 +440,15 @@ def test_json_string_load_to_struct():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": json_ntp_data,
-            "IOL2": json_ntp_data,
+            "iol-r1": json_ntp_data,
+            "csr1k-r1": json_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {
                 "rpc-reply": {
                     "@message-id": "urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6",
@@ -488,7 +490,7 @@ def test_json_string_load_to_struct():
                 }
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": {
                 "rpc-reply": {
                     "@message-id": "urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6",
@@ -543,15 +545,15 @@ def test_struct_to_flatten_dict():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": dict_ntp_data,
-            "IOL2": dict_ntp_data,
+            "iol-r1": dict_ntp_data,
+            "csr1k-r1": dict_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
-    assert result["IOL1"]["show run | inc ntp"] == dict_ntp_data_flattened
-    assert result["IOL2"]["show run | inc ntp"] == dict_ntp_data_flattened
+    assert result["iol-r1"]["show run | inc ntp"] == dict_ntp_data_flattened
+    assert result["csr1k-r1"]["show run | inc ntp"] == dict_ntp_data_flattened
 
 
 # test_struct_to_flatten_dict()
@@ -564,15 +566,15 @@ def test_struct_to_unflatten_dict():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": dict_ntp_data_flattened,
-            "IOL2": dict_ntp_data_flattened,
+            "iol-r1": dict_ntp_data_flattened,
+            "csr1k-r1": dict_ntp_data_flattened,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
-    assert result["IOL1"]["show run | inc ntp"] == dict_ntp_data
-    assert result["IOL2"]["show run | inc ntp"] == dict_ntp_data
+    assert result["iol-r1"]["show run | inc ntp"] == dict_ntp_data
+    assert result["csr1k-r1"]["show run | inc ntp"] == dict_ntp_data
 
 
 # test_struct_to_unflatten_dict()
@@ -585,13 +587,13 @@ def test_struct_to_unflatten_list():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "0.a.b.0.c": 1,
                 "0.a.b.1.c": 2,
                 "1.a.b.0.c": 3,
                 "1.a.b.1": 4,
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "0.a.b.0.c": 1,
                 "0.a.b.1.c": 2,
                 "1.a.b.0.c": 3,
@@ -603,13 +605,13 @@ def test_struct_to_unflatten_list():
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"a": {"b": [{"c": 1}, {"c": 2}]}},
                 {"a": {"b": [{"c": 3}, 4]}},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"a": {"b": [{"c": 1}, {"c": 2}]}},
                 {"a": {"b": [{"c": 3}, 4]}},
@@ -628,13 +630,13 @@ def test_struct_to_unflatten_list_first_non_0_index():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "5.a.b.0.c": 1,
                 "5.a.b.1.c": 2,
                 "10.a.b.0.c": 3,
                 "10.a.b.1": 4,
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "5.a.b.0.c": 1,
                 "5.a.b.1.c": 2,
                 "10.a.b.0.c": 3,
@@ -669,15 +671,15 @@ def test_xml_xpath_with_namespaces():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     pprint.pprint(result, width=200)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": '<config xmlns="http://openconfig.net/yang/system">\n'
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -700,7 +702,7 @@ def test_xml_xpath_with_namespaces():
             "            </config>\n"
             "          \n"
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": '<config xmlns="http://openconfig.net/yang/system">\n'
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -748,18 +750,18 @@ def test_xml_xpath_elem_by_value():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result, width=200)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": '<address xmlns="http://openconfig.net/yang/system">1.1.1.11</address>\n              \n'
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": '<address xmlns="http://openconfig.net/yang/system">1.1.1.11</address>\n              \n'
         },
     }
@@ -779,14 +781,14 @@ def test_xml_xpath_smart_string_false():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result, width=200)
-    assert isinstance(result["IOL1"]["show run | inc ntp"], str)
+    assert isinstance(result["iol-r1"]["show run | inc ntp"], str)
 
 
 # test_xml_xpath_smart_string_false()
@@ -801,15 +803,15 @@ def test_xml_xpath_ignore_namespaces():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result, width=200)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": '<config xmlns="http://openconfig.net/yang/system">\n'
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -832,7 +834,7 @@ def test_xml_xpath_ignore_namespaces():
             "            </config>\n"
             "          \n"
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": '<config xmlns="http://openconfig.net/yang/system">\n'
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -870,8 +872,8 @@ def test_xml_xpath_on_error():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
@@ -879,7 +881,7 @@ def test_xml_xpath_on_error():
     pprint.pprint(result, width=200)
     assert (
         "lxml.etree.XPathEvalError: Invalid expression"
-        in result["IOL1"]["show run | inc ntp"]["exception"]
+        in result["iol-r1"]["show run | inc ntp"]["exception"]
     )
 
 
@@ -893,8 +895,8 @@ def test_xml_rm_ns():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
@@ -902,7 +904,7 @@ def test_xml_rm_ns():
     # pprint.pprint(result, width=200)
 
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": '<rpc-reply message-id="urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6">\n'
             '  <data time-modified="2021-07-15T19:54:35.034953141Z">\n'
             "    <system>\n"
@@ -936,7 +938,7 @@ def test_xml_rm_ns():
             "  </data>\n"
             "</rpc-reply>\n"
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": '<rpc-reply message-id="urn:uuid:2412b1be-e949-4ebc-93e4-9fb3a20134c6">\n'
             '  <data time-modified="2021-07-15T19:54:35.034953141Z">\n'
             "    <system>\n"
@@ -985,15 +987,15 @@ def test_xml_xpath_with_rm_ns():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output, to_dict=True)
     pprint.pprint(result, width=200)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": "<config>\n"
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -1016,7 +1018,7 @@ def test_xml_xpath_with_rm_ns():
             "            </config>\n"
             "          \n"
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": "<config>\n"
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -1067,13 +1069,13 @@ interface {{ interface }}
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
   description RID
             """,
-            "IOL2": """
+            "csr1k-r1": """
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
@@ -1085,13 +1087,13 @@ interface Loopback0
     result = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"description": "Storage Management", "interface": "Port-Chanel11"},
                 {"description": "RID", "interface": "Loopback0"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"description": "Storage Management", "interface": "Port-Chanel11"},
                 {"description": "RID", "interface": "Loopback0"},
@@ -1110,13 +1112,13 @@ def test_match():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
   description PID
             """,
-            "IOL2": """
+            "csr1k-r1": """
 interface Port-Chanel11
   description Storage Management Space
 interface Loopback0
@@ -1128,8 +1130,8 @@ interface Loopback0
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {"show run | inc ntp": "  description Storage Management"},
-        "IOL2": {"show run | inc ntp": "  description Storage Management Space"},
+        "iol-r1": {"show run | inc ntp": "  description Storage Management"},
+        "csr1k-r1": {"show run | inc ntp": "  description Storage Management Space"},
     }
 
 
@@ -1147,13 +1149,13 @@ def test_match_with_before():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
   description PID
             """,
-            "IOL2": """
+            "csr1k-r1": """
 interface Port-Chanel11
   description Storage Management Space
 interface Loopback0
@@ -1165,10 +1167,10 @@ interface Loopback0
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": "--\ninterface Port-Chanel11\n  description Storage Management"
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": "--\n"
             "interface Port-Chanel11\n"
             "  description Storage Management Space"
@@ -1184,13 +1186,13 @@ def test_match_int_pattern():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 interface Port-Chanel11
   description Storage Management
 interface Loopback0
   description PID
             """,
-            "IOL2": """
+            "csr1k-r1": """
 interface Port-Chanel11
   description Storage Management Space
 interface Loopback0
@@ -1202,8 +1204,8 @@ interface Loopback0
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {"show run | inc ntp": "interface Port-Chanel11"},
-        "IOL2": {"show run | inc ntp": "interface Port-Chanel11"},
+        "iol-r1": {"show run | inc ntp": "interface Port-Chanel11"},
+        "csr1k-r1": {"show run | inc ntp": "interface Port-Chanel11"},
     }
 
 
@@ -1217,12 +1219,12 @@ def test_lod_filter():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
@@ -1233,13 +1235,13 @@ def test_lod_filter():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
@@ -1258,12 +1260,12 @@ def test_lod_filter_with_glob_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
@@ -1274,13 +1276,13 @@ def test_lod_filter_with_glob_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
@@ -1299,12 +1301,12 @@ def test_lod_filter_with_uncknown_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
@@ -1315,8 +1317,8 @@ def test_lod_filter_with_uncknown_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {"show run | inc ntp": []},
-        "IOL2": {"show run | inc ntp": []},
+        "iol-r1": {"show run | inc ntp": []},
+        "csr1k-r1": {"show run | inc ntp": []},
     }
 
 
@@ -1330,12 +1332,12 @@ def test_lod_filter_with_glob_check_type_specifier_multikey():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
@@ -1346,8 +1348,8 @@ def test_lod_filter_with_glob_check_type_specifier_multikey():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {"show run | inc ntp": [{"interface": "Gi2", "ip": "1.1.2.3"}]},
-        "IOL2": {"show run | inc ntp": [{"interface": "Gi2", "ip": "1.1.2.3"}]},
+        "iol-r1": {"show run | inc ntp": [{"interface": "Gi2", "ip": "1.1.2.3"}]},
+        "csr1k-r1": {"show run | inc ntp": [{"interface": "Gi2", "ip": "1.1.2.3"}]},
     }
 
 
@@ -1370,20 +1372,20 @@ logging host {{ log_server }}
 </group>
     """
 
-    iol1_res_ntp = """
+    iol_r1_res_ntp = """
 Timestamp 12:12:12
 
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """
-    iol2_res_ntp = """
+    csr1k_r1_res_ntp = """
 ntp server 7.7.7.7
         """
-    iol1_res_log = """
+    iol_r1_res_log = """
 logging host 1.2.3.4
 logging host 4.4.4.4
         """
-    iol2_res_log = """
+    csr1k_r1_res_log = """
 logging host 5.5.5.5
         """
 
@@ -1406,16 +1408,16 @@ logging host 5.5.5.5
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_ntp,
-                "IOL2": iol2_res_ntp,
+                "iol-r1": iol_r1_res_ntp,
+                "csr1k-r1": csr1k_r1_res_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_log,
-                "IOL2": iol2_res_log,
+                "iol-r1": iol_r1_res_log,
+                "csr1k-r1": csr1k_r1_res_log,
             },
             "name": "show run | inc logging",
         },
@@ -1423,7 +1425,7 @@ logging host 5.5.5.5
     res = ResultSerializer(output, to_dict=True)
     # pprint.pprint(result, width=100)
     assert res == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc logging": [
                 {"log": [{"log_server": "1.2.3.4"}, {"log_server": "4.4.4.4"}]}
             ],
@@ -1431,7 +1433,7 @@ logging host 5.5.5.5
                 {"ntp": [{"ntp_server": "7.7.7.8"}, {"ntp_server": "7.7.7.7"}]}
             ],
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc logging": [{"log": [{"log_server": "5.5.5.5"}]}],
             "show run | inc ntp": [{"ntp": [{"ntp_server": "7.7.7.7"}]}],
         },
@@ -1446,12 +1448,12 @@ def test_path_function():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
@@ -1463,8 +1465,8 @@ def test_path_function():
     pprint.pprint(result)
 
     assert result == {
-        "IOL1": {"show run | inc ntp": "1.2.3.4"},
-        "IOL2": {"show run | inc ntp": "1.2.3.4"},
+        "iol-r1": {"show run | inc ntp": "1.2.3.4"},
+        "csr1k-r1": {"show run | inc ntp": "1.2.3.4"},
     }
 
 
@@ -1487,7 +1489,7 @@ def test_path_highhly_nested_data_path_with_quotes():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "VIP_cfg": {
                     "1.1.1.1": {
                         "config_state": "dis",
@@ -1499,7 +1501,7 @@ def test_path_highhly_nested_data_path_with_quotes():
                     }
                 }
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "VIP_cfg": {
                     "1.1.1.1": {
                         "config_state": "dis",
@@ -1518,8 +1520,8 @@ def test_path_highhly_nested_data_path_with_quotes():
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {"show run | inc ntp": "443"},
-        "IOL2": {"show run | inc ntp": "80"},
+        "iol-r1": {"show run | inc ntp": "443"},
+        "csr1k-r1": {"show run | inc ntp": "80"},
     }
 
 
@@ -1550,7 +1552,7 @@ def test_path_highhly_nested_data_path_is_list():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "VIP_cfg": {
                     "1.1.1.1": {
                         "config_state": "dis",
@@ -1562,7 +1564,7 @@ def test_path_highhly_nested_data_path_is_list():
                     }
                 }
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "VIP_cfg": {
                     "1.1.1.1": {
                         "config_state": "dis",
@@ -1581,8 +1583,8 @@ def test_path_highhly_nested_data_path_is_list():
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {"show run | inc ntp": "443"},
-        "IOL2": {"show run | inc ntp": "80"},
+        "iol-r1": {"show run | inc ntp": "443"},
+        "csr1k-r1": {"show run | inc ntp": "80"},
     }
 
 
@@ -1596,12 +1598,12 @@ def test_find_in_list():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1"},
                 {"ip": "1.1.2.3", "interface": "Gi2"},
                 {"ip": "1.1.1.1", "interface": "Gi3"},
@@ -1614,13 +1616,13 @@ def test_find_in_list():
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
@@ -1650,7 +1652,7 @@ def test_find_in_list_with_path():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "interfaces": {
                     "cfg": [
                         {"ip": "1.2.3.4", "interface": "Gi1"},
@@ -1659,7 +1661,7 @@ def test_find_in_list_with_path():
                     ]
                 }
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "interfaces": {
                     "cfg": [
                         {"ip": "1.2.3.4", "interface": "Gi1"},
@@ -1676,13 +1678,13 @@ def test_find_in_list_with_path():
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3"},
                 {"interface": "Gi3", "ip": "1.1.1.1"},
@@ -1701,12 +1703,12 @@ def test_find_in_dict_key_filter():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "Gi1": {"ip": "1.2.3.4"},
                 "Gi2": {"ip": "1.1.1.1"},
                 "Gi3": {"ip": "2.2.2.2"},
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "Gi1": {"ip": "4.3.2.1"},
                 "Gi3": {"ip": "2.2.2.2"},
             },
@@ -1718,10 +1720,10 @@ def test_find_in_dict_key_filter():
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {"Gi2": {"ip": "1.1.1.1"}, "Gi3": {"ip": "2.2.2.2"}}
         },
-        "IOL2": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
+        "csr1k-r1": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
     }
 
 
@@ -1739,7 +1741,7 @@ def test_find_in_dict_key_filter_with_path():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "interfaces": {
                     "cfg": {
                         "Gi1": {"ip": "1.2.3.4"},
@@ -1748,7 +1750,7 @@ def test_find_in_dict_key_filter_with_path():
                     }
                 }
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "interfaces": {
                     "cfg": {
                         "Gi1": {"ip": "4.3.2.1"},
@@ -1764,10 +1766,10 @@ def test_find_in_dict_key_filter_with_path():
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {"Gi2": {"ip": "1.1.1.1"}, "Gi3": {"ip": "2.2.2.2"}}
         },
-        "IOL2": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
+        "csr1k-r1": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
     }
 
 
@@ -1781,7 +1783,7 @@ def test_find_in_text_match_filter():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 interface Lo0
  description data_1 file
  ip address 1.0.0.0 32
@@ -1791,7 +1793,7 @@ interface Lo1
  ip address 1.1.1.1 32
 !
             """,
-            "IOL2": """
+            "csr1k-r1": """
 interface Lo0
  description data_1 file
  ip address 1.0.0.0 32
@@ -1804,10 +1806,10 @@ interface Lo0
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": " ip address 1.0.0.0 32\n" " ip address 1.1.1.1 32"
         },
-        "IOL2": {"show run | inc ntp": " ip address 1.0.0.0 32"},
+        "csr1k-r1": {"show run | inc ntp": " ip address 1.0.0.0 32"},
     }
 
 
@@ -1825,7 +1827,7 @@ def test_find_in_text_match_filter_with_path():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"interfaces": {"cfg": """
+            "iol-r1": {"interfaces": {"cfg": """
 interface Lo0
  description data_1 file
  ip address 1.0.0.0 32
@@ -1835,7 +1837,7 @@ interface Lo1
  ip address 1.1.1.1 32
 !
             """}},
-            "IOL2": {"interfaces": {"cfg": """
+            "csr1k-r1": {"interfaces": {"cfg": """
 interface Lo0
  description data_1 file
  ip address 1.0.0.0 32
@@ -1848,10 +1850,10 @@ interface Lo0
     # pprint.pprint(result)
 
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": " ip address 1.0.0.0 32\n" " ip address 1.1.1.1 32"
         },
-        "IOL2": {"show run | inc ntp": " ip address 1.0.0.0 32"},
+        "csr1k-r1": {"show run | inc ntp": " ip address 1.0.0.0 32"},
     }
 
 
@@ -1865,12 +1867,12 @@ def test_key_filter_check_specifier_glob():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "Gi1": {"ip": "1.2.3.4"},
                 "Gi2": {"ip": "1.1.1.1"},
                 "Gi3": {"ip": "2.2.2.2"},
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "Gi1": {"ip": "4.3.2.1"},
                 "Gi3": {"ip": "2.2.2.2"},
             },
@@ -1880,10 +1882,10 @@ def test_key_filter_check_specifier_glob():
     result = ResultSerializer(output)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {"Gi2": {"ip": "1.1.1.1"}, "Gi3": {"ip": "2.2.2.2"}}
         },
-        "IOL2": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
+        "csr1k-r1": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
     }
 
 
@@ -1897,12 +1899,12 @@ def test_key_filter_check_specifier_re():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "Gi1": {"ip": "1.2.3.4"},
                 "Gi2": {"ip": "1.1.1.1"},
                 "Gi3": {"ip": "2.2.2.2"},
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "Gi1": {"ip": "4.3.2.1"},
                 "Gi3": {"ip": "2.2.2.2"},
             },
@@ -1912,10 +1914,10 @@ def test_key_filter_check_specifier_re():
     result = ResultSerializer(output)
     # pprint.pprint(result)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {"Gi2": {"ip": "1.1.1.1"}, "Gi3": {"ip": "2.2.2.2"}}
         },
-        "IOL2": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
+        "csr1k-r1": {"show run | inc ntp": {"Gi3": {"ip": "2.2.2.2"}}},
     }
 
 
@@ -1951,11 +1953,11 @@ logging host {{ log_server }}
     result = ResultSerializer(output)
     pprint.pprint(result)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "nr_test": {"commands": ["show run | inc ntp", "show run | inc logging"]},
             "run_ttp": [[]],
         },
-        "IOL2": {
+        "csr1k-r1": {
             "nr_test": {"commands": ["show run | inc ntp", "show run | inc logging"]},
             "run_ttp": [[]],
         },
@@ -1966,18 +1968,18 @@ logging host {{ log_server }}
 
 
 def test_parse_ttp_run_non_default_inputs_only():
-    iol1_res_ntp = """
+    iol_r1_res_ntp = """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """
-    iol2_res_ntp = """
+    csr1k_r1_res_ntp = """
 ntp server 7.7.7.7
         """
-    iol1_res_log = """
+    iol_r1_res_log = """
 logging host 1.2.3.4
 logging host 4.4.4.4
         """
-    iol2_res_log = """
+    csr1k_r1_res_log = """
 logging host 5.5.5.5
         """
 
@@ -2006,16 +2008,16 @@ logging host {{ log_server }}
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_ntp,
-                "IOL2": iol2_res_ntp,
+                "iol-r1": iol_r1_res_ntp,
+                "csr1k-r1": csr1k_r1_res_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_log,
-                "IOL2": iol2_res_log,
+                "iol-r1": iol_r1_res_log,
+                "csr1k-r1": csr1k_r1_res_log,
             },
             "name": "show run | inc logging",
         },
@@ -2028,7 +2030,7 @@ logging host {{ log_server }}
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "run_ttp",
             "result": [
                 [
@@ -2042,7 +2044,7 @@ logging host {{ log_server }}
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "run_ttp",
             "result": [
                 [
@@ -2058,18 +2060,18 @@ logging host {{ log_server }}
 
 
 def test_parse_ttp_run_inputs_with_default_input():
-    iol1_res_ntp = """
+    iol_r1_res_ntp = """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """
-    iol2_res_ntp = """
+    csr1k_r1_res_ntp = """
 ntp server 7.7.7.7
         """
-    iol1_res_log = """
+    iol_r1_res_log = """
 logging host 1.2.3.4
 logging host 4.4.4.4
         """
-    iol2_res_log = """
+    csr1k_r1_res_log = """
 logging host 5.5.5.5
         """
 
@@ -2098,16 +2100,16 @@ logging host {{ log_server }}
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_ntp,
-                "IOL2": iol2_res_ntp,
+                "iol-r1": iol_r1_res_ntp,
+                "csr1k-r1": csr1k_r1_res_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_log,
-                "IOL2": iol2_res_log,
+                "iol-r1": iol_r1_res_log,
+                "csr1k-r1": csr1k_r1_res_log,
             },
             "name": "show run | inc logging",
         },
@@ -2120,7 +2122,7 @@ logging host {{ log_server }}
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "run_ttp",
             "result": [
                 [
@@ -2134,7 +2136,7 @@ logging host {{ log_server }}
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "run_ttp",
             "result": [
                 [
@@ -2150,18 +2152,18 @@ logging host {{ log_server }}
 
 
 def test_parse_ttp_run_default_input_only():
-    iol1_res_ntp = """
+    iol_r1_res_ntp = """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """
-    iol2_res_ntp = """
+    csr1k_r1_res_ntp = """
 ntp server 7.7.7.7
         """
-    iol1_res_log = """
+    iol_r1_res_log = """
 logging host 1.2.3.4
 logging host 4.4.4.4
         """
-    iol2_res_log = """
+    csr1k_r1_res_log = """
 logging host 5.5.5.5
         """
 
@@ -2189,16 +2191,16 @@ logging host {{ log_server }}
         task_1={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_ntp,
-                "IOL2": iol2_res_ntp,
+                "iol-r1": iol_r1_res_ntp,
+                "csr1k-r1": csr1k_r1_res_ntp,
             },
             "name": "show run | inc ntp",
         },
         task_2={
             "task": nr_test,
             "ret_data_per_host": {
-                "IOL1": iol1_res_log,
-                "IOL2": iol2_res_log,
+                "iol-r1": iol_r1_res_log,
+                "csr1k-r1": csr1k_r1_res_log,
             },
             "name": "show run | inc logging",
         },
@@ -2211,7 +2213,7 @@ logging host {{ log_server }}
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "run_ttp",
             "result": [
                 [
@@ -2227,7 +2229,7 @@ logging host {{ log_server }}
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "run_ttp",
             "result": [
                 [
@@ -2260,7 +2262,7 @@ def test_jmespath_struct_data():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "locations": [
                     {"name": "Seattle", "state": "WA"},
                     {"name": "New York", "state": "NY"},
@@ -2268,7 +2270,7 @@ def test_jmespath_struct_data():
                     {"name": "Olympia", "state": "WA"},
                 ]
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "locations": [
                     {"name": "Seattle", "state": "WA"},
                     {"name": "New York", "state": "NY"},
@@ -2282,10 +2284,10 @@ def test_jmespath_struct_data():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=150)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {"WashingtonCities": "Bellevue, Olympia, Seattle"}
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": {"WashingtonCities": "Bellevue, Olympia, Seattle"}
         },
     }
@@ -2312,7 +2314,7 @@ def test_jmespath_json_data():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": json.dumps(
+            "iol-r1": json.dumps(
                 {
                     "locations": [
                         {"name": "Seattle", "state": "WA"},
@@ -2322,7 +2324,7 @@ def test_jmespath_json_data():
                     ]
                 }
             ),
-            "IOL2": json.dumps(
+            "csr1k-r1": json.dumps(
                 {
                     "locations": [
                         {"name": "Seattle", "state": "WA"},
@@ -2338,10 +2340,10 @@ def test_jmespath_json_data():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=150)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {"WashingtonCities": "Bellevue, Olympia, Seattle"}
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": {"WashingtonCities": "Bellevue, Olympia, Seattle"}
         },
     }
@@ -2367,7 +2369,7 @@ def test_find_use_jmespath():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "locations": [
                     {"name": "Seattle", "state": "WA"},
                     {"name": "New York", "state": "NY"},
@@ -2375,7 +2377,7 @@ def test_find_use_jmespath():
                     {"name": "Olympia", "state": "WA"},
                 ]
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "locations": [
                     {"name": "Seattle", "state": "WA"},
                     {"name": "New York", "state": "NY"},
@@ -2389,10 +2391,10 @@ def test_find_use_jmespath():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=150)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": {"WashingtonCities": "Bellevue, Olympia, Seattle"}
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": {"WashingtonCities": "Bellevue, Olympia, Seattle"}
         },
     }
@@ -2419,15 +2421,15 @@ def test_find_use_xpath_with_namespaces():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": xml_ntp_data,
-            "IOL2": xml_ntp_data,
+            "iol-r1": xml_ntp_data,
+            "csr1k-r1": xml_ntp_data,
         },
         name="show run | inc ntp",
     )
     result = ResultSerializer(output)
     # pprint.pprint(result, width=150)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": '<config xmlns="http://openconfig.net/yang/system">\n'
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -2450,7 +2452,7 @@ def test_find_use_xpath_with_namespaces():
             "            </config>\n"
             "          \n"
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": '<config xmlns="http://openconfig.net/yang/system">\n'
             "          <enable-ntp-auth>false</enable-ntp-auth>\n"
             "          <enabled>true</enabled>\n"
@@ -2486,12 +2488,12 @@ def test_lod_filter_with_eq_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2502,10 +2504,10 @@ def test_lod_filter_with_eq_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
     }
@@ -2521,12 +2523,12 @@ def test_lod_filter_with_ge_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2537,13 +2539,13 @@ def test_lod_filter_with_ge_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
@@ -2562,12 +2564,12 @@ def test_lod_filter_with_ge_check_type_specifier_wrong_type():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "255.255.255.255"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "255.255.255.0"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "255.255.255.252"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2578,10 +2580,10 @@ def test_lod_filter_with_ge_check_type_specifier_wrong_type():
     result = ResultSerializer(output)
     pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
     }
@@ -2597,12 +2599,12 @@ def test_lod_filter_with_gt_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2613,13 +2615,13 @@ def test_lod_filter_with_gt_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
@@ -2638,12 +2640,12 @@ def test_lod_filter_with_le_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2654,13 +2656,13 @@ def test_lod_filter_with_le_check_type_specifier():
     result = ResultSerializer(output)
     pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
                 {"interface": "Gi3", "ip": "1.1.1.1", "mask": "24"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
                 {"interface": "Gi3", "ip": "1.1.1.1", "mask": "24"},
@@ -2679,12 +2681,12 @@ def test_lod_filter_with_le_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2695,13 +2697,13 @@ def test_lod_filter_with_le_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
                 {"interface": "Gi3", "ip": "1.1.1.1", "mask": "24"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
                 {"interface": "Gi3", "ip": "1.1.1.1", "mask": "24"},
@@ -2720,12 +2722,12 @@ def test_lod_filter_with_in_list_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2736,13 +2738,13 @@ def test_lod_filter_with_in_list_check_type_specifier():
     result = ResultSerializer(output)
     pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
@@ -2761,12 +2763,12 @@ def test_lod_filter_with_in_comma_sep_string_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2777,13 +2779,13 @@ def test_lod_filter_with_in_comma_sep_string_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
             ]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [
                 {"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"},
                 {"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"},
@@ -2802,12 +2804,12 @@ def test_lod_filter_with_in_string_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2818,10 +2820,10 @@ def test_lod_filter_with_in_string_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
     }
@@ -2837,12 +2839,12 @@ def test_lod_filter_with_in_integer_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2853,10 +2855,10 @@ def test_lod_filter_with_in_integer_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [{"interface": "Gi1", "ip": "1.2.3.4", "mask": "32"}]
         },
     }
@@ -2872,12 +2874,12 @@ def test_lod_filter_with_contains_check_type_specifier():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
             ],
-            "IOL2": [
+            "csr1k-r1": [
                 {"ip": "1.2.3.4", "interface": "Gi1", "mask": "32"},
                 {"ip": "1.1.2.3", "interface": "Gi2", "mask": "30"},
                 {"ip": "1.1.1.1", "interface": "Gi3", "mask": "24"},
@@ -2888,10 +2890,10 @@ def test_lod_filter_with_contains_check_type_specifier():
     result = ResultSerializer(output)
     # pprint.pprint(result, width=100)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp": [{"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"}]
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp": [{"interface": "Gi2", "ip": "1.1.2.3", "mask": "30"}]
         },
     }
@@ -2903,13 +2905,13 @@ def test_lod_filter_with_contains_check_type_specifier():
 def test_iplkp():
     csv_table = """
 ip,name
-10.0.1.4,IOL1:Eth1
-1.1.1.1,IOL1:Lo1
-1.1.1.11,IOL1:Lo2
-1::1,IOL1:Lo3
-10.0.1.5,IOL2:Eth1
-1.101.2.2,IOL2:Lo101
-fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
+10.0.1.4,iol-r1:Eth1
+1.1.1.1,iol-r1:Lo1
+1.1.1.11,iol-r1:Lo2
+1::1,iol-r1:Lo3
+10.0.1.5,csr1k-r1:Eth1
+1.101.2.2,csr1k-r1:Lo101
+fd51:abcd:beef:beef:cafe:cafe:1234:1234,csr1k-r1:Lo102
     """
     nr_with_dp = nr.with_processors(
         [DataProcessor([{"fun": "iplkp", "use_csv": csv_table}])]
@@ -2917,7 +2919,7 @@ fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
                                                                           Address
 Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
@@ -2925,7 +2927,7 @@ Ethernet1       10.0.1.4/24       up           up                 1500
 Loopback1       1.1.1.1/24        up           up                65535
 Loopback2       1.1.1.11/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
-            "IOL2": """
+            "csr1k-r1": """
                                                                               Address
 Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
@@ -2939,25 +2941,25 @@ Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up        
     result = ResultSerializer(output)
     pprint.pprint(result, width=170)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show ip int brief": "\n"
             "                                                                          Address\n"
             "Interface       IP Address        Status       Protocol            MTU    Owner\n"
             "--------------- ----------------- ------------ -------------- ----------- -------\n"
-            "Ethernet1       10.0.1.4(IOL1:Eth1)/24       up           up                 1500\n"
-            "Loopback1       1.1.1.1(IOL1:Lo1)/24        up           up                65535\n"
-            "Loopback2       1.1.1.11(IOL1:Lo2)/24        up           up                65535\n"
-            "Loopback3       1::1(IOL1:Lo3)/120        up           up                65535           "
+            "Ethernet1       10.0.1.4(iol-r1:Eth1)/24       up           up                 1500\n"
+            "Loopback1       1.1.1.1(iol-r1:Lo1)/24        up           up                65535\n"
+            "Loopback2       1.1.1.11(iol-r1:Lo2)/24        up           up                65535\n"
+            "Loopback3       1::1(iol-r1:Lo3)/120        up           up                65535           "
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show ip int brief": "\n"
             "                                                                              Address\n"
             "Interface         IP Address          Status       Protocol            MTU    Owner\n"
             "----------------- ------------------- ------------ -------------- ----------- -------\n"
-            "Ethernet1         10.0.1.5(IOL2:Eth1)/24         up           up                 1500\n"
+            "Ethernet1         10.0.1.5(csr1k-r1:Eth1)/24         up           up                 1500\n"
             "Loopback100       100.12.3.4/22       up           up                65535\n"
-            "Loopback101       1.101.2.2(IOL2:Lo101)/32        up           up                65535\n"
-            "Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234(IOL2:Lo102)/24          up           up                65535           "
+            "Loopback101       1.101.2.2(csr1k-r1:Lo101)/32        up           up                65535\n"
+            "Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234(csr1k-r1:Lo102)/24          up           up                65535           "
         },
     }
 
@@ -2968,13 +2970,13 @@ Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up        
 def test_iplkp_with_subform():
     csv_table = """
 ip,name
-10.0.1.4,IOL1:Eth1
-1.1.1.1,IOL1:Lo1
-1.1.1.11,IOL1:Lo2
-1::1,IOL1:Lo3
-10.0.1.5,IOL2:Eth1
-1.101.2.2,IOL2:Lo101
-fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
+10.0.1.4,iol-r1:Eth1
+1.1.1.1,iol-r1:Lo1
+1.1.1.11,iol-r1:Lo2
+1::1,iol-r1:Lo3
+10.0.1.5,csr1k-r1:Eth1
+1.101.2.2,csr1k-r1:Lo101
+fd51:abcd:beef:beef:cafe:cafe:1234:1234,csr1k-r1:Lo102
     """
     nr_with_dp = nr.with_processors(
         [DataProcessor([{"fun": "iplkp", "use_csv": csv_table, "subform": "{lookup}"}])]
@@ -2982,7 +2984,7 @@ fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
                                                                           Address
 Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
@@ -2990,7 +2992,7 @@ Ethernet1       10.0.1.4/24       up           up                 1500
 Loopback1       1.1.1.1/24        up           up                65535
 Loopback2       1.1.1.11/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
-            "IOL2": """
+            "csr1k-r1": """
                                                                               Address
 Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
@@ -3004,25 +3006,25 @@ Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up        
     result = ResultSerializer(output)
     pprint.pprint(result, width=170)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show ip int brief": "\n"
             "                                                                          Address\n"
             "Interface       IP Address        Status       Protocol            MTU    Owner\n"
             "--------------- ----------------- ------------ -------------- ----------- -------\n"
-            "Ethernet1       IOL1:Eth1/24       up           up                 1500\n"
-            "Loopback1       IOL1:Lo1/24        up           up                65535\n"
-            "Loopback2       IOL1:Lo2/24        up           up                65535\n"
-            "Loopback3       IOL1:Lo3/120        up           up                65535           "
+            "Ethernet1       iol-r1:Eth1/24       up           up                 1500\n"
+            "Loopback1       iol-r1:Lo1/24        up           up                65535\n"
+            "Loopback2       iol-r1:Lo2/24        up           up                65535\n"
+            "Loopback3       iol-r1:Lo3/120        up           up                65535           "
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show ip int brief": "\n"
             "                                                                              Address\n"
             "Interface         IP Address          Status       Protocol            MTU    Owner\n"
             "----------------- ------------------- ------------ -------------- ----------- -------\n"
-            "Ethernet1         IOL2:Eth1/24         up           up                 1500\n"
+            "Ethernet1         csr1k-r1:Eth1/24         up           up                 1500\n"
             "Loopback100       100.12.3.4/22       up           up                65535\n"
-            "Loopback101       IOL2:Lo101/32        up           up                65535\n"
-            "Loopback102       IOL2:Lo102/24          up           up                65535           "
+            "Loopback101       csr1k-r1:Lo101/32        up           up                65535\n"
+            "Loopback102       csr1k-r1:Lo102/24          up           up                65535           "
         },
     }
 
@@ -3037,7 +3039,7 @@ def test_iplkp_no_csv_no_dns():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
                                                                           Address
 Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
@@ -3045,7 +3047,7 @@ Ethernet1       10.0.1.4/24       up           up                 1500
 Loopback1       1.1.1.1/24        up           up                65535
 Loopback2       1.1.1.11/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
-            "IOL2": """
+            "csr1k-r1": """
                                                                               Address
 Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
@@ -3059,7 +3061,7 @@ Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up        
     result = ResultSerializer(output)
     # pprint.pprint(result, width=170)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show ip int brief": "\n"
             "                                                                          Address\n"
             "Interface       IP Address        Status       Protocol            MTU    Owner\n"
@@ -3069,7 +3071,7 @@ Loopback102       fd51:abcd:beef:beef:cafe:cafe:1234:1234/24          up        
             "Loopback2       1.1.1.11/24        up           up                65535\n"
             "Loopback3       1::1/120        up           up                65535           "
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show ip int brief": "\n"
             "                                                                              Address\n"
             "Interface         IP Address          Status       Protocol            MTU    Owner\n"
@@ -3092,14 +3094,14 @@ def test_iplkp_use_dns():
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
                                                                           Address
 Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
 Ethernet1       192.168.3.3/24       up           up                 1500
 Loopback2       8.8.8.8/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
-            "IOL2": """
+            "csr1k-r1": """
                                                                               Address
 Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
@@ -3110,7 +3112,7 @@ Loopback102       2001:4860:4860::8888/128          up           up             
     result = ResultSerializer(output)
     # pprint.pprint(result, width=170)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show ip int brief": "\n"
             "                                                                          Address\n"
             "Interface       IP Address        Status       Protocol            MTU    Owner\n"
@@ -3119,7 +3121,7 @@ Loopback102       2001:4860:4860::8888/128          up           up             
             "Loopback2       8.8.8.8(dns.google)/24        up           up                65535\n"
             "Loopback3       1::1/120        up           up                65535           "
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show ip int brief": "\n"
             "                                                                              Address\n"
             "Interface         IP Address          Status       Protocol            MTU    Owner\n"
@@ -3135,13 +3137,13 @@ Loopback102       2001:4860:4860::8888/128          up           up             
 def test_iplkp_use_dns_use_csv():
     csv_table = """
 ip,name
-192.168.3.3,IOL1:Eth1
-1.1.1.1,IOL1:Lo1
-1.1.1.11,IOL1:Lo2
-1::1,IOL1:Lo3
-10.0.1.5,IOL2:Eth1
-1.101.2.2,IOL2:Lo101
-fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
+192.168.3.3,iol-r1:Eth1
+1.1.1.1,iol-r1:Lo1
+1.1.1.11,iol-r1:Lo2
+1::1,iol-r1:Lo3
+10.0.1.5,csr1k-r1:Eth1
+1.101.2.2,csr1k-r1:Lo101
+fd51:abcd:beef:beef:cafe:cafe:1234:1234,csr1k-r1:Lo102
     """
     nr_with_dp = nr.with_processors(
         [DataProcessor([{"fun": "iplkp", "use_dns": True, "use_csv": csv_table}])]
@@ -3149,14 +3151,14 @@ fd51:abcd:beef:beef:cafe:cafe:1234:1234,IOL2:Lo102
     output = nr_with_dp.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
                                                                           Address
 Interface       IP Address        Status       Protocol            MTU    Owner
 --------------- ----------------- ------------ -------------- ----------- -------
 Ethernet1       192.168.3.3/24       up           up                 1500
 Loopback2       8.8.8.8/24        up           up                65535
 Loopback3       1::1/120        up           up                65535           """,
-            "IOL2": """
+            "csr1k-r1": """
                                                                               Address
 Interface         IP Address          Status       Protocol            MTU    Owner
 ----------------- ------------------- ------------ -------------- ----------- -------
@@ -3167,16 +3169,16 @@ Loopback102       2001:4860:4860::8888/128          up           up             
     result = ResultSerializer(output)
     # pprint.pprint(result, width=170)
     assert result == {
-        "IOL1": {
+        "iol-r1": {
             "show ip int brief": "\n"
             "                                                                          Address\n"
             "Interface       IP Address        Status       Protocol            MTU    Owner\n"
             "--------------- ----------------- ------------ -------------- ----------- -------\n"
-            "Ethernet1       192.168.3.3(IOL1:Eth1)/24       up           up                 1500\n"
+            "Ethernet1       192.168.3.3(iol-r1:Eth1)/24       up           up                 1500\n"
             "Loopback2       8.8.8.8(dns.google)/24        up           up                65535\n"
-            "Loopback3       1::1(IOL1:Lo3)/120        up           up                65535           "
+            "Loopback3       1::1(iol-r1:Lo3)/120        up           up                65535           "
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show ip int brief": "\n"
             "                                                                              Address\n"
             "Interface         IP Address          Status       Protocol            MTU    Owner\n"

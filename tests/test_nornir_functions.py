@@ -20,7 +20,7 @@ except ImportError:
 
 from nornir_salt.plugins.functions import DumpResults, ResultSerializer
 from nornir_salt.plugins.inventory import DictInventory
-from nornir_salt.plugins.tasks import nr_test, tcp_ping
+from nornir_salt.plugins.tasks import nr_test
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -42,17 +42,18 @@ skip_if_no_nornir = pytest.mark.skipif(
     HAS_NORNIR == False,
     reason="Failed to import all required Nornir modules and plugins",
 )
-skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
 
 groups:
@@ -69,8 +70,6 @@ def init(opts):
     """
     Initiate nornir by calling InitNornir()
     """
-    global skip_if_no_lab
-
     nr = InitNornir(
         logging={"enabled": False},
         runner={"plugin": "serial"},
@@ -82,16 +81,6 @@ def init(opts):
                 "defaults": opts.get("defaults", {}),
             },
         },
-    )
-
-    ping_check = ResultSerializer(nr.run(tcp_ping))
-    HAS_LAB = True
-    for hostname, result in ping_check.items():
-        if result["tcp_ping"][22] == False:
-            HAS_LAB = False
-
-    skip_if_no_lab = pytest.mark.skipif(
-        HAS_LAB == False, reason="Failed connect to LAB"
     )
 
     return nr
@@ -112,11 +101,11 @@ def test_result_serializer_to_dict_with_details():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -124,7 +113,7 @@ ntp server 7.7.7.7
     )
     serialized_output = ResultSerializer(output, add_details=True)
     assert serialized_output == {
-        "IOL1": {
+        "iol-r1": {
             "check ntp config": {
                 "changed": False,
                 "diff": "",
@@ -133,7 +122,7 @@ ntp server 7.7.7.7
                 "result": "\n" "ntp server 7.7.7.8\n" "ntp server 7.7.7.7\n" "        ",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "check ntp config": {
                 "changed": False,
                 "diff": "",
@@ -153,11 +142,11 @@ def test_result_serializer_to_dict_no_details():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -165,13 +154,13 @@ ntp server 7.7.7.7
     )
     serialized_output = ResultSerializer(output, add_details=False)
     assert serialized_output == {
-        "IOL1": {
+        "iol-r1": {
             "check ntp config": "\n"
             "ntp server 7.7.7.8\n"
             "ntp server 7.7.7.7\n"
             "        "
         },
-        "IOL2": {"check ntp config": "\nntp server 7.7.7.7\n        "},
+        "csr1k-r1": {"check ntp config": "\nntp server 7.7.7.7\n        "},
     }
 
 
@@ -183,11 +172,11 @@ def test_result_serializer_to_list_with_details():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -201,7 +190,7 @@ ntp server 7.7.7.7
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "check ntp config",
             "result": "\nntp server 7.7.7.8\nntp server 7.7.7.7\n        ",
         },
@@ -210,7 +199,7 @@ ntp server 7.7.7.7
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "check ntp config",
             "result": "\nntp server 7.7.7.7\n        ",
         },
@@ -225,11 +214,11 @@ def test_result_serializer_to_list_no_details():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -239,12 +228,12 @@ ntp server 7.7.7.7
     # pprint.pprint(serialized_output)
     assert serialized_output == [
         {
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "check ntp config",
             "result": "\nntp server 7.7.7.8\nntp server 7.7.7.7\n        ",
         },
         {
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "check ntp config",
             "result": "\nntp server 7.7.7.7\n        ",
         },
@@ -260,11 +249,11 @@ def test_DumpResults_dictionary_result():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -302,11 +291,11 @@ def test_DumpResults_AggregatedResult_result():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -339,11 +328,11 @@ def test_DumpResults_string_result():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -378,11 +367,11 @@ def test_DumpResults_max_files():
     output = nr.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },

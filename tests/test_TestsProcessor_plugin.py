@@ -37,9 +37,10 @@ skip_if_no_lab = None
 
 lab_inventory = """
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2206
     groups: [lab]
     data:
       interfaces:
@@ -54,9 +55,10 @@ hosts:
           line: line protocol is up
           admin: admin up
       version: xe1.2.3.4
-  IOL2:
-    hostname: 192.168.217.7
+  csr1k-r1:
+    hostname: containerlab.lab
     platform: ios
+    port: 2207
     groups: [lab]
     data:
       version: xe1.2.3.4
@@ -117,11 +119,11 @@ def test_contains_check_list_of_dict_tests():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -130,7 +132,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -143,7 +145,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -179,11 +181,11 @@ def test_contains_check_single_test_kwargs():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -192,7 +194,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -205,7 +207,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -242,11 +244,11 @@ def test_contains_check_list_of_lists():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -255,7 +257,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result, width=150)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp contains ntp serve..": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.7",
@@ -279,7 +281,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             },
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp contains ntp serve..": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.7",
@@ -324,11 +326,11 @@ def test_contains_re_check():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -337,7 +339,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": ".* server 7.7.7.8",
@@ -350,7 +352,7 @@ ntp server 7.7.7.7
                 "test": "contains_re",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": ".* server 7.7.7.8",
@@ -385,11 +387,11 @@ def test_contains_count_check():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -398,7 +400,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count": 2,
@@ -412,7 +414,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count": 2,
@@ -447,11 +449,11 @@ def test_contains_check_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -460,7 +462,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -473,7 +475,7 @@ ntp server 7.7.7.7
                 "test": "!contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -507,11 +509,11 @@ def test_contains_re_check_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -520,7 +522,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": ".* server 7.7.7.8",
@@ -533,7 +535,7 @@ ntp server 7.7.7.7
                 "test": "!contains_re",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": ".* server 7.7.7.8",
@@ -568,11 +570,11 @@ def test_contains_count_check_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -581,7 +583,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count": 2,
@@ -595,7 +597,7 @@ ntp server 7.7.7.7
                 "test": "!contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count": 2,
@@ -630,11 +632,11 @@ def test_contains_check_contains_lines():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -643,7 +645,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -656,7 +658,7 @@ ntp server 7.7.7.7
                 "test": "contains_lines",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -690,11 +692,11 @@ def test_contains_check_contains_lines_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.9
         """,
         },
@@ -703,7 +705,7 @@ ntp server 7.7.7.9
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -716,7 +718,7 @@ ntp server 7.7.7.9
                 "test": "!contains_lines",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -750,18 +752,18 @@ def test_equal_check():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """ntp server 7.7.7.7""",
+            "csr1k-r1": """ntp server 7.7.7.7""",
         },
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.7",
@@ -774,7 +776,7 @@ ntp server 7.7.7.7
                 "test": "equal",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.7",
@@ -808,18 +810,18 @@ def test_not_equal_check():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """ntp server 7.7.7.7""",
+            "csr1k-r1": """ntp server 7.7.7.7""",
         },
         name="show run | inc ntp",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.7",
@@ -832,7 +834,7 @@ ntp server 7.7.7.7
                 "test": "!equal",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.7",
@@ -884,11 +886,11 @@ def run(result):
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -897,7 +899,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -910,7 +912,7 @@ ntp server 7.7.7.7
                 "test": "custom",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -946,11 +948,11 @@ def test_custom_function_file():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -959,7 +961,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -972,7 +974,7 @@ ntp server 7.7.7.7
                 "test": "custom",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1023,11 +1025,11 @@ def test_custom_function_call():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1036,7 +1038,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1049,7 +1051,7 @@ ntp server 7.7.7.7
                 "test": "custom",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1075,11 +1077,11 @@ def grouped_task_for_use_all_tasks_test(task):
     task.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1089,10 +1091,10 @@ ntp server 7.7.7.7
     task.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 logging host 1.1.1.1
         """,
-            "IOL2": """
+            "csr1k-r1": """
 logging host 2.2.2.2
 """,
         },
@@ -1138,7 +1140,7 @@ def test_custom_function_text_use_all_tasks():
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result, width=150)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP and logging config": {
                 "changed": False,
                 "criteria": "",
@@ -1152,7 +1154,7 @@ def test_custom_function_text_use_all_tasks():
                 "use_all_tasks": True,
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP and logging config": {
                 "changed": False,
                 "criteria": "",
@@ -1205,11 +1207,11 @@ def run(result):
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1218,7 +1220,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1231,7 +1233,7 @@ ntp server 7.7.7.7
                 "test": "custom",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1270,11 +1272,11 @@ def non_exist(result):
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1311,11 +1313,11 @@ def run(result):
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1346,15 +1348,15 @@ def test_cerberus_dict():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {"interface": "Gig1", "mtu": 1200},
-            "IOL2": {"mtu": 1500},
+            "iol-r1": {"interface": "Gig1", "mtu": 1200},
+            "csr1k-r1": {"mtu": 1500},
         },
         name="interfaces MTU",
     )
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test Gig1 MTU config": {
                 "changed": False,
                 "criteria": "",
@@ -1367,7 +1369,7 @@ def test_cerberus_dict():
                 "test": "cerberus",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test {interface} MTU config": {
                 "changed": False,
                 "criteria": "",
@@ -1401,12 +1403,12 @@ def test_cerberus_list_of_dict():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": [
+            "iol-r1": [
                 {"interface": "Gi1", "mtu": 1200},
                 {"interface": "Gi2", "mtu": 1500},
                 {"interface": "Gi2", "mtu": 1505},
             ],
-            "IOL2": [{"interface": "Gi6", "mtu": 9600}],
+            "csr1k-r1": [{"interface": "Gi6", "mtu": 9600}],
         },
         name="interfaces MTU",
     )
@@ -1419,7 +1421,7 @@ def test_cerberus_list_of_dict():
             "diff": "",
             "exception": "{'mtu': ['unallowed value 1200']}",
             "failed": True,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test Gi1 MTU config",
             "result": "FAIL",
             "success": False,
@@ -1432,7 +1434,7 @@ def test_cerberus_list_of_dict():
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test Gi2 MTU config",
             "result": "PASS",
             "success": True,
@@ -1445,7 +1447,7 @@ def test_cerberus_list_of_dict():
             "diff": "",
             "exception": "{'mtu': ['unallowed value 1505']}",
             "failed": True,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test Gi2 MTU config",
             "result": "FAIL",
             "success": False,
@@ -1458,7 +1460,7 @@ def test_cerberus_list_of_dict():
             "diff": "",
             "exception": "{'mtu': ['unallowed value 9600']}",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test Gi6 MTU config",
             "result": "FAIL",
             "success": False,
@@ -1486,11 +1488,11 @@ def test_contains_check_remove_tasks_false():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1499,7 +1501,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -1519,7 +1521,7 @@ ntp server 7.7.7.7
                 "result": "\n" "ntp server 7.7.7.8\n" "ntp server 7.7.7.7\n" "        ",
             },
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -1560,11 +1562,11 @@ def test_contains_check_calling_by_globals_name():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1573,7 +1575,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -1586,7 +1588,7 @@ ntp server 7.7.7.7
                 "test": "ContainsTest",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -1646,12 +1648,12 @@ def _test_docs_sample_code():
     pprint.pprint(results_dictionary)
     # should print something like:
     #
-    # [{'host': 'IOL1', 'name': 'Test NTP config', 'result': 'PASS'},
-    # {'host': 'IOL1', 'name': 'Test Logging config', 'result': 'PASS'},
-    # {'host': 'IOL1', 'name': 'Test BGP peers state', 'result': 'FAIL'},
-    # {'host': 'IOL2', 'name': 'Test NTP config', 'result': 'PASS'},
-    # {'host': 'IOL2', 'name': 'Test Logging config', 'result': 'PASS'},
-    # {'host': 'IOL2', 'name': 'Test BGP peers state', 'result': 'PASS'}]
+    # [{'host': 'iol-r1', 'name': 'Test NTP config', 'result': 'PASS'},
+    # {'host': 'iol-r1', 'name': 'Test Logging config', 'result': 'PASS'},
+    # {'host': 'iol-r1', 'name': 'Test BGP peers state', 'result': 'FAIL'},
+    # {'host': 'csr1k-r1', 'name': 'Test NTP config', 'result': 'PASS'},
+    # {'host': 'csr1k-r1', 'name': 'Test Logging config', 'result': 'PASS'},
+    # {'host': 'csr1k-r1', 'name': 'Test BGP peers state', 'result': 'PASS'}]
 
 
 # _test_docs_sample_code()
@@ -1674,11 +1676,11 @@ def test_contains_check_failed_only_to_dict():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1688,7 +1690,7 @@ ntp server 7.7.7.7
     check_result_to_list = ResultSerializer(output, add_details=True, to_dict=False)
     # pprint.pprint(check_result_to_list)
     assert check_result_to_dict == {
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -1709,7 +1711,7 @@ ntp server 7.7.7.7
             "diff": "",
             "exception": "Pattern not in output",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test NTP config",
             "result": "FAIL",
             "success": False,
@@ -1757,11 +1759,11 @@ def run(result):
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1772,7 +1774,7 @@ ntp server 7.7.7.7
     # pprint.pprint(check_result_to_dict)
     # pprint.pprint(check_result_to_list)
     assert check_result_to_dict == {
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1795,7 +1797,7 @@ ntp server 7.7.7.7
             "diff": "",
             "exception": "Server 7.7.7.8 not in config",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test NTP config",
             "result": "FAIL",
             "success": False,
@@ -1824,11 +1826,11 @@ def test_contains_custom_err_msg():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1837,7 +1839,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -1850,7 +1852,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "ntp server 7.7.7.8",
@@ -1884,11 +1886,11 @@ def test_eval_function_simple_expression():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1897,7 +1899,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1910,7 +1912,7 @@ ntp server 7.7.7.7
                 "test": "eval",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1943,11 +1945,11 @@ def test_eval_function_assert_statement():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -1956,7 +1958,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -1969,7 +1971,7 @@ ntp server 7.7.7.7
                 "test": "eval",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -2006,11 +2008,11 @@ def test_eval_when_tests_are_list_of_lists():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -2019,7 +2021,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result, width=150)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "show run | inc ntp eval ..": {
                 "changed": False,
                 "criteria": "",
@@ -2043,7 +2045,7 @@ ntp server 7.7.7.7
                 "test": "eval",
             },
         },
-        "IOL2": {
+        "csr1k-r1": {
             "show run | inc ntp eval ..": {
                 "changed": False,
                 "criteria": "",
@@ -2089,11 +2091,11 @@ def test_eval_kwargs_to_globals_vars_usage():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 logging host 1.1.1.1
 logging host 2.2.2.2
         """,
-            "IOL2": """
+            "csr1k-r1": """
 logging host 3.3.3.3
         """,
         },
@@ -2102,7 +2104,7 @@ logging host 3.3.3.3
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     # pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test Syslog config": {
                 "changed": False,
                 "criteria": "",
@@ -2115,7 +2117,7 @@ logging host 3.3.3.3
                 "test": "eval",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test Syslog config": {
                 "changed": False,
                 "criteria": "",
@@ -2149,7 +2151,7 @@ def test_path_with_eval():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "config": {
                     "system": {
                         "syslog": [
@@ -2159,7 +2161,7 @@ def test_path_with_eval():
                     }
                 }
             },
-            "IOL2": {"config": {"system": {"syslog": [{"remote_host": "1.1.1.2"}]}}},
+            "csr1k-r1": {"config": {"system": {"syslog": [{"remote_host": "1.1.1.2"}]}}},
         },
         name="show run | inc logging",
     )
@@ -2172,7 +2174,7 @@ def test_path_with_eval():
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test Syslog config",
             "result": "PASS",
             "success": True,
@@ -2185,7 +2187,7 @@ def test_path_with_eval():
             "diff": "",
             "exception": "Expression evaluated to False",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test Syslog config",
             "result": "FAIL",
             "success": False,
@@ -2213,7 +2215,7 @@ def test_path_with_equal():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "config": {
                     "system": {
                         "syslog": [
@@ -2223,7 +2225,7 @@ def test_path_with_equal():
                     }
                 }
             },
-            "IOL2": {"config": {"system": {"syslog": [{"remote_host": "1.1.1.2"}]}}},
+            "csr1k-r1": {"config": {"system": {"syslog": [{"remote_host": "1.1.1.2"}]}}},
         },
         name="show run | inc logging",
     )
@@ -2236,7 +2238,7 @@ def test_path_with_equal():
             "diff": "",
             "exception": "Pattern and output not equal",
             "failed": True,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test Syslog config",
             "result": "FAIL",
             "success": False,
@@ -2249,7 +2251,7 @@ def test_path_with_equal():
             "diff": "",
             "exception": "Pattern and output not equal",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test Syslog config",
             "result": "FAIL",
             "success": False,
@@ -2277,7 +2279,7 @@ def test_path_with_contains():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "config": {
                     "system": {
                         "syslog": [
@@ -2287,7 +2289,7 @@ def test_path_with_contains():
                     }
                 }
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "config": {"system": {"syslog": [{"remote_host_bla": "1.1.1.2"}]}}
             },
         },
@@ -2302,7 +2304,7 @@ def test_path_with_contains():
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test Syslog config",
             "pattern": "remote_host",
             "result": "PASS",
@@ -2316,7 +2318,7 @@ def test_path_with_contains():
             "diff": "",
             "exception": "Pattern not in output",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test Syslog config",
             "result": "FAIL",
             "success": False,
@@ -2344,13 +2346,13 @@ def test_path_with_eval_assert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "interfaces": [
                     {"interface": "Gi1", "mtu": 1500},
                     {"interface": "Gi2", "mtu": 9200},
                 ]
             },
-            "IOL2": {"interfaces": [{"interface": "Eth1/9", "mtu": 9600}]},
+            "csr1k-r1": {"interfaces": [{"interface": "Eth1/9", "mtu": 9600}]},
         },
         name="show run interface",
     )
@@ -2363,7 +2365,7 @@ def test_path_with_eval_assert():
             "diff": "",
             "exception": "Gi1 MTU less then 9000",
             "failed": True,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test MTU config",
             "result": "FAIL",
             "success": False,
@@ -2376,7 +2378,7 @@ def test_path_with_eval_assert():
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test MTU config",
             "result": "PASS",
             "success": True,
@@ -2404,7 +2406,7 @@ def test_path_with_eval_list_of_lists():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "ospf_processes": [
                     {
                         "pid": 1,
@@ -2416,7 +2418,7 @@ def test_path_with_eval_list_of_lists():
                     {"pid": 2, "peers": [{"state": "up", "peer": "3.3.3.3"}]},
                 ]
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "ospf_processes": [
                     {"pid": 3, "peers": [{"state": "init", "peer": "1.1.1.2"}]}
                 ]
@@ -2433,7 +2435,7 @@ def test_path_with_eval_list_of_lists():
             "diff": "",
             "exception": "1.1.1.2 peer is init",
             "failed": True,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test OSPF peers",
             "result": "FAIL",
             "success": False,
@@ -2446,7 +2448,7 @@ def test_path_with_eval_list_of_lists():
             "diff": "",
             "exception": "1.1.1.2 peer is init",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test OSPF peers",
             "result": "FAIL",
             "success": False,
@@ -2475,7 +2477,7 @@ def test_path_with_eval_list_of_lists_report_all():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": {
+            "iol-r1": {
                 "ospf_processes": [
                     {
                         "pid": 1,
@@ -2487,7 +2489,7 @@ def test_path_with_eval_list_of_lists_report_all():
                     {"pid": 2, "peers": [{"state": "up", "peer": "3.3.3.3"}]},
                 ]
             },
-            "IOL2": {
+            "csr1k-r1": {
                 "ospf_processes": [
                     {"pid": 3, "peers": [{"state": "init", "peer": "1.1.1.2"}]}
                 ]
@@ -2504,7 +2506,7 @@ def test_path_with_eval_list_of_lists_report_all():
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test OSPF peers",
             "result": "PASS",
             "success": True,
@@ -2517,7 +2519,7 @@ def test_path_with_eval_list_of_lists_report_all():
             "diff": "",
             "exception": "1.1.1.2 peer is init",
             "failed": True,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test OSPF peers",
             "result": "FAIL",
             "success": False,
@@ -2530,7 +2532,7 @@ def test_path_with_eval_list_of_lists_report_all():
             "diff": "",
             "exception": None,
             "failed": False,
-            "host": "IOL1",
+            "host": "iol-r1",
             "name": "Test OSPF peers",
             "result": "PASS",
             "success": True,
@@ -2543,7 +2545,7 @@ def test_path_with_eval_list_of_lists_report_all():
             "diff": "",
             "exception": "1.1.1.2 peer is init",
             "failed": True,
-            "host": "IOL2",
+            "host": "csr1k-r1",
             "name": "Test OSPF peers",
             "result": "FAIL",
             "success": False,
@@ -2572,12 +2574,12 @@ def test_contains_count_ge_check():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
 ntp server 7.7.7.6
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -2586,7 +2588,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_ge": 2,
@@ -2600,7 +2602,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_ge": 2,
@@ -2634,12 +2636,12 @@ def test_contains_count_ge_check_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
 ntp server 7.7.7.6
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -2648,7 +2650,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_ge": 2,
@@ -2662,7 +2664,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_ge": 2,
@@ -2695,12 +2697,12 @@ def test_contains_count_le_check():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
 ntp server 7.7.7.6
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -2709,7 +2711,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_le": 2,
@@ -2723,7 +2725,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_le": 2,
@@ -2757,12 +2759,12 @@ def test_contains_count_le_check_revert():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
 ntp server 7.7.7.6
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -2771,7 +2773,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_le": 2,
@@ -2785,7 +2787,7 @@ ntp server 7.7.7.7
                 "test": "contains",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "count_le": 2,
@@ -2806,7 +2808,7 @@ def grouped_task_for_test_jinja2_suite(task):
     # run first subtask
     task.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": """
+        ret_data_per_host={"iol-r1": """
 Interface description Circuit CX54DF323
 Interface mtu 1500
 Interface line protocol is up
@@ -2817,7 +2819,7 @@ Interface admin state - admin up
     # run second subtask
     task.run(
         task=nr_test,
-        ret_data_per_host={"IOL1": """
+        ret_data_per_host={"iol-r1": """
 Interface description OOB Connection
 Interface mtu 9200
 Interface line protocol is up
@@ -2829,8 +2831,8 @@ Interface admin state - admin up
     task.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": "Version: xe1.2.3.4",
-            "IOL2": "Version: xe4.3.2.1",
+            "iol-r1": "Version: xe1.2.3.4",
+            "csr1k-r1": "Version: xe4.3.2.1",
         },
         name="show version",
     )
@@ -2840,7 +2842,7 @@ Interface admin state - admin up
 @skip_if_no_nornir
 def test_jinja2_suite():
     """
-    IOL1 inventory has this data:
+    iol-r1 inventory has this data:
     data:
       interfaces:
         - name: Eth1
@@ -2854,7 +2856,7 @@ def test_jinja2_suite():
           line: line protocol is up
           admin: admin up
       version: xe1.2.3.4
-    IOL2 inventory has this data:
+    csr1k-r1 inventory has this data:
     data:
       version: xe1.2.3.4
     """
@@ -2893,14 +2895,14 @@ def test_jinja2_suite():
     output = nr_with_tests.run(task=grouped_task_for_test_jinja2_suite)
     res = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(res, width=150)
-    assert res["IOL1"]["Test IOL1 interface Eth1 MTU"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth2 MTU"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth1 description"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth2 description"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth1 status"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth2 status"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 version"]["result"] == "PASS"
-    assert res["IOL2"]["Test IOL2 version"]["result"] == "FAIL"
+    assert res["iol-r1"]["Test iol-r1 interface Eth1 MTU"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth2 MTU"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth1 description"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth2 description"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth1 status"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth2 status"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 version"]["result"] == "PASS"
+    assert res["csr1k-r1"]["Test csr1k-r1 version"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -2909,7 +2911,7 @@ def test_jinja2_suite_tests_data():
     This tes add tests_data to testsprovessor, that data used to render tests suite
     """
     tests_data = {
-        "IOL1": {
+        "iol-r1": {
             "interfaces": [
                 {
                     "name": "Eth1",
@@ -2928,7 +2930,7 @@ def test_jinja2_suite_tests_data():
             ],
             "version": "xe1.2.3.4",
         },
-        "IOL2": {"version": "xe1.2.3.4"},
+        "csr1k-r1": {"version": "xe1.2.3.4"},
     }
     tests = [
         """
@@ -2936,7 +2938,7 @@ def test_jinja2_suite_tests_data():
   name: "Test {{ host.name }} version"
   pattern: "{{ tests_data[host.name]['version'] }}"
   test: contains
-{% if host.name == 'IOL1' %}
+{% if host.name == 'iol-r1' %}
 {% for interface in tests_data[host.name]['interfaces'] %}
 - task: "show interface {{ interface.name }}"
   name: "Test {{ host.name }} interface {{ interface.name }} MTU"
@@ -2950,7 +2952,7 @@ def test_jinja2_suite_tests_data():
 {% endif %}
     """,
         """
-{% if host.name == 'IOL1' %}
+{% if host.name == 'iol-r1' %}
 {% for interface in tests_data[host.name]['interfaces'] %}
 - task: "show interface {{ interface.name }}"
   name: "Test {{ host.name }} interface {{ interface.name }} status"
@@ -2976,14 +2978,14 @@ def test_jinja2_suite_tests_data():
     output = nr_with_tests.run(task=grouped_task_for_test_jinja2_suite)
     res = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(res, width=150)
-    assert res["IOL1"]["Test IOL1 interface Eth1 MTU"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth2 MTU"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth1 description"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth2 description"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth1 status"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 interface Eth2 status"]["result"] == "PASS"
-    assert res["IOL1"]["Test IOL1 version"]["result"] == "PASS"
-    assert res["IOL2"]["Test IOL2 version"]["result"] == "FAIL"
+    assert res["iol-r1"]["Test iol-r1 interface Eth1 MTU"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth2 MTU"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth1 description"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth2 description"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth1 status"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 interface Eth2 status"]["result"] == "PASS"
+    assert res["iol-r1"]["Test iol-r1 version"]["result"] == "PASS"
+    assert res["csr1k-r1"]["Test csr1k-r1 version"]["result"] == "FAIL"
 
 
 @skip_if_no_nornir
@@ -3001,11 +3003,11 @@ def test_custom_function_import():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -3014,7 +3016,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -3027,7 +3029,7 @@ ntp server 7.7.7.7
                 "test": "custom",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "criteria": "",
@@ -3061,11 +3063,11 @@ def test_extra_arguments_return():
     output = nr_with_tests.run(
         task=nr_test,
         ret_data_per_host={
-            "IOL1": """
+            "iol-r1": """
 ntp server 7.7.7.8
 ntp server 7.7.7.7
         """,
-            "IOL2": """
+            "csr1k-r1": """
 ntp server 7.7.7.7
         """,
         },
@@ -3074,7 +3076,7 @@ ntp server 7.7.7.7
     check_result = ResultSerializer(output, add_details=True, to_dict=True)
     pprint.pprint(check_result)
     assert check_result == {
-        "IOL1": {
+        "iol-r1": {
             "Test NTP config": {
                 "changed": False,
                 "comments": "This test check that ntp server is "
@@ -3090,7 +3092,7 @@ ntp server 7.7.7.7
                 "test": "custom",
             }
         },
-        "IOL2": {
+        "csr1k-r1": {
             "Test NTP config": {
                 "changed": False,
                 "comments": "This test check that ntp server is "

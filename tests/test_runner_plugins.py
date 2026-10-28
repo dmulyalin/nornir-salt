@@ -2,6 +2,7 @@ import importlib
 import logging
 import pprint
 import queue
+import socket
 import sys
 import threading
 from types import SimpleNamespace
@@ -70,16 +71,16 @@ RunnersPluginRegister.register("RetryRunner", RetryRunner)
 
 
 @skip_if_no_nornir
-def test_retry_runner_connection_check_failed():
-    lab_inventory = """
+@pytest.mark.parametrize(
+    "port, connection_port", [(2206, None), (122, None), (2206, 123)]
+)
+def test_retry_runner_connection_check_failed(monkeypatch, port, connection_port):
+    lab_inventory = yaml.safe_load("""
 hosts:
-  IOL1:
-    hostname: 192.168.217.10
+  iol-r1:
+    hostname: containerlab.lab
     platform: ios
-    groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
-    platform: ios
+    port: 2206
     groups: [lab]
 
 groups:
@@ -88,141 +89,63 @@ groups:
     password: cisco
 
 defaults: {}
-"""
-    lab_inventory_dict = yaml.safe_load(lab_inventory)
-    nr = init(lab_inventory_dict, "RetryRunner")
+""")
+    lab_inventory["hosts"]["iol-r1"]["port"] = port
+    if connection_port is not None:
+        lab_inventory["hosts"]["iol-r1"].setdefault("connection_options", {})["netmiko"] = {
+            "port": connection_port
+        }
+    connection = Mock()
+    connection.connect.side_effect = socket.timeout("timed out")
+    monkeypatch.setattr(socket, "socket", Mock(return_value=connection))
+    nr = init(lab_inventory, "RetryRunner")
+    # Explicitly enable TCP preflight; its default is now False.
     output = nr.run(
         task=netmiko_send_commands,
-        name="check ntp config",
-        connection_name="netmiko",
         commands=["show clock"],
+        connection_name="netmiko",
+        run_connect_check=True,
         run_connect_retry=0,
     )
     result = ResultSerializer(output)
-    pprint.pprint(result)
-
-    for hostname, results in result.items():
-        for result_name, result_data in results.items():
-            assert (
-                "TCP connection error: 'timed out'" in result_data
-            ), f"'{hostname}' unexpected results: {result_data}"
-
-
-@skip_if_no_nornir
-def test_retry_runner_connection_check_failed_custom_port():
-    lab_inventory = """
-hosts:
-  IOL1:
-    hostname: 192.168.217.10
-    platform: ios
-    port: 122
-    groups: [lab]
-  IOL2:
-    hostname: 192.168.217.7
-    platform: ios
-    port: 321
-    groups: [lab]
-
-groups:
-  lab:
-    username: cisco
-    password: cisco
-
-defaults: {}
-"""
-    lab_inventory_dict = yaml.safe_load(lab_inventory)
-    nr = init(lab_inventory_dict, "RetryRunner")
-    output = nr.run(
-        task=netmiko_send_commands,
-        name="check ntp config",
-        connection_name="netmiko",
-        commands=["show clock"],
-        run_connect_retry=0,
+    assert set(result) == {"iol-r1"}
+    for result_data in result["iol-r1"].values():
+        assert "TCP connection error: 'timed out'" in result_data
+        assert f"containerlab.lab:{connection_port or port}" in result_data
+    connection.connect.assert_called_once_with(
+        ("containerlab.lab", connection_port or port)
     )
-    result = ResultSerializer(output)
-    pprint.pprint(result)
-
-    for hostname, results in result.items():
-        for result_name, result_data in results.items():
-            assert (
-                "TCP connection error: 'timed out'" in result_data
-            ), f"'{hostname}' unexpected results: {result_data}"
-            if hostname == "IOL1":
-                assert "192.168.217.10:122" in result_data
-            elif hostname == "IOL2":
-                assert "192.168.217.7:321" in result_data
-
-
-@skip_if_no_nornir
-def test_retry_runner_connection_check_failed_connection_params():
-    lab_inventory = """
-hosts:
-  IOL1:
-    hostname: 192.168.217.10
-    platform: ios
-    groups: [lab] 
-  IOL2:
-    hostname: 192.168.217.7
-    platform: ios
-    groups: [lab]
-
-groups:
-  lab:
-    username: cisco
-    password: cisco
-    connection_options:
-      netmiko:
-        port: 123
-
-defaults: {}
-"""
-    lab_inventory_dict = yaml.safe_load(lab_inventory)
-    nr = init(lab_inventory_dict, "RetryRunner")
-    output = nr.run(
-        task=netmiko_send_commands,
-        name="check ntp config",
-        connection_name="netmiko",
-        commands=["show clock"],
-        run_connect_retry=0,
-    )
-    result = ResultSerializer(output)
-    pprint.pprint(result)
-
-    for hostname, results in result.items():
-        for result_name, result_data in results.items():
-            assert (
-                "TCP connection error: 'timed out'" in result_data
-            ), f"'{hostname}' unexpected results: {result_data}"
-            if hostname == "IOL1":
-                assert "192.168.217.10:123" in result_data
-            elif hostname == "IOL2":
-                assert "192.168.217.7:123" in result_data
+    assert output.failed
 
 
 @skip_if_no_nornir
 def test_retry_runner_connection_check():
-    lab_inventory = """
+    lab_inventory = yaml.safe_load("""
 hosts:
   ceos-spine-1:
-    hostname: 192.168.1.130
+    hostname: containerlab.lab
     platform: arista_eos
     username: admin
     password: admin
     port: 2200
-"""
-    lab_inventory_dict = yaml.safe_load(lab_inventory)
-    nr = init(lab_inventory_dict, "RetryRunner")
+""")
+    host = lab_inventory["hosts"]["ceos-spine-1"]
+    try:
+        with socket.create_connection((host["hostname"], host["port"]), timeout=1):
+            pass
+    except OSError as exc:
+        pytest.skip(f"cEOS lab unavailable: {exc}")
+    nr = init(lab_inventory, "RetryRunner")
     output = nr.run(
         task=netmiko_send_commands,
-        name="check ntp config",
-        connection_name="netmiko",
         commands=["show clock"],
+        connection_name="netmiko",
+        run_connect_check=True,
         run_connect_retry=1,
     )
-    result = ResultSerializer(output)
-    pprint.pprint(result)
-
-    assert "error" not in result["ceos-spine-1"]["show clock"]
+    nr.close_connections()
+    assert not output.failed, ResultSerializer(output, add_details=True)
+    assert ResultSerializer(output)["ceos-spine-1"]["show clock"].strip()
 
 
 @skip_if_no_nornir
